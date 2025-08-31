@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema, insertCommentSchema, insertCommentVoteSchema, insertPostUnlockSchema, insertWalletNonceSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 // Helper function to check if user has access to a post
 async function checkPostAccess(post: any, userId?: string): Promise<{
@@ -75,6 +77,25 @@ function filterPostContent(post: any, hasAccess: boolean, isCreator: boolean) {
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 25 * 1024 * 1024, // 25MB max file size
+      files: 5, // Max 5 files
+    },
+    fileFilter: (req: any, file: any, cb: any) => {
+      // Only allow image and video files
+      if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image and video files are allowed'), false);
+      }
+    },
+  });
+
+  const objectStorageService = new ObjectStorageService();
 
   // Wallet verification endpoints
   app.get("/api/wallet/nonce", async (req, res) => {
@@ -269,6 +290,69 @@ export function registerRoutes(app: Express): Server {
     res.json(filteredPosts);
   });
 
+  // Multipart upload endpoint for posts with media
+  app.post("/api/posts/upload", upload.array('media', 5), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const creator = await storage.getCreatorByUserId(req.user!.id);
+    if (!creator) {
+      return res.status(403).json({ message: "Creator profile required" });
+    }
+
+    try {
+      const { content, visibility, price } = req.body;
+      const files = req.files as any[];
+
+      // Validate input
+      if (!content?.trim() && (!files || files.length === 0)) {
+        return res.status(400).json({ message: "Content or media files required" });
+      }
+
+      if (visibility === "ppv" && (!price || parseFloat(price) <= 0)) {
+        return res.status(400).json({ message: "Valid price required for pay-per-view content" });
+      }
+
+      // Upload media files to object storage
+      const mediaUrls: string[] = [];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            const mediaUrl = await objectStorageService.uploadFile(
+              file.buffer,
+              file.originalname,
+              file.mimetype
+            );
+            mediaUrls.push(mediaUrl);
+          } catch (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            return res.status(500).json({ message: "Failed to upload media files" });
+          }
+        }
+      }
+
+      // Create post with media URLs
+      const postData = insertPostSchema.parse({
+        creatorId: creator.id,
+        content: content?.trim() || "",
+        mediaUrl: mediaUrls.length > 0 ? mediaUrls[0] : undefined, // For backwards compatibility
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+        visibility,
+        price: visibility === "ppv" ? parseFloat(price) : undefined,
+      });
+
+      const post = await storage.createPost(postData);
+      res.status(201).json(post);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/posts", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
@@ -338,6 +422,20 @@ export function registerRoutes(app: Express): Server {
       res.status(204).send();
     } else {
       res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // Object serving endpoint
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(`/objects/${req.params.objectPath}`);
+      await objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      return res.status(500).json({ error: "Internal server error" });
     }
   });
 

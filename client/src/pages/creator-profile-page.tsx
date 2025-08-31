@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
 import Navigation from "../components/navigation";
 import Footer from "../components/footer";
-import { InlinePostComposer } from "@/components/posts/inline-post-composer";
+import { FacebookStyleComposer } from "@/components/posts/facebook-style-composer";
 import { LockedPostPreview } from "@/components/posts/locked-post-preview";
 import { TipButton } from "@/components/wallet/tip-button";
 import { SubscribeButton } from "@/components/wallet/subscribe-button";
@@ -233,9 +233,9 @@ export default function CreatorProfilePage() {
             </Card>
           </div>
 
-          {/* Inline Post Composer - Only shown for profile owner */}
+          {/* Facebook-Style Post Composer - Only shown for profile owner */}
           {canPost && (
-            <InlinePostComposer 
+            <FacebookStyleComposer 
               creatorId={creator.id} 
               onPostCreated={handlePostCreated}
             />
@@ -270,7 +270,7 @@ export default function CreatorProfilePage() {
                     // Determine if post should show as locked
                     const shouldShowLocked = !isOwnProfile && post.visibility !== "public" && (
                       (post.visibility === "members" && !userSubscription?.active) ||
-                      (post.visibility === "ppv" && !post.isUnlocked)
+                      (post.visibility === "ppv" && !(post as any).isUnlocked)
                     );
                     
                     return (
@@ -278,6 +278,7 @@ export default function CreatorProfilePage() {
                         key={post.id}
                         post={{ 
                           ...post, 
+                          content: post.content || "",
                           isLocked: shouldShowLocked,
                           mediaUrl: post.mediaUrl || undefined 
                         }}

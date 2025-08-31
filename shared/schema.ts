@@ -48,6 +48,7 @@ export const posts = pgTable("posts", {
   title: text("title").notNull(),
   content: text("content"),
   mediaUrl: text("media_url"),
+  mediaUrls: json("media_urls").$type<string[]>(), // Array of media URLs
   mediaType: text("media_type"), // "image" | "video"
   visibility: text("visibility").notNull().default("public"), // "public" | "members" | "ppv"
   price: integer("price").default(0), // in cents for PPV

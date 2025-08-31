@@ -4,12 +4,7 @@ import App from "./App";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
-  <WalletProvider
-    config={{
-      autoConnect: true,
-      preferredWallets: ["Sui Wallet", "Suiet", "Ethos Wallet"],
-    }}
-  >
+  <WalletProvider autoConnect={true}>
     <App />
   </WalletProvider>
 );
