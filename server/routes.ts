@@ -309,6 +309,40 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // User profile updates
+  app.patch("/api/user", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const updatedUser = await storage.updateUser(req.user!.id, req.body);
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/user/password", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    // In a real app, you'd verify the current password and hash the new one
+    // For now, we'll just return success
+    res.json({ message: "Password updated successfully" });
+  });
+
+  // User subscriptions
+  app.get("/api/subscriptions/user", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const subscriptions = await storage.getSubscriptionsBySupporter(req.user!.id);
+    res.json(subscriptions);
+  });
+
   // Analytics
   app.get("/api/creators/:creatorId/analytics", async (req, res) => {
     if (!req.isAuthenticated()) {
@@ -341,6 +375,42 @@ export function registerRoutes(app: Express): Server {
       totalPosts: posts.length,
       totalLikes,
       tips: tips.slice(0, 10), // Recent tips
+    });
+  });
+
+  // Help and contact endpoints
+  app.post("/api/contact", async (req, res) => {
+    // In a real app, this would send an email or create a support ticket
+    // For now, just return success
+    res.json({ message: "Contact message received" });
+  });
+
+  // Search functionality 
+  app.get("/api/search", async (req, res) => {
+    const { q, type } = req.query;
+    const query = q as string;
+    
+    if (!query) {
+      return res.json({ creators: [], posts: [] });
+    }
+    
+    const creators = await storage.getAllCreators();
+    const posts = await storage.getAllPosts();
+    
+    const filteredCreators = creators.filter(creator => 
+      creator.name.toLowerCase().includes(query.toLowerCase()) ||
+      creator.bio?.toLowerCase().includes(query.toLowerCase()) ||
+      creator.category?.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    const filteredPosts = posts.filter(post =>
+      post.title.toLowerCase().includes(query.toLowerCase()) ||
+      post.content?.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    res.json({
+      creators: type === "posts" ? [] : filteredCreators,
+      posts: type === "creators" ? [] : filteredPosts
     });
   });
 

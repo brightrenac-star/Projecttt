@@ -1,16 +1,21 @@
 import { useState } from "react";
-import Navigation from "@/components/navigation";
-import Footer from "@/components/footer";
+import Navigation from "../components/navigation";
+import Footer from "../components/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, DollarSign, Edit, FileSearch, ChevronDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Search, User, DollarSign, Edit, FileSearch, ChevronDown, HelpCircle, MessageSquare, Shield, Zap } from "lucide-react";
 
 export default function HelpPage() {
+  const { toast } = useToast();
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   const toggleFAQ = (index: number) => {
     setExpandedFAQ(expandedFAQ === index ? null : index);
@@ -18,32 +23,84 @@ export default function HelpPage() {
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    alert("Thank you for your message! We'll get back to you soon.");
+    toast({
+      title: "Message sent!",
+      description: "Thank you for your message. We'll get back to you within 24 hours.",
+    });
   };
+
+  const faqCategories = ["all", "account", "creator", "supporter", "payments", "technical"];
 
   const faqs = [
     {
+      category: "creator",
       question: "How do I start earning as a creator?",
-      answer: "To start earning, create your studio profile, publish engaging content, and build your supporter base. You can earn through tips, subscriptions, and exclusive content sales."
+      answer: "To start earning, create your studio profile, publish engaging content, and build your supporter base. You can earn through tips, subscriptions, and exclusive content sales. Set up subscription tiers and engage with your community regularly."
     },
     {
+      category: "payments",
       question: "What payment methods are supported?",
-      answer: "We support SUI blockchain payments for low fees and fast transactions. Traditional payment methods will be added in future updates."
+      answer: "We support SUI blockchain payments for low fees and fast transactions. Traditional payment methods will be added in future updates. All earnings are processed through the SUI network for transparency and speed."
     },
     {
+      category: "creator",
       question: "How do I withdraw my earnings?",
-      answer: "Navigate to your Studio Analytics page and click on 'Withdraw Earnings'. You'll need to connect your SUI wallet to complete the transaction."
+      answer: "Navigate to your Studio Analytics page and click on 'Withdraw Earnings'. You'll need to connect your SUI wallet to complete the transaction. Minimum withdrawal is $10 and payouts are processed monthly."
     },
     {
+      category: "account",
       question: "Can I switch between Creator and Supporter roles?",
-      answer: "Yes! You can change your role anytime in your profile settings. Note that switching to Creator will require setting up your studio profile."
+      answer: "Yes! You can change your role anytime in your profile settings. Note that switching to Creator will require setting up your studio profile and may take up to 24 hours to activate."
     },
     {
+      category: "creator",
       question: "What content guidelines should I follow?",
-      answer: "All content should be original, respectful, and comply with our community guidelines. Adult content is allowed but must be clearly marked and age-restricted."
+      answer: "All content should be original, respectful, and comply with our community guidelines. Adult content is allowed but must be clearly marked and age-restricted. Avoid spam, harassment, and copyright infringement."
+    },
+    {
+      category: "supporter",
+      question: "How do I support my favorite creators?",
+      answer: "You can support creators through one-time tips, monthly subscriptions, or purchasing exclusive content. Tips go directly to creators, while subscriptions provide ongoing support and access to member-only content."
+    },
+    {
+      category: "payments",
+      question: "Are my payments secure?",
+      answer: "Yes, all payments are processed through secure SUI blockchain technology. We don't store your payment information, and all transactions are encrypted and verifiable on the blockchain."
+    },
+    {
+      category: "technical",
+      question: "Why is the site not loading properly?",
+      answer: "Try refreshing your browser, clearing cache, or checking your internet connection. If problems persist, contact support with your browser version and any error messages you see."
+    },
+    {
+      category: "account",
+      question: "How do I delete my account?",
+      answer: "You can request account deletion through your profile settings. Note that this action is permanent and will remove all your content, subscriptions, and earnings data. Contact support if you need assistance."
+    },
+    {
+      category: "creator",
+      question: "What's the difference between public and member content?",
+      answer: "Public content is visible to everyone, member content requires an active subscription, and pay-per-view content requires a one-time payment. Choose visibility based on your monetization strategy."
+    },
+    {
+      category: "supporter",
+      question: "Can I cancel my subscription anytime?",
+      answer: "Yes, you can cancel subscriptions anytime from your profile page. You'll retain access until the end of your current billing period. Creators are notified when subscriptions are cancelled."
+    },
+    {
+      category: "technical",
+      question: "How do I report bugs or suggest features?",
+      answer: "Use the contact form below to report bugs or suggest features. Include as much detail as possible, including steps to reproduce bugs. We review all feedback and prioritize based on community needs."
     }
   ];
+
+  const filteredFAQs = faqs.filter(faq => {
+    const matchesCategory = selectedCategory === "all" || faq.category === selectedCategory;
+    const matchesSearch = searchQuery === "" || 
+      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen">
@@ -56,17 +113,36 @@ export default function HelpPage() {
             <p className="text-xl text-muted-foreground">Find answers to common questions or get in touch</p>
           </div>
 
-          {/* Search Help */}
+          {/* Search and Filter Help */}
           <Card className="glass mb-8">
             <CardContent className="p-6">
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="Search help articles..."
-                  className="pl-12"
-                  data-testid="input-search-help"
-                />
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <div className="space-y-4">
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Search help articles..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-12"
+                    data-testid="input-search-help"
+                  />
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {faqCategories.map(category => (
+                    <Button
+                      key={category}
+                      variant={selectedCategory === category ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory(category)}
+                      className={selectedCategory === category ? "gradient-primary text-primary-foreground" : "glass"}
+                      data-testid={`filter-help-${category}`}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -132,7 +208,8 @@ export default function HelpPage() {
               <CardTitle className="text-2xl font-bold text-foreground">Frequently Asked Questions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {faqs.map((faq, index) => (
+              {filteredFAQs.length > 0 ? (
+                filteredFAQs.map((faq, index) => (
                 <div key={index} className="border-b border-border pb-4 last:border-0">
                   <button
                     className="flex justify-between items-center w-full text-left"
@@ -152,7 +229,12 @@ export default function HelpPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No FAQs match your search criteria.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

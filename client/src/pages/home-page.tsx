@@ -1,11 +1,31 @@
 import { Link } from "wouter";
-import Navigation from "@/components/navigation";
-import Footer from "@/components/footer";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import Navigation from "../components/navigation";
+import Footer from "../components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Rocket, UserPlus, Heart, TrendingUp, Wallet } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Rocket, UserPlus, Heart, TrendingUp, Wallet, Users } from "lucide-react";
+import type { Creator, Post } from "@shared/schema";
 
 export default function HomePage() {
+  const { user } = useAuth();
+  
+  // Get featured creators
+  const { data: creators = [], isLoading: creatorsLoading } = useQuery<Creator[]>({
+    queryKey: ["/api/creators"],
+  });
+  
+  // Get trending posts
+  const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
+    queryKey: ["/api/posts"],
+  });
+  
+  const featuredCreators = creators.slice(0, 6);
+  const trendingPosts = posts.slice(0, 6);
+
   return (
     <div className="min-h-screen">
       <Navigation />
@@ -30,16 +50,34 @@ export default function HomePage() {
                 Join Suiciety, the revolutionary platform where creators connect with supporters through exclusive content, direct support, and community building.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link href="/auth">
-                  <Button size="lg" className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-start-creating">
-                    Start Creating
-                  </Button>
-                </Link>
-                <Link href="/discover">
-                  <Button variant="outline" size="lg" className="glass border-border hover-scale transition-smooth" data-testid="button-explore-creators">
-                    Explore Creators
-                  </Button>
-                </Link>
+                {user ? (
+                  user.role === "creator" ? (
+                    <Link href="/studio">
+                      <Button size="lg" className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-go-to-studio">
+                        Go to Studio
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href="/discover">
+                      <Button size="lg" className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-continue-exploring">
+                        Continue Exploring
+                      </Button>
+                    </Link>
+                  )
+                ) : (
+                  <>
+                    <Link href="/auth">
+                      <Button size="lg" className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-start-creating">
+                        Get Started
+                      </Button>
+                    </Link>
+                    <Link href="/discover">
+                      <Button variant="outline" size="lg" className="glass border-border hover-scale transition-smooth" data-testid="button-explore-creators">
+                        Explore
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -102,59 +140,170 @@ export default function HomePage() {
             <p className="text-xl text-muted-foreground">Discover amazing creators in our community</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Featured Creator Examples */}
-            {[
-              {
-                name: "Sarah Chen",
-                category: "Digital Artist",
-                description: "Creating stunning digital art and illustrations. Join my journey!",
-                supporters: "1.2k supporters",
-                image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-              },
-              {
-                name: "Alex Rivera",
-                category: "Music Producer", 
-                description: "Producing electronic music and sharing my creative process.",
-                supporters: "856 supporters",
-                image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-              },
-              {
-                name: "Maya Johnson",
-                category: "Content Writer",
-                description: "Writing about technology, startups, and the future of work.",
-                supporters: "2.1k supporters", 
-                image: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300"
-              }
-            ].map((creator, index) => (
-              <Card key={index} className="glass hover-scale transition-smooth overflow-hidden" data-testid={`card-featured-creator-${index}`}>
-                <img 
-                  src={creator.image} 
-                  alt={creator.category} 
-                  className="w-full h-48 object-cover"
-                />
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <img 
-                      src={`https://images.unsplash.com/photo-${143876168 + index}1033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=48&h=48`} 
-                      alt={`${creator.name} portrait`} 
-                      className="w-12 h-12 rounded-full"
-                    />
-                    <div className="ml-3">
-                      <h3 className="font-semibold text-foreground">{creator.name}</h3>
-                      <p className="text-sm text-muted-foreground">{creator.category}</p>
+          <div className="grid md:grid-cols-3 gap-8" data-testid="featured-creators">
+            {creatorsLoading ? (
+              // Loading state
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="glass overflow-hidden">
+                  <Skeleton className="w-full h-48" />
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="w-12 h-12 rounded-full" />
+                      <div className="ml-3 space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-muted-foreground mb-4">{creator.description}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">{creator.supporters}</span>
-                    <Button className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid={`button-support-creator-${index}`}>
-                      Support
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <Skeleton className="h-3 w-full mb-2" />
+                    <Skeleton className="h-3 w-3/4 mb-4" />
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-8 w-16 rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : featuredCreators.length > 0 ? (
+              featuredCreators.map((creator, index) => (
+                <Link href={`/creator/${creator.handle}`} key={creator.id}>
+                  <Card className="glass hover-scale transition-smooth overflow-hidden cursor-pointer" data-testid={`card-featured-creator-${index}`}>
+                    {creator.banner && (
+                      <img 
+                        src={creator.banner} 
+                        alt={creator.category || "Creator banner"} 
+                        className="w-full h-48 object-cover"
+                      />
+                    )}
+                    <CardContent className="p-6">
+                      <div className="flex items-center mb-4">
+                        {creator.avatar ? (
+                          <img 
+                            src={creator.avatar} 
+                            alt={`${creator.name} avatar`} 
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-white font-bold">
+                            {creator.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="ml-3">
+                          <h3 className="font-semibold text-foreground">{creator.name}</h3>
+                          <p className="text-sm text-muted-foreground">{creator.category || "Creator"}</p>
+                        </div>
+                      </div>
+                      {creator.bio && (
+                        <p className="text-muted-foreground mb-4 line-clamp-2">{creator.bio}</p>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Users className="w-4 h-4 mr-1" />
+                          {creator.subscriberCount || 0} supporters
+                        </div>
+                        <Badge variant="outline" className="border-primary/20 text-primary">
+                          View Profile
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            ) : (
+              // Empty state
+              <div className="col-span-3 text-center py-12">
+                <p className="text-muted-foreground mb-4">No featured creators yet.</p>
+                <Link href="/auth">
+                  <Button className="gradient-primary text-primary-foreground" data-testid="button-become-creator">
+                    Become the First Creator
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Trending Posts Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Trending Posts</h2>
+            <p className="text-xl text-muted-foreground">See what's popular in our community</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" data-testid="trending-posts">
+            {postsLoading ? (
+              // Loading state
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="glass">
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="w-10 h-10 rounded-full" />
+                      <div className="ml-3 space-y-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-3 w-3/4 mb-4" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-3 w-12" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : trendingPosts.length > 0 ? (
+              trendingPosts.map((post, index) => {
+                const creator = creators.find(c => c.id === post.creatorId);
+                return (
+                  <Card key={post.id} className="glass hover-scale transition-smooth cursor-pointer" data-testid={`card-trending-post-${index}`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center mb-4">
+                        {creator?.avatar ? (
+                          <img 
+                            src={creator.avatar} 
+                            alt={`${creator.name} avatar`} 
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-bold">
+                            {creator?.name.charAt(0).toUpperCase() || "U"}
+                          </div>
+                        )}
+                        <div className="ml-3">
+                          <p className="font-medium text-foreground">{creator?.name || "Creator"}</p>
+                          <p className="text-xs text-muted-foreground">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : "Recent"}</p>
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-2 line-clamp-2">{post.title}</h3>
+                      {post.content && (
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{post.content}</p>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Heart className="w-4 h-4 mr-1" />
+                          {post.likes || 0} likes
+                        </div>
+                        {post.visibility === "ppv" && post.price && (
+                          <Badge variant="outline" className="text-primary border-primary/20">
+                            ${(post.price / 100).toFixed(2)}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              // Empty state
+              <div className="col-span-3 text-center py-12">
+                <p className="text-muted-foreground mb-4">No posts yet.</p>
+                <Link href="/auth">
+                  <Button className="gradient-primary text-primary-foreground" data-testid="button-create-first-post">
+                    Share the First Post
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

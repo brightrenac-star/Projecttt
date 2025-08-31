@@ -9,6 +9,7 @@ export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
 
@@ -47,7 +48,7 @@ export interface IStorage {
   createLike(like: InsertLike): Promise<Like>;
   deleteLike(userId: string, postId: string): Promise<boolean>;
 
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -57,7 +58,7 @@ export class MemStorage implements IStorage {
   private subscriptions: Map<string, Subscription>;
   private tips: Map<string, Tip>;
   private likes: Map<string, Like>;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -80,10 +81,15 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.email === email);
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === username);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
+      role: insertUser.role || "supporter",
       id, 
       createdAt: new Date() 
     };
@@ -119,7 +125,16 @@ export class MemStorage implements IStorage {
   async createCreator(insertCreator: InsertCreator): Promise<Creator> {
     const id = randomUUID();
     const creator: Creator = { 
-      ...insertCreator, 
+      ...insertCreator,
+      banner: insertCreator.banner || null,
+      bio: insertCreator.bio || null,
+      avatar: insertCreator.avatar || null,
+      category: insertCreator.category || null,
+      tiers: insertCreator.tiers || [],
+      links: insertCreator.links || {},
+      payoutAddress: insertCreator.payoutAddress || null,
+      totalEarnings: insertCreator.totalEarnings || 0,
+      subscriberCount: insertCreator.subscriberCount || 0,
       id, 
       createdAt: new Date() 
     };
@@ -154,7 +169,14 @@ export class MemStorage implements IStorage {
   async createPost(insertPost: InsertPost): Promise<Post> {
     const id = randomUUID();
     const post: Post = { 
-      ...insertPost, 
+      ...insertPost,
+      content: insertPost.content || null,
+      mediaUrl: insertPost.mediaUrl || null,
+      mediaType: insertPost.mediaType || null,
+      price: insertPost.price || 0,
+      tier: insertPost.tier || null,
+      likes: 0,
+      published: insertPost.published ?? true,
       id, 
       createdAt: new Date() 
     };
@@ -190,7 +212,8 @@ export class MemStorage implements IStorage {
   async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
     const id = randomUUID();
     const subscription: Subscription = { 
-      ...insertSubscription, 
+      ...insertSubscription,
+      active: insertSubscription.active ?? true,
       id, 
       createdAt: new Date() 
     };
@@ -224,7 +247,8 @@ export class MemStorage implements IStorage {
   async createTip(insertTip: InsertTip): Promise<Tip> {
     const id = randomUUID();
     const tip: Tip = { 
-      ...insertTip, 
+      ...insertTip,
+      message: insertTip.message || null,
       id, 
       createdAt: new Date() 
     };
