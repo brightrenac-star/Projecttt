@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Society — Create • Own • Earn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fg:#0a1223; --muted:#4b5e80;
+  --g1:#7ed3f7; --g2:#a7e8d6; --g3:#cbb7ff; --g4:#b6f2ff;
+  --line:rgba(255,255,255,.22);
+  --shadow:0 12px 40px rgba(10,18,35,.16);
+
+  --glass-bg: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
+  --glass-border: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.15));
+  --glass-blur: 16px;
+  --glass-sat: 160%;
+  --glass-radius: 18px;
+
+  --gap-lg:22px; --gap-md:16px; --gap-sm:10px;
+
+  --section-gap-sm: 18px;
+  --section-gap-md: 28px;
+  --section-gap-lg: 56px;
+}
+
+/* Base */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:#eaf3ff;overflow-x:hidden}
+
+/* Background */
+.backdrop{
+  position:fixed; inset:0; z-index:-3;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--g4) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--g1) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--g3) 0%, transparent 70%),
+    radial-gradient(30% 40% at 0% 90%,   var(--g2) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #ecf4ff 100%);
+}
+.bg-shine{
+  position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(70% 40% at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(80% 50% at 50% 100%, rgba(255,255,255,.55), transparent 65%);
+}
+
+/* Glass utility */
+.glass{
+  position:relative;
+  background:var(--glass-bg);
+  border-radius:var(--glass-radius);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+  box-shadow: var(--shadow);
+}
+.glass::before{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background: var(--glass-border);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events:none;
+}
+.glare{position:relative}
+.glare::after{
+  content:""; position:absolute; left:0; right:0; top:0; height:55%;
+  border-radius:inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.35), transparent 70%);
+  pointer-events:none; mix-blend-mode:screen;
+}
+
+/* Container */
+.container{max-width:1140px;margin:0 auto;padding:16px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 12px;
+}
+.brand{display:flex;gap:10px;align-items:center;min-width:0}
+.logo{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#00323a;
+  background:conic-gradient(from 210deg, var(--g2), var(--g1), var(--g3), var(--g2));
+  box-shadow:0 6px 14px rgba(126,211,247,.25)
+}
+.brandword{
+  font-family:"Plus Jakarta Sans", Inter; font-weight:800; letter-spacing:.2px; font-size:20px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw;
+}
+
+/* Buttons */
+.btn{
+  border:1px solid rgba(255,255,255,.35);
+  border-radius:14px;padding:9px 12px;font-weight:800;cursor:pointer;
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.15));
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  color:inherit; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+}
+.btn.primary{
+  color:#053;
+  background:linear-gradient(135deg, rgba(167,232,214,.9), rgba(126,211,247,.9));
+  border-color:rgba(255,255,255,.6);
+  box-shadow:0 8px 24px rgba(126,211,247,.28);
+}
+.btn:hover{transform:translateY(-1px)}
+.actions-desktop{display:flex;gap:8px;align-items:center;flex-wrap:nowrap}
+.menu-btn{display:none}
+
+/* Mobile menu panel */
+.menu-panel{
+  position:fixed; right:calc(16px + env(safe-area-inset-right)); top:calc(70px + env(safe-area-inset-top));
+  width:min(320px, 92vw); display:none; z-index:1000; padding:10px;
+}
+.menu-panel.show{display:block}
+.menu-col{display:flex;flex-direction:column;gap:8px}
+.menu-panel .btn{width:100%; justify-content:center}
+
+/* HERO */
+.hero{ margin: var(--section-gap-md) 0 var(--section-gap-md); display:grid; grid-template-columns: 1fr; gap:var(--gap-md) }
+.panel{ padding:20px }
+.h1{
+  font-family:"Plus Jakarta Sans", Inter, system-ui, Arial;
+  font-size:clamp(26px, 5.2vw, 38px); line-height:1.15; margin:0 0 10px;
+  background: linear-gradient(90deg, var(--g1), var(--g3));
+  -webkit-background-clip: text; background-clip:text; color:transparent;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.lead{color:var(--muted); font-size:clamp(14px, 2.5vw, 15px); margin:0}
+.ctas{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* Benefits micro-cards */
+.benefits{ padding:20px; margin:0 0 var(--section-gap-md) }
+.benefits .head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.benefits .head .title{ font-weight:800; background: linear-gradient(90deg, var(--g2), var(--g3)); -webkit-background-clip:text; background-clip:text; color:transparent }
+.feat-grid{ display:grid; gap:var(--gap-sm); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) }
+.feat{
+  display:flex; gap:8px; align-items:flex-start; padding:10px 12px; border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.08));
+  border:1px solid rgba(255,255,255,.4);
+  backdrop-filter: blur(10px) saturate(160%); -webkit-backdrop-filter: blur(10px) saturate(160%);
+}
+.feat .icon{font-size:18px}
+.feat .label{font-weight:800}
+.feat .desc{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* Section */
+.section{margin: var(--section-gap-md) 0}
+.row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.sub{color:var(--muted);font-size:13px; margin-top:2px }
+
+/* Grid */
+.grid{
+  --col-min: 230px;
+  display:grid; gap:var(--gap-lg);
+  grid-template-columns: repeat(auto-fill, minmax(var(--col-min), 1fr));
+  margin-top:14px
+}
+@media(max-width: 720px){ .grid{ --col-min: 180px; gap:var(--gap-md) } }
+
+/* Card (glass) */
+.card{ position:relative; overflow:hidden; padding:0; border-radius:16px }
+.card-head{
+  height:96px; display:flex;align-items:center;justify-content:center;position:relative;padding-bottom:10px
+}
+.avatar{
+  width:64px;height:64px;border-radius:999px; border:2px solid rgba(255,255,255,.65);
+  background:linear-gradient(135deg,var(--g2),var(--g1));
+  color:#00323a; display:grid;place-items:center; font-weight:800; font-size:20px;
+  transform:translateY(24px); overflow:hidden; flex:0 0 auto; box-shadow:0 6px 24px rgba(10,18,35,.12)
+}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:999px}
+.corner-tag{
+  position:absolute; left:8px; top:8px; font-size:10px; padding:4px 7px; border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.2));
+  border:1px solid rgba(255,255,255,.7); color:#b0172a; font-weight:900; backdrop-filter: blur(8px)
+}
+.card-body{
+  padding:46px 12px 12px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.title{
+  font-weight:800; line-height:1.2;
+  display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+  word-break:break-word;
+}
+.meta{
+  color:var(--muted);font-size:12px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.badge{font-size:11px;padding:6px 10px;border-radius:999px;display:inline-flex;gap:6px;align-items:center;
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.15)); border:1px solid rgba(255,255,255,.6)}
+.actions{display:flex;gap:8px;margin-top:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.card .btn{font-size:13px;padding:8px 10px}
+
+/* MISSION */
+.mission{ padding:20px; margin: var(--section-gap-md) 0 var(--section-gap-lg) }
+.mission h3{
+  margin:0 0 6px; font-size:20px; font-family:"Plus Jakarta Sans", Inter; font-weight:800;
+  background: linear-gradient(90deg, var(--g1), var(--g3)); -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.mission p{margin:6px 0; color:var(--fg); font-size:14.5px}
+
+/* Footer + Language */
+.footerwrap{margin:16px 0}
+.langbar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-bottom:10px; flex-wrap:wrap }
+.langbar .sel{
+  padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.15));
+  backdrop-filter: blur(10px) saturate(150%); -webkit-backdrop-filter: blur(10px) saturate(150%);
+}
+.footer{
+  padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:nowrap
+}
+.footlinks{
+  display:flex; gap:10px; overflow:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  max-width:70%; padding-bottom:4px;
+}
+.footlinks::-webkit-scrollbar{display:none}
+.footlinks a{
+  border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.18));
+  padding:7px 10px; border-radius:999px; font-weight:700; font-size:13px; color:inherit; text-decoration:none;
+  backdrop-filter: blur(8px) saturate(150%); -webkit-backdrop-filter: blur(8px) saturate(150%);
+}
+.copy{color:var(--muted); font-size:12.5px}
+
+/* Floating Chat */
+.chat-fab{
+  position:fixed; right:calc(16px + env(safe-area-inset-right)); bottom:calc(16px + env(safe-area-inset-bottom)); z-index:99;
+  width:56px;height:56px;border-radius:16px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(135deg, rgba(167,232,214,.9), rgba(126,211,247,.95));
+  box-shadow:0 16px 40px rgba(16,32,64,.22);
+  display:grid;place-items:center;
+}
+.chat-fab svg{width:26px;height:26px}
+.chat-panel{
+  position:fixed; right:calc(16px + env(safe-area-inset-right)); bottom:calc(86px + env(safe-area-inset-bottom)); z-index:99; width:min(360px, 92vw); max-height:62vh;
+  display:none; overflow:hidden; padding:0;
+}
+.chat-panel.show{display:flex;flex-direction:column}
+.chat-head{ padding:10px 12px; display:flex; align-items:center; justify-content:space-between; font-weight:800 }
+.chat-body{padding:10px; overflow:auto; display:flex; flex-direction:column; gap:8px}
+.msg{max-width:80%; padding:8px 10px; border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.2)); border:1px solid rgba(255,255,255,.6)}
+.msg.me{margin-left:auto; background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.35))}
+.chat-input{display:flex; gap:8px; padding:10px; }
+.chat-input input{all:unset; flex:1; padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.25));
+  backdrop-filter: blur(8px)}
+.chat-input button{padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.25)); cursor:pointer;font-weight:800}
+
+/* Responsive nav */
+@media (max-width: 900px){
+  .actions-desktop{display:none}
+  .menu-btn{display:inline-flex}
+  .brandword{max-width:50vw}
+}
+
+/* Desktop spacing boost */
+@media (min-width: 980px){
+  .hero{ margin: var(--section-gap-lg) 0 var(--section-gap-lg) }
+  .benefits{ margin-bottom: var(--section-gap-lg) }
+  .section{ margin: var(--section-gap-lg) 0 }
+  .mission{ margin: var(--section-gap-lg) 0 var(--section-gap-lg) }
+  .grid{ gap: 26px }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+/* ===== Parallax section ===== */
+.pax-section{height:240vh;position:relative;margin:var(--section-gap-md) 0}
+@media(min-width:980px){.pax-section{height:260vh}}
+.pax-frame{position:sticky;top:0;height:100vh;overflow:hidden;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(12px) saturate(140%);-webkit-backdrop-filter:blur(12px) saturate(140%);box-shadow:var(--shadow)}
+.pax-layer{position:absolute;inset:-10vh -10vw;will-change:transform;transform:translate3d(0,0,0)}
+.pax-back{background:radial-gradient(60% 60% at 20% 20%,var(--g4),transparent 60%),radial-gradient(70% 60% at 80% 10%,var(--g1),transparent 70%),linear-gradient(180deg,#fafdff 0%,#e8f2ff 100%)}
+.pax-mid{background:radial-gradient(30% 30% at 70% 35%,rgba(203,183,255,.7),transparent 70%),radial-gradient(35% 35% at 25% 70%,rgba(167,232,214,.6),transparent 75%);mix-blend-mode:multiply;opacity:.9}
+.pax-front{background:radial-gradient(18% 18% at 35% 30%,rgba(255,255,255,.95),transparent 70%),radial-gradient(22% 22% at 65% 60%,rgba(255,255,255,.95),transparent 75%);mix-blend-mode:screen;opacity:.9}
+.pax-copy{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:clamp(12px,3vw,24px)}
+.pax-title{font-family:"Plus Jakarta Sans",Inter,system-ui;font-weight:800;font-size:clamp(28px,7vw,56px);line-height:1.05;background:linear-gradient(90deg,var(--g1),var(--g3));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 1px 0 rgba(255,255,255,.35);margin:0 0 8px}
+.pax-sub{color:var(--muted);margin:0 0 12px;font-size:clamp(14px,2.6vw,18px)}
+.pax-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+@supports (animation-timeline: scroll()){
+  @scroll-timeline --pax-tl{source:selector(#pax-demo);axis:block}
+  .pax-back{--from:-8vh;--to:6vh;animation:paxY 1s linear both;animation-timeline:--pax-tl;animation-range:0% 100%}
+  .pax-mid{--from:-18vh;--to:12vh;animation:paxY 1s linear both;animation-timeline:--pax-tl;animation-range:0% 100%}
+  .pax-front{--from:-32vh;--to:22vh;animation:paxY 1s linear both;animation-timeline:--pax-tl;animation-range:0% 100%}
+  @keyframes paxY{from{transform:translate3d(0,var(--from),0)}to{transform:translate3d(0,var(--to),0)}}
+}
+@media(max-width:420px){.pax-front{opacity:.75}.pax-mid{opacity:.85}}
+@media(prefers-reduced-motion:reduce){.pax-layer{transform:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="bg-shine"></div>
+
+  <div class="container">
+    <!-- NAV -->
+    <div class="nav glass glare">
+      <div class="brand">
+        <div class="logo">S</div>
+        <div class="brandword">Society</div>
+      </div>
+
+      <div class="actions-desktop">
+        <a class="btn" href="./discover.html">Discover</a>
+        <a class="btn" href="./profile.html">Settings</a>
+        <a class="btn" href="./register.html" id="t_register">Get started</a>
+        <button class="btn primary" id="connect">Connect Wallet</button>
+      </div>
+
+      <button class="btn menu-btn" id="menuBtn" aria-expanded="false" aria-haspopup="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Menu
+      </button>
+    </div>
+
+    <!-- Mobile menu panel -->
+    <div class="menu-panel glass glare" id="menuPanel" role="menu">
+      <div class="menu-col">
+        <a class="btn" href="./discover.html">Discover</a>
+        <a class="btn" href="./profile.html">Settings</a>
+        <a class="btn" href="./register.html" id="t_register_m">Get started</a>
+        <button class="btn primary" id="connectM">Connect Wallet</button>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="panel glass glare">
+        <h1 class="h1" id="t_h1">The creator home on Sui.</h1>
+        <p class="lead" id="t_lead">Memberships, tips and pay-per-view in crypto with just 5% platform fee. Own your audience. Keep your earnings.</p>
+        <div class="ctas">
+          <a class="btn primary" href="./register.html" id="t_get_started">Get started</a>
+          <a class="btn" href="./discover.html" id="t_explore">Explore creators</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARALLAX SCENE -->
+    <section class="pax-section" id="pax-demo">
+      <div class="pax-frame glass glare">
+        <div class="pax-layer pax-back"></div>
+        <div class="pax-layer pax-mid"></div>
+        <div class="pax-layer pax-front"></div>
+        <div class="pax-copy">
+          <h2 class="pax-title">Create • Own • Earn</h2>
+          <p class="pax-sub">Memberships, tips, PPV with just 5% fee.</p>
+          <div class="pax-cta">
+            <a class="btn primary" href="./register.html">Get started</a>
+            <a class="btn" href="./discover.html">Explore creators</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFITS -->
+    <section class="benefits glass glare" id="benefits">
+      <div class="head"><div class="title" id="b_title">Why creators choose Society</div></div>
+      <div class="feat-grid" id="featGrid"></div>
+    </section>
+
+    <!-- TOP CREATORS -->
+    <section class="section" id="creators">
+      <div class="row">
+        <div>
+          <h2 style="margin:0" id="t_top">Top creators</h2>
+          <div class="sub" id="t_top_sub">Fresh picks across Art, Music, Streaming and more</div>
+        </div>
+        <a class="btn" href="./register.html" id="t_become">Become a creator →</a>
+      </div>
+      <div class="grid" id="creGrid"></div>
+    </section>
+
+    <!-- MISSION -->
+    <section class="mission glass glare" id="mission">
+      <h3 id="m_title">Our mission</h3>
+      <p id="m_p1">Society helps creators earn fairly with crypto-native memberships, tips, and pay-per-view. We charge only a 5% platform fee so more value stays with the people who make it.</p>
+      <p id="m_p2">We’re building a new system where payouts are transparent, borderless, and instant—so creators anywhere can own their audience and keep their earnings.</p>
+      <p id="m_p3">Join us in shaping a fairer internet for creative work.</p>
+    </section>
+
+    <!-- Footer + Language -->
+    <div class="footerwrap">
+      <div class="langbar">
+        <div class="sub" id="t_lang_label" style="margin-right:4px">Language</div>
+        <select id="langBottom" class="sel" aria-label="Language">
+          <option value="auto">Auto (device)</option>
+          <option value="en">English</option>
+          <option value="th">ไทย</option>
+        </select>
+      </div>
+      <footer class="footer glass glare">
+        <div class="footlinks">
+          <a href="./about.html" id="f_about">About</a>
+          <a href="./contact.html" id="f_contact">Contact us</a>
+          <a href="./help.html" id="f_help">Help & Safety</a>
+          <a href="./terms.html" id="f_terms">Terms</a>
+          <a href="./privacy.html" id="f_privacy">Privacy</a>
+        </div>
+        <div class="copy">© <span id="year"></span> Society</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Floating Chat -->
+  <button class="chat-fab" id="chatFab" aria-label="Open chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5H7l-4 3.5V12A8.5 8.5 0 0 1 21 12Z"/></svg>
+  </button>
+  <div class="chat-panel glass glare" id="chatPanel" role="dialog" aria-modal="true" aria-label="Chat">
+    <div class="chat-head">
+      <div>Society Chat</div>
+      <button class="btn" id="chatClose">✕</button>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-input">
+      <input id="chatText" placeholder="Message…"/>
+      <button class="btn" id="chatSend">Send</button>
+    </div>
+  </div>
+
+<script>
+const I18N={
+  en:{
+    h1:"The creator home on Sui.",
+    lead:"Memberships, tips and pay-per-view in crypto with just 5% platform fee. Own your audience. Keep your earnings.",
+    register:"Get started", explore:"Explore creators", top:"Top creators", top_sub:"Fresh picks across Art, Music, Streaming and more", become:"Become a creator →",
+    lang_label:"Language", about:"About", contact:"Contact us", help:"Help & Safety", terms:"Terms", privacy:"Privacy", connected:"Connected",
+    benefits_title:"Why creators choose Society",
+    benefits:[
+      {icon:"💸", label:"Low 5% fee", desc:"Keep more of what you earn."},
+      {icon:"🫶", label:"Privacy-first", desc:"Own your audience & data."},
+      {icon:"🎟️", label:"Flexible memberships", desc:"Tips, PPV, tiers—your way."},
+      {icon:"✨", label:"Custom fandom", desc:"Name and shape your community."},
+      {icon:"🌍", label:"Borderless payouts", desc:"Crypto-native, instant transfers."},
+      {icon:"🧩", label:"Creator tools", desc:"Posts, analytics, and more."}
+    ]
+  },
+  th:{
+    h1:"บ้านของครีเอเตอร์บน Sui",
+    lead:"สมาชิก ทิป และจ่ายต่อครั้งด้วยคริปโต ค่าธรรมเนียมเพียง 5% เป็นเจ้าของผู้ติดตาม เก็บรายได้ของคุณ",
+    register:"เริ่มต้น", explore:"สำรวจครีเอเตอร์", top:"ครีเอเตอร์แนะนำ", top_sub:"คัดสรรจาก Art, Music, Streaming และอื่น ๆ", become:"สมัครเป็นครีเอเตอร์ →",
+    lang_label:"ภาษา", about:"เกี่ยวกับเรา", contact:"ติดต่อเรา", help:"ศูนย์ช่วยเหลือ", terms:"เงื่อนไข", privacy:"ความเป็นส่วนตัว", connected:"เชื่อมต่อแล้ว",
+    benefits_title:"ทำไมหลายคนเลือก Society",
+    benefits:[
+      {icon:"💸", label:"ค่าธรรมเนียมต่ำ 5%", desc:"รายได้อยู่กับคุณมากขึ้น"},
+      {icon:"🫶", label:"ความเป็นส่วนตัวสูง", desc:"เป็นเจ้าของผู้ติดตามและข้อมูล"},
+      {icon:"🎟️", label:"สมาชิกยืดหยุ่น", desc:"ทิป / PPV / ระดับสมาชิก จัดได้เอง"},
+      {icon:"✨", label:"ปรับแต่งแฟนด้อม", desc:"ตั้งชื่อ/แนวทางคอมมูนิตี้เองได้"},
+      {icon:"🌍", label:"โอนจ่ายไร้พรมแดน", desc:"คริปโต โอนเร็ว โปร่งใส"},
+      {icon:"🧩", label:"เครื่องมือครบ", desc:"โพสต์ สถิติ และอื่น ๆ"}
+    ]
+  }
+};
+function deviceLang(){return (navigator.language||'en').toLowerCase().startsWith('th')?'th':'en'}
+function activeLang(){const sel=localStorage.getItem('lang')||'auto';return sel==='auto'?deviceLang():sel}
+function tr(){return I18N[activeLang()]||I18N.en}
+function applyLang(){
+  const L=tr();
+  t_h1.textContent=L.h1; t_lead.textContent=L.lead; t_get_started.textContent=L.register; t_explore.textContent=L.explore;
+  t_top.textContent=L.top; t_top_sub.textContent=L.top_sub; t_become.textContent=L.become;
+  t_register.textContent=L.register; const r2=document.getElementById('t_register_m'); if(r2) r2.textContent=L.register;
+  t_lang_label.textContent=L.lang_label;
+  f_about.textContent=L.about; f_contact.textContent=L.contact; f_help.textContent=L.help; f_terms.textContent=L.terms; f_privacy.textContent=L.privacy;
+  langBottom.value=localStorage.getItem('lang')||'auto';
+  b_title.textContent=L.benefits_title; renderBenefits(L.benefits||[]);
+}
+langBottom.onchange=e=>{ localStorage.setItem('lang', e.target.value); applyLang(); };
+
+/* Wallet mock */
+function setWalletText(el, addr, L){ if(!el) return; el.textContent = addr ? `${L.connected}: ${addr}` : 'Connect Wallet'; }
+function attachWalletHandler(el){
+  if(!el) return;
+  el.onclick=()=>{
+    const addr='0x'+Math.random().toString(16).slice(2,10)+'…';
+    localStorage.setItem('last_wallet', addr);
+    const L=tr(); setWalletText(document.getElementById('connect'), addr, L); setWalletText(document.getElementById('connectM'), addr, L);
+  };
+}
+(function initWalletBtns(){
+  const L=tr();
+  const last=localStorage.getItem('last_wallet');
+  setWalletText(document.getElementById('connect'), last, L);
+  setWalletText(document.getElementById('connectM'), last, L);
+  attachWalletHandler(document.getElementById('connect'));
+  attachWalletHandler(document.getElementById('connectM'));
+})();
+
+/* Mobile menu */
+const menuBtn=document.getElementById('menuBtn');
+const menuPanel=document.getElementById('menuPanel');
+menuBtn.addEventListener('click',()=>{
+  const open = !menuPanel.classList.contains('show');
+  menuPanel.classList.toggle('show', open);
+  menuBtn.setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click',(e)=>{
+  if(!menuPanel.contains(e.target) && !menuBtn.contains(e.target)){
+    menuPanel.classList.remove('show'); menuBtn.setAttribute('aria-expanded','false');
+  }
+});
+
+/* Local seed readers */
+const STORE={
+  creators:['society_creators','suiciety_creators'],
+  posts:['society_posts','suiciety_posts'],
+  orders:['society_orders','suiciety_orders']
+};
+function loadAny(keys,def){ for(const k of keys){ try{ const v=localStorage.getItem(k); if(v!=null) return JSON.parse(v) }catch{} } return def }
+const creators = loadAny(STORE.creators, null);
+const posts    = loadAny(STORE.posts, []);
+const orders   = loadAny(STORE.orders, []);
+function trendingScore(handle){
+  const now=Date.now(); let s=0;
+  posts.filter(p=>p.creator===handle).forEach(p=>{
+    const hours=(now-p.createdAt)/3600000;
+    const decay=1/(1+hours/24);
+    s += ((p.baseLikes||0) + (p.comments||[]).length*2) * decay;
+  });
+  return s;
+}
+function subCount(handle){ return orders.filter(o=>o.type==='sub' && o.handle===handle).length; }
+function card(c){
+  const subs=subCount(c.handle||'')||0;
+  const ava=c.avatar?`<img src="${c.avatar}" alt="">`:(c.name?.[0]||c.handle?.[0]||'S').toUpperCase();
+  const titleText = c.name || c.handle || 'Creator';
+  const metaText = `${(c.category||'').replace(/-/g,' ')} • ${(c.langs||[]).join(', ').toUpperCase()||'—'}`;
+  return `
+    <div class="card glass glare">
+      <div class="card-head">
+        ${c.nsfw?`<div class="corner-tag" title="18+">NSFW</div>`:''}
+        <div class="avatar">${ava}</div>
+      </div>
+      <div class="card-body">
+        <div class="title" title="${titleText}">${titleText}</div>
+        <div class="meta" title="${metaText}">${metaText}</div>
+        <div class="actions">
+          <a class="btn" href="./creator.html?h=${c.handle||''}">${tr().explore}</a>
+          <span class="badge">${subs} subs</span>
+        </div>
+      </div>
+    </div>`;
+}
+function renderCreators(){
+  const wrap=creGrid; wrap.innerHTML='';
+  if(creators && Object.keys(creators).length){
+    const list=Object.values(creators).sort((a,b)=>trendingScore(b.handle)-trendingScore(a.handle)).slice(0,8);
+    list.forEach(c=>{ const w=document.createElement('div'); w.innerHTML=card(c); wrap.appendChild(w.firstElementChild); });
+  }else{
+    const demo=[
+      {name:'Nicha', category:'music', langs:['en']},
+      {name:'Aom', category:'art', langs:['th']},
+      {name:'Ken', category:'streaming', langs:['en','ja']},
+      {name:'Lena', category:'video', langs:['en','ko']},
+      {name:'Yuta', category:'photography', langs:['ja','en']},
+      {name:'Ana', category:'fashion', langs:['es','en']},
+    ];
+    demo.forEach(c=>{ const w=document.createElement('div'); w.innerHTML=card(c); wrap.appendChild(w.firstElementChild); });
+  }
+}
+
+/* Benefits render */
+function renderBenefits(items){
+  const grid=featGrid; grid.innerHTML='';
+  items.forEach(b=>{
+    const el=document.createElement('div'); el.className='feat';
+    el.innerHTML = `
+      <div class="icon">${b.icon||'✨'}</div>
+      <div>
+        <div class="label">${b.label||''}</div>
+        <div class="desc">${b.desc||''}</div>
+      </div>`;
+    grid.appendChild(el);
+  });
+}
+
+/* Chat demo */
+const CHAT_KEY='society_chat';
+function loadChat(){ try{return JSON.parse(localStorage.getItem(CHAT_KEY)||'[]')}catch{return[]} }
+function saveChat(L){ localStorage.setItem(CHAT_KEY, JSON.stringify(L)) }
+function renderChat(){
+  chatBody.innerHTML='';
+  loadChat().forEach(m=>{
+    const div=document.createElement('div'); div.className='msg'+(m.me?' me':''); div.textContent=m.text; chatBody.appendChild(div);
+  });
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+function openChat(){ chatPanel.classList.add('show'); renderChat(); chatText.focus(); }
+function closeChat(){ chatPanel.classList.remove('show'); }
+function sendChat(){
+  const t=(chatText.value||'').trim(); if(!t) return;
+  const L=loadChat(); L.push({me:true, text:t, ts:Date.now()}); saveChat(L); chatText.value=''; renderChat();
+  setTimeout(()=>{ const L2=loadChat(); L2.push({me:false, text:"(Demo) Thanks! Real-time messaging coming soon.", ts:Date.now()}); saveChat(L2); renderChat(); }, 500);
+}
+chatFab.onclick=openChat; chatClose.onclick=closeChat; chatSend.onclick=sendChat;
+chatText.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* Parallax fallback (JS) */
+(function(){
+  if (CSS && CSS.supports && CSS.supports('animation-timeline: scroll()')) return;
+  const sec=document.getElementById('pax-demo'); if(!sec) return;
+  const back=sec.querySelector('.pax-back'), mid=sec.querySelector('.pax-mid'), front=sec.querySelector('.pax-front');
+  const layers=[{el:back,from:-8,to:6},{el:mid,from:-18,to:12},{el:front,from:-32,to:22}];
+  const clamp01=v=>Math.max(0,Math.min(1,v)); const lerp=(a,b,t)=>a+(b-a)*t;
+  let ticking=false;
+  function update(){
+    const vh=window.innerHeight; const top=sec.getBoundingClientRect().top;
+    const total=sec.offsetHeight-vh; const scrolled=clamp01((vh-top)/(vh+total));
+    layers.forEach(L=>{ const y=lerp(L.from,L.to,scrolled); L.el.style.transform=`translate3d(0, ${y}vh, 0)`; });
+    ticking=false;
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(update); } }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',update,{passive:true});
+  update();
+})();
+
+/* Init */
+(function init(){
+  year.textContent=new Date().getFullYear();
+  applyLang();
+  renderCreators();
+})();
+</script>
+</body>
+</html>

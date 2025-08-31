@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Society — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f8ff; --fg:#0a1223; --muted:#4b5e80; --line:rgba(13,35,78,.14);
+  --g1:#7ed3f7; --g2:#a7e8d6; --g3:#cbb7ff; --g4:#b6f2ff;
+  --card:#ffffff; --rad:18px; --shadow:0 10px 28px rgba(16,32,64,.07);
+  --ok:#0aa77f; --warn:#b77700; --bad:#c62828;
+  --gap-1:8px; --gap-2:12px; --gap-3:16px; --gap-4:20px;
+}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:var(--bg);overflow-x:hidden}
+
+.backdrop{
+  position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--g4) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--g1) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--g3) 0%, transparent 70%),
+    radial-gradient(30% 40% at 0% 90%,   var(--g2) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 60%, #ecf4ff 100%);
+}
+.noise{
+  position:fixed; inset:0; z-index:-1; opacity:.05; pointer-events:none;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140"><filter id="n"><feTurbulence baseFrequency="0.7" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.45"/></svg>');
+}
+
+/* Container */
+.container{max-width:1120px;margin:0 auto;padding:16px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(10px + env(safe-area-inset-top)) 12px 12px;border-radius:20px;
+  background:rgba(255,255,255,.9); border:1px solid var(--line); backdrop-filter: blur(8px)
+}
+.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.logo{
+  width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:900;color:#001018;
+  background:conic-gradient(from 210deg,var(--g2),var(--g1),var(--g3),var(--g2));
+  box-shadow:0 6px 16px rgba(6,182,212,.25)
+}
+.name{font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:8px}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+.meta{color:var(--muted);font-size:13px}
+
+/* Main grid */
+.main{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-top:14px}
+@media(max-width:980px){.main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.pad{padding:14px}
+.sep{height:1px;background:var(--line);border:none;margin:12px 0}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;cursor:pointer}
+.tab.active{background:linear-gradient(135deg,var(--g2),var(--g1));color:#053;border-color:transparent}
+.tabpanes{margin-top:10px}
+.pane{display:none}
+.pane.active{display:block}
+
+/* Inputs + vertical rhythm */
+label{font-size:13px;color:var(--muted)}
+input[type="text"],input[type="url"],textarea,select{
+  width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--fg);outline:none
+}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 2px rgba(126,211,247,.35)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.counter{font-size:12px;color:var(--muted)}
+.warn{color:var(--warn)} .bad{color:var(--bad)}
+
+/* NEW: field stack spacing */
+.field{display:grid;gap:var(--gap-1);margin-top:var(--gap-3)}
+.field .help{margin-top:2px;color:var(--muted);font-size:12.5px}
+.field-tight{display:grid;gap:6px}
+
+/* File button */
+.filebtn{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;
+  background:linear-gradient(135deg,var(--g2),var(--g1)); color:#053; font-weight:900; border:1px solid rgba(126,211,247,.5);
+  box-shadow:0 8px 18px rgba(126,211,247,.18); cursor:pointer; user-select:none
+}
+.filebtn svg{opacity:.9}
+.file-name{font-size:12px;color:var(--muted)}
+input[type="file"].hidden{display:none}
+
+/* Avatar / Banner preview */
+.av-wrap{display:flex;gap:12px;align-items:center}
+@media(max-width:640px){.av-wrap{flex-direction:column;align-items:flex-start}}
+.avatar{width:96px;height:96px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(135deg,var(--g2),var(--g1));display:grid;place-items:center;color:#031018;font-weight:900}
+.avatar img{width:100%;height:100%;object-fit:cover}
+
+/* Switch */
+.switch{position:relative;width:46px;height:26px;background:#e8eefb;border:1px solid var(--line);border-radius:999px;cursor:pointer;flex:0 0 auto}
+.switch input{display:none}
+.switch .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.switch input:checked + .knob{left:24px;background:linear-gradient(135deg,var(--g2),var(--g1))}
+
+/* Society ID card */
+.socid{border:1px solid var(--line);border-radius:18px;overflow:hidden;position:relative;background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(126,211,247,.35) 55%, rgba(203,183,255,.45));box-shadow:0 14px 28px rgba(20,40,80,.08)}
+.socid .top{display:flex;gap:12px;align-items:center;padding:12px 14px 10px 14px}
+.socid .ava{width:72px;height:72px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(135deg,var(--g2),var(--g1));display:grid;place-items:center;font-weight:900;color:#043}
+.socid .ava img{width:100%;height:100%;object-fit:cover}
+.socid .name{font-weight:900;font-size:18px}
+.socid .idrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.socid .id{font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;font-weight:800; letter-spacing:.6px; font-size:12px; padding:4px 8px; border-radius:999px;background:#fff; border:1px dashed var(--line)}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 8px;cursor:pointer;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+.role{font-size:11px;padding:5px 9px;border-radius:999px;border:1px solid var(--line);background:#fff}
+.socid .desc{color:#2c3b58;font-size:13px;margin-top:6px;line-height:1.5}
+.socid .bottom{padding:10px 14px;border-top:1px dashed var(--line);background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.85))}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.tier{display:inline-flex;align-items:center;gap:8px;font-weight:900;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px}
+.tier svg{width:16px;height:16px}
+.kv{display:grid;grid-template-columns:1fr auto auto;gap:6px 10px;margin-top:10px;align-items:center}
+.kv .k{color:var(--muted);font-size:12px}
+.obscured{filter:blur(5px);opacity:.7}
+.eye{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 8px;cursor:pointer;font-size:12px}
+.progress{height:6px;background:#e9eefb;border-radius:999px;overflow:hidden}
+.progress > span{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g1))}
+
+/* Public view toggle bar */
+.viewbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.viewbar .badge{font-size:11px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+
+/* Actions */
+.actions-end{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.btn.pri{color:#053;background:linear-gradient(135deg,var(--g2),var(--g1));border:1px solid rgba(126,211,247,.5);box-shadow:0 10px 20px rgba(126,211,247,.22)}
+@media(max-width:640px){
+  .actions-end{flex-direction:column}
+  .actions-end .btn.pri,.actions-end .btn.ghost{width:100%}
+}
+
+/* Footer + Language */
+.footerwrap{margin:16px 0}
+.langbar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-bottom:10px; flex-wrap:wrap }
+.langbar .sel{
+  padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.15));
+  backdrop-filter: blur(10px) saturate(150%); -webkit-backdrop-filter: blur(10px) saturate(150%);
+  width:max-content; min-width:120px; max-width:170px;
+}
+.footer{
+  padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:nowrap;
+  background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:16px
+}
+.footlinks{
+  display:flex; gap:10px; overflow:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  max-width:70%; padding-bottom:4px;
+}
+.footlinks::-webkit-scrollbar{display:none}
+.footlinks a{
+  border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.18));
+  padding:7px 10px; border-radius:999px; font-weight:700; font-size:13px; color:inherit; text-decoration:none;
+  backdrop-filter: blur(8px) saturate(150%); -webkit-backdrop-filter: blur(8px) saturate(150%);
+}
+.copy{color:var(--muted); font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="backdrop"></div><div class="noise"></div>
+
+<div class="container">
+  <!-- NAV -->
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div class="name">Society</div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="./index.html">Home</a>
+      <a class="btn ghost" href="./discover.html">Explore</a>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- LEFT -->
+    <div class="card pad">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="profile" id="t_tab_profile">Profile</button>
+        <button class="tab" data-tab="locale" id="t_tab_locale">Locale</button>
+        <button class="tab" data-tab="prefs" id="t_tab_prefs">Preferences</button>
+      </div>
+
+      <div class="tabpanes">
+        <!-- PROFILE -->
+        <section class="pane active" id="pane_profile" role="tabpanel">
+          <h2 style="margin:8px 0" id="t_edit">Edit profile</h2>
+          <div class="meta" id="t_note">Saved locally in your browser (no upload yet).</div>
+          <hr class="sep"/>
+
+          <div class="field av-wrap">
+            <div class="avatar" id="avBox">👤</div>
+            <div style="flex:1;width:100%" class="field-tight">
+              <label id="t_photo">Profile photo</label>
+              <div class="row" style="align-items:center">
+                <label for="avInput" class="filebtn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16v-8M8 12h8" stroke="#053" stroke-width="2" stroke-linecap="round"/><rect x="3" y="5" width="18" height="14" rx="3" stroke="#053" stroke-width="1.5"/></svg>
+                  Choose image
+                </label>
+                <input id="avInput" type="file" accept="image/*" class="hidden">
+                <button class="btn ghost" id="removeAv">Remove</button>
+                <span id="avFileName" class="file-name"></span>
+              </div>
+              <div class="meta help" id="t_photoHelp">Recommended 512×512 PNG/JPG. Stored locally.</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="t_name">Display name</label>
+            <input id="name" type="text" maxlength="64" placeholder="e.g. Alice">
+          </div>
+
+          <div class="field">
+            <label id="t_bio">Short bio (≤200)</label>
+            <textarea id="bio" rows="4" maxlength="200" placeholder="Tell your fans who you are..."></textarea>
+            <div class="row" style="justify-content:space-between">
+              <span class="meta help" id="t_bioHelp">Keep it friendly & concise.</span>
+              <span id="count" class="counter">0 / 200</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div style="flex:1;min-width:220px">
+                <label>Twitter / X</label>
+                <input id="tw" type="url" placeholder="https://x.com/username">
+              </div>
+              <div style="flex:1;min-width:220px">
+                <label>Instagram</label>
+                <input id="ig" type="url" placeholder="https://instagram.com/username">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <div style="flex:1;min-width:220px">
+                <label>YouTube</label>
+                <input id="yt" type="url" placeholder="https://youtube.com/@username">
+              </div>
+              <div style="flex:1;min-width:220px">
+                <label>Website</label>
+                <input id="web" type="url" placeholder="https://yoursite.com">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="t_banner">Profile banner (optional)</label>
+            <div class="row" style="align-items:center">
+              <label for="bannerInput" class="filebtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16v-8M8 12h8" stroke="#053" stroke-width="2" stroke-linecap="round"/><rect x="3" y="5" width="18" height="14" rx="3" stroke="#053" stroke-width="1.5"/></svg>
+                Choose image
+              </label>
+              <input id="bannerInput" type="file" accept="image/*" class="hidden">
+              <button class="btn ghost" id="removeBanner">Remove</button>
+              <span id="bannerFileName" class="file-name"></span>
+            </div>
+            <div class="meta help" id="t_bannerHelp">Use a wide image (e.g., 1600×500). Stored locally.</div>
+          </div>
+
+          <hr class="sep"/>
+          <div class="actions-end">
+            <button class="btn ghost" id="reset">Reset</button>
+            <button class="btn pri" id="save">Save</button>
+          </div>
+        </section>
+
+        <!-- LOCALE -->
+        <section class="pane" id="pane_locale" role="tabpanel">
+          <h2 style="margin:8px 0" id="t_locale_head">Locale</h2>
+          <div class="meta" id="t_locale_note">Select region and (optionally) country. App language is below in the footer.</div>
+
+          <div class="field">
+            <div class="row">
+              <div style="flex:1;min-width:220px">
+                <label id="t_region">Region</label>
+                <select id="pv_region" style="margin-top:6px">
+                  <option value="GL">🌐 Global</option>
+                  <option value="NA">🇺🇸 North America</option>
+                  <option value="LATAM">🌎 Latin America</option>
+                  <option value="EU">🇪🇺 Europe</option>
+                  <option value="MENA">🌍 MENA</option>
+                  <option value="SSA">🌍 Sub-Saharan Africa</option>
+                  <option value="SA">🌏 South Asia</option>
+                  <option value="SEA">🌏 Southeast Asia</option>
+                  <option value="EAO">🌏 East Asia & Oceania</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:220px">
+                <label id="t_country">Country (optional)</label>
+                <select id="pv_country" style="margin-top:6px">
+                  <option value="">—</option>
+                  <option value="TH">🇹🇭 Thailand</option><option value="US">🇺🇸 United States</option>
+                  <option value="JP">🇯🇵 Japan</option><option value="KR">🇰🇷 Korea</option>
+                  <option value="SG">🇸🇬 Singapore</option><option value="VN">🇻🇳 Vietnam</option>
+                  <option value="ID">🇮🇩 Indonesia</option><option value="DE">🇩🇪 Germany</option>
+                  <option value="FR">🇫🇷 France</option><option value="BR">🇧🇷 Brazil</option>
+                  <option value="ES">🇪🇸 Spain</option><option value="RU">🇷🇺 Russia</option>
+                  <option value="IN">🇮🇳 India</option><option value="CN">🇨🇳 China</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <hr class="sep"/>
+          <div class="actions-end">
+            <button class="btn pri" id="saveLocale">Save Locale</button>
+          </div>
+        </section>
+
+        <!-- PREFERENCES -->
+        <section class="pane" id="pane_prefs" role="tabpanel">
+          <h2 style="margin:8px 0" id="t_prefs_head">Preferences</h2>
+
+          <div class="field">
+            <div style="font-weight:800" id="t_nf_head">Notifications</div>
+            <div class="row" style="align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-weight:800" id="t_nf_email_tips">Email: Tips & purchases</div>
+                <div class="meta help" id="t_nf_email_tips_sub">Get a receipt when someone tips or buys PPV.</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="nf_email_tips"><span class="knob"></span></label>
+            </div>
+            <div class="row" style="align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-weight:800" id="t_nf_digest">Digest</div>
+                <div class="meta help" id="t_nf_digest_sub">Creator updates summary email.</div>
+              </div>
+              <select id="nf_digest" style="max-width:160px">
+                <option value="off">Off</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div class="row" style="align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-weight:800" id="t_nf_prod">Product updates</div>
+                <div class="meta help" id="t_nf_prod_sub">Occasional announcements (new features).</div>
+              </div>
+              <label class="switch"><input type="checkbox" id="nf_updates"><span class="knob"></span></label>
+            </div>
+          </div>
+
+          <hr class="sep"/>
+          <div class="field">
+            <div style="font-weight:800" id="t_priv_head">Privacy</div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="pv_search"><span class="knob"></span></label>
+              <div><div style="font-weight:800" id="t_pv_search">Searchable profile</div><div class="meta help" id="t_pv_search_sub">Allow your profile to appear in search.</div></div>
+            </div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="pv_links"><span class="knob"></span></label>
+              <div><div style="font-weight:800" id="t_pv_links">Show social links</div><div class="meta help" id="t_pv_links_sub">Display X/IG/YouTube/Website on your page.</div></div>
+            </div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="pv_safe"><span class="knob"></span></label>
+              <div><div style="font-weight:800" id="t_pv_safe">Hide NSFW by default</div><div class="meta help" id="t_pv_safe_sub">Blur or hide sensitive previews.</div></div>
+            </div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="pv_hide_spent"><span class="knob"></span></label>
+              <div><div style="font-weight:800">Hide spending on Society ID</div><div class="meta help">Keep your total support private.</div></div>
+            </div>
+            <div class="row">
+              <label class="switch"><input type="checkbox" id="pv_hide_earned"><span class="knob"></span></label>
+              <div><div style="font-weight:800">Hide earnings on Society ID</div><div class="meta help">Keep your creator income private.</div></div>
+            </div>
+          </div>
+
+          <hr class="sep"/>
+          <div class="actions-end">
+            <button class="btn pri" id="savePrefs">Save Preferences</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- RIGHT: Society ID -->
+    <aside class="card pad">
+      <div class="viewbar">
+        <span class="badge">Society ID</span>
+        <div class="row">
+          <label class="switch" title="Public view">
+            <input type="checkbox" id="publicView"><span class="knob"></span>
+          </label>
+          <span class="meta">Public view</span>
+        </div>
+      </div>
+
+      <div class="socid" id="socCard">
+        <div class="top">
+          <div class="ava" id="socAva">S</div>
+          <div style="flex:1">
+            <div class="name" id="socName">Your name</div>
+            <div class="idrow">
+              <span class="id" id="socId">ID • ————————</span>
+              <button class="iconbtn" id="copyId">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 9h9v12H9zM6 3h9v3M6 3v12h3" stroke="currentColor" stroke-width="1.6"/></svg>
+                Copy
+              </button>
+              <button class="iconbtn" id="shareId">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12v6a2 2 0 0 0 2 2h12M16 6l-4-4-4 4M12 2v14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                Share
+              </button>
+              <span class="role" id="socRole">Supporter</span>
+            </div>
+            <div class="desc" id="socDesc">Your short bio appears here</div>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="badges" id="socBadges"></div>
+          <div class="kv" style="margin-top:8px">
+            <div class="k">Spent</div>
+            <div id="socSpent" class="stat">$0</div>
+            <button class="eye" id="revealSpent">👁 Reveal 5s</button>
+            <div class="k">Earned</div>
+            <div id="socEarned" class="stat">$0</div>
+            <button class="eye" id="revealEarned">👁 Reveal 5s</button>
+          </div>
+          <div style="margin-top:8px">
+            <div class="meta" style="margin-bottom:4px">Progress to next tier</div>
+            <div class="progress"><span id="progBar" style="width:0%"></span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Footer + Language -->
+  <div class="footerwrap">
+    <div class="langbar">
+      <div class="meta" id="t_lang_label" style="margin-right:4px">Language</div>
+      <select id="langBottom" class="sel" aria-label="Language">
+        <option value="auto">Auto (device)</option>
+        <option value="en">English</option>
+        <option value="th">ไทย</option>
+      </select>
+    </div>
+    <footer class="footer">
+      <div class="footlinks">
+        <a href="./about.html" id="f_about">About</a>
+        <a href="./contact.html" id="f_contact">Contact us</a>
+        <a href="./help.html" id="f_help">Help & Safety</a>
+        <a href="./terms.html" id="f_terms">Terms</a>
+        <a href="./privacy.html" id="f_privacy">Privacy</a>
+      </div>
+      <div class="copy">© <span id="year"></span> Society</div>
+    </footer>
+  </div>
+</div>
+
+<script>
+const I18N={en:{
+  tabs:{profile:"Profile", locale:"Locale", prefs:"Preferences"},
+  edit:"Edit profile", note:"Saved locally in your browser (no upload yet).",
+  photo:"Profile photo", photoHelp:"Recommended 512×512 PNG/JPG. Stored locally.",
+  name:"Display name", bio:"Short bio (≤200)", bioHelp:"Keep it friendly & concise.",
+  banner:"Profile banner (optional)", bannerHelp:"Use a wide image (e.g., 1600×500). Stored locally.",
+  locale_head:"Locale", locale_note:"Select region and (optionally) country. App language is below in the footer.",
+  region:"Region", country:"Country (optional)",
+  prefs_head:"Preferences",
+  nf_head:"Notifications", nf_email_tips:"Email: Tips & purchases", nf_email_tips_sub:"Get a receipt when someone tips or buys PPV.",
+  nf_digest:"Digest", nf_digest_sub:"Creator updates summary email.",
+  nf_prod:"Product updates", nf_prod_sub:"Occasional announcements (new features).",
+  pv_head:"Privacy", pv_search:"Searchable profile", pv_search_sub:"Allow your profile to appear in search.",
+  pv_links:"Show social links", pv_links_sub:"Display X/IG/YouTube/Website on your page.",
+  pv_safe:"Hide NSFW by default", pv_safe_sub:"Blur or hide sensitive previews.",
+  saved:"Saved locally", confirm_clear:"Clear all profile data?", name_ph:"e.g. Alice", bio_ph:"Tell your fans who you are...",
+  lang_label:"Language", about:"About", contact:"Contact us", help:"Help & Safety", terms:"Terms", privacy:"Privacy"
+}, th:{
+  tabs:{profile:"โปรไฟล์", locale:"ภาษา/ภูมิภาค", prefs:"การตั้งค่า"},
+  edit:"แก้ไขโปรไฟล์", note:"บันทึกไว้บนเบราว์เซอร์ของคุณ (ยังไม่อัปโหลด)",
+  photo:"รูปโปรไฟล์", photoHelp:"แนะนำ 512×512 PNG/JPG เก็บในเครื่อง",
+  name:"ชื่อที่แสดง", bio:"คำอธิบายสั้น (≤200)", bioHelp:"เขียนสั้น กระชับ เป็นกันเอง",
+  banner:"แบนเนอร์โปรไฟล์ (ไม่บังคับ)", bannerHelp:"ใช้ภาพแนวนอน (เช่น 1600×500) เก็บในเครื่อง",
+  locale_head:"ภาษา/ภูมิภาค", locale_note:"เลือกภูมิภาคและประเทศ (ถ้ามี) การเปลี่ยนภาษาอยู่ด้านล่าง (footer)",
+  region:"ภูมิภาค", country:"ประเทศ (ไม่บังคับ)",
+  prefs_head:"การตั้งค่า",
+  nf_head:"การแจ้งเตือน", nf_email_tips:"อีเมล: ทิป/การซื้อ", nf_email_tips_sub:"รับใบเสร็จเมื่อมีคนทิปหรือซื้อ PPV",
+  nf_digest:"อีเมลสรุป", nf_digest_sub:"สรุปอัปเดตจากครีเอเตอร์",
+  nf_prod:"อัปเดตฟีเจอร์", nf_prod_sub:"ข่าวสารฟีเจอร์ใหม่เป็นครั้งคราว",
+  pv_head:"ความเป็นส่วนตัว", pv_search:"ให้ค้นหาเจอ", pv_search_sub:"อนุญาตให้โปรไฟล์แสดงในผลการค้นหา",
+  pv_links:"แสดงลิงก์โซเชียล", pv_links_sub:"แสดง X/IG/YouTube/Website บนเพจ",
+  pv_safe:"ซ่อน NSFW โดยค่าเริ่มต้น", pv_safe_sub:"เบลอ/ซ่อนพรีวิวที่อ่อนไหว",
+  saved:"บันทึกแล้ว (เก็บในเครื่อง)", confirm_clear:"ล้างข้อมูลโปรไฟล์ทั้งหมด?", name_ph:"เช่น Alice", bio_ph:"บอกแฟน ๆ แบบสั้น ๆ ว่าคุณคือใคร…",
+  lang_label:"ภาษา", about:"เกี่ยวกับเรา", contact:"ติดต่อเรา", help:"ศูนย์ช่วยเหลือ", terms:"เงื่อนไข", privacy:"ความเป็นส่วนตัว"
+}};
+const $=id=>document.getElementById(id);
+function deviceLang(){return (navigator.language||'en').toLowerCase().startsWith('th')?'th':'en'}
+function activeLang(){const sel=localStorage.getItem('lang')||'auto';return sel==='auto'?deviceLang():sel}
+function tr(){return I18N[activeLang()]||I18N.en}
+
+/* Tabs */
+document.querySelectorAll('.tab').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('pane_'+b.dataset.tab).classList.add('active');
+  });
+});
+
+/* Store */
+const MAX=200, storeKey='su_society_profile';
+function loadProfile(){ try{ return JSON.parse(localStorage.getItem(storeKey)||'{}') }catch{ return {} } }
+function saveProfile(p){ localStorage.setItem(storeKey, JSON.stringify(p)) }
+const state={ name:'', bio:'', avatar:'', banner:'', links:{tw:'',ig:'',yt:'',web:''} };
+
+/* Society ID */
+function ensureSocietyId(){
+  let id=localStorage.getItem('society_society_id');
+  if(!id){
+    id = Array.from({length:15},()=> 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join('');
+    localStorage.setItem('society_society_id', id);
+  }
+  return id;
+}
+const SOC_ID = ensureSocietyId();
+
+/* Prefs */
+const prefKey='society_prefs';
+function loadPrefs(){ try{ return JSON.parse(localStorage.getItem(prefKey)||'{}') }catch{ return {} } }
+function savePrefs(p){ localStorage.setItem(prefKey, JSON.stringify(p)) }
+
+/* Account (optional) */
+function loadAccount(){ try{ return JSON.parse(localStorage.getItem('society_account')||'{}') }catch{ return {} } }
+
+/* Money mock */
+function formatUSD(n){ return '$'+(Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits: (n<100?2:0), maximumFractionDigits:2}); }
+function seededFloat(seedStr, min, max){
+  let h=0; for(let i=0;i<seedStr.length;i++){ h=(h*31 + seedStr.charCodeAt(i))>>>0; }
+  const r=(h%10000)/10000; return min + r*(max-min);
+}
+function getTotalsUSD(){
+  const RATE = parseFloat(localStorage.getItem('sui_usd')||'1.2');
+  let spent=0, earned=0;
+  const me = (JSON.parse(localStorage.getItem('society_me')||'{"wallet":""}')).wallet || '';
+  try{
+    const orders = JSON.parse(localStorage.getItem('society_orders')||'[]');
+    orders.forEach(o=>{
+      const amtUSD = (o.amount||0)*RATE;
+      if(o.payer && me && o.payer===me) spent += amtUSD;
+      const acc=loadAccount();
+      if(acc && acc.handle && o.handle===acc.handle) earned += amtUSD;
+    });
+  }catch{}
+  if(spent===0){ spent = seededFloat(SOC_ID+'S', 0, 2500); }
+  const acc=loadAccount();
+  if((acc?.role)!=='creator' && earned===0){ earned=0; }
+  else if(earned===0){ earned = seededFloat(SOC_ID+'C', 0, 50000); }
+  return {spent, earned};
+}
+
+/* Tiers */
+const supporterSteps=[{limit:1, name:'Researcher', kind:'book'},
+                      {limit:501, name:'Blue Diamond', kind:'diamond'},
+                      {limit:2500, name:'Sapphire', kind:'diamond'},
+                      {limit:10000, name:'Emerald', kind:'diamond'},
+                      {limit:50000, name:'Ruby', kind:'diamond'},
+                      {limit:100000, name:'Platinum Crown', kind:'diamond'}];
+const creatorSteps=[{limit:100, name:'Starter Coin', kind:'coin'},
+                    {limit:1000, name:'Bronze Coin', kind:'coin'},
+                    {limit:10000, name:'Silver Coin', kind:'coin'},
+                    {limit:50000, name:'Gold Coin', kind:'coin'},
+                    {limit:100000, name:'Platinum Coin', kind:'coin'}];
+
+function tierFor(usd, steps){
+  for(let i=0;i<steps.length;i++){
+    if(usd < steps[i].limit) {
+      const prev = i===0 ? 0 : steps[i-1].limit;
+      const pct = Math.max(0, Math.min(1, (usd - prev)/(steps[i].limit - prev)));
+      return {name:steps[i].name, kind:steps[i].kind, pct};
+    }
+  }
+  return {name:steps[steps.length-1].name, kind:steps[steps.length-1].kind, pct:1};
+}
+function svgDiamond(){return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dgrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#9ad1ff"/><stop offset="1" stop-color="#2f8df2"/></linearGradient><radialGradient id="shine" cx="30%" cy="20%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><path d="M12 3l4.5 4.5L12 21 7.5 7.5 12 3zM3 7.5h6L12 3 15 7.5h6L12 21 3 7.5z" fill="url(#dgrad)" stroke="#225" stroke-opacity=".15"/><circle cx="9" cy="6" r="5" fill="url(#shine)"/></svg>`}
+function svgCoin(){return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="cgrad" cx="35%" cy="35%"><stop offset="0" stop-color="#fff6b8"/><stop offset=".35" stop-color="#ffd24d"/><stop offset=".65" stop-color="#f9b636"/><stop offset="1" stop-color="#eaa300"/></radialGradient><linearGradient id="cedge" x1="0" x2="1"><stop offset="0" stop-color="#c98c00"/><stop offset="1" stop-color="#ffda66"/></linearGradient></defs><circle cx="12" cy="12" r="9" fill="url(#cgrad)" stroke="url(#cedge)" stroke-width="1.5"/><path d="M8 12h8M10 9h6M8 15h6" stroke="#9b6a00" stroke-width="1.2" stroke-linecap="round"/></svg>`}
+function svgBook(){return `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bgrad" x1="0" x2="1"><stop offset="0" stop-color="#d8e2ff"/><stop offset="1" stop-color="#a6b7ff"/></linearGradient></defs><path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3V4z" fill="url(#bgrad)" stroke="#334" stroke-opacity=".15"/><path d="M16 20V7M7 4v16" stroke="#667" stroke-opacity=".35"/></svg>`}
+function iconSVG(kind){ if(kind==='diamond') return svgDiamond(); if(kind==='coin') return svgCoin(); return svgBook(); }
+
+/* Apply language */
+function applyLang(){
+  const L=tr();
+  $('t_tab_profile').textContent=L.tabs.profile;
+  $('t_tab_locale').textContent =L.tabs.locale;
+  $('t_tab_prefs').textContent  =L.tabs.prefs;
+
+  $('t_edit').textContent=L.edit; $('t_note').textContent=L.note;
+  $('t_photo').textContent=L.photo; $('t_photoHelp').textContent=L.photoHelp;
+  $('t_name').textContent=L.name; $('t_bio').textContent=L.bio; $('t_bioHelp').textContent=L.bioHelp;
+  $('t_banner').textContent=L.banner; $('t_bannerHelp').textContent=L.bannerHelp;
+
+  $('t_locale_head').textContent=L.locale_head; $('t_locale_note').textContent=L.locale_note;
+  $('t_region').textContent=L.region; $('t_country').textContent=L.country;
+
+  $('t_prefs_head').textContent=L.prefs_head;
+  $('t_nf_head').textContent=L.nf_head; $('t_nf_email_tips').textContent=L.nf_email_tips; $('t_nf_email_tips_sub').textContent=L.nf_email_tips_sub;
+  $('t_nf_digest').textContent=L.nf_digest; $('t_nf_digest_sub').textContent=L.nf_digest_sub;
+  $('t_nf_prod').textContent=L.nf_prod; $('t_nf_prod_sub').textContent=L.nf_prod_sub;
+
+  $('t_pv_search').textContent=L.pv_search; $('t_pv_search_sub').textContent=L.pv_search_sub;
+  $('t_pv_links').textContent=L.pv_links; $('t_pv_links_sub').textContent=L.pv_links_sub;
+  $('t_pv_safe').textContent=L.pv_safe; $('t_pv_safe_sub').textContent=L.pv_safe_sub;
+
+  $('t_lang_label').textContent = L.lang_label;
+  $('f_about').textContent=L.about; $('f_contact').textContent=L.contact; $('f_help').textContent=L.help; $('f_terms').textContent=L.terms; $('f_privacy').textContent=L.privacy;
+
+  $('langBottom').value=localStorage.getItem('lang')||'auto';
+  $('name').placeholder=L.name_ph; $('bio').placeholder=L.bio_ph;
+}
+$('langBottom').onchange=e=>{ localStorage.setItem('lang', e.target.value); applyLang(); render(); renderSocietyCard(); };
+
+/* Restore */
+(function restore(){
+  const p=loadProfile();
+  state.name=p.name||''; state.bio=(p.bio||'').slice(0,MAX);
+  state.avatar=p.avatarData||''; state.banner=p.bannerData||'';
+  state.links=Object.assign(state.links,p.links||{});
+  $('name').value=state.name; $('bio').value=state.bio;
+  $('tw').value=state.links.tw||''; $('ig').value=state.links.ig||''; $('yt').value=state.links.yt||''; $('web').value=state.links.web||'';
+
+  const prefs=loadPrefs();
+  $('pv_region').value = prefs.locale?.region || 'GL';
+  $('pv_country').value= prefs.locale?.country || '';
+  $('nf_email_tips').checked = !!(prefs.notifications?.emailTips ?? true);
+  $('nf_digest').value = prefs.notifications?.digest || 'weekly';
+  $('nf_updates').checked = !!(prefs.notifications?.productUpdates ?? true);
+  $('pv_search').checked = prefs.privacy?.searchable ?? true;
+  $('pv_links').checked  = prefs.privacy?.showLinks ?? true;
+  $('pv_safe').checked   = prefs.privacy?.hideNSFW ?? true;
+  $('pv_hide_spent').checked  = prefs.privacy?.hideSpend ?? false;
+  $('pv_hide_earned').checked = prefs.privacy?.hideEarn ?? false;
+
+  applyLang(); render(); renderSocietyCard();
+})();
+
+/* Bindings */
+$('name').oninput = e=>{state.name=e.target.value.slice(0,64); render(); renderSocietyCard();}
+$('bio').oninput  = e=>{state.bio =e.target.value.slice(0,MAX); render(); renderSocietyCard();}
+;['tw','ig','yt','web'].forEach(id=>$(id).oninput=e=>{state.links[id]=e.target.value.trim(); render(); renderSocietyCard(); });
+
+$('avInput').addEventListener('change',e=>{
+  const f=e.target.files?.[0]; if(!f)return;
+  const r=new FileReader(); r.onload=()=>{ state.avatar=r.result; render(); renderSocietyCard(); $('avFileName').textContent=f.name; }; r.readAsDataURL(f);
+});
+$('removeAv').onclick=()=>{ state.avatar=''; $('avInput').value=''; $('avFileName').textContent=''; render(); renderSocietyCard(); };
+
+$('bannerInput').addEventListener('change',e=>{
+  const f=e.target.files?.[0]; if(!f)return;
+  const r=new FileReader(); r.onload=()=>{ state.banner=r.result; render(); $('bannerFileName').textContent=f.name; }; r.readAsDataURL(f);
+});
+$('removeBanner').onclick=()=>{ state.banner=''; $('bannerInput').value=''; $('bannerFileName').textContent=''; render(); };
+
+$('save').onclick=()=>{
+  const L=tr(); if(state.bio.length>MAX){ alert(L.bio+' > 200'); return; }
+  saveProfile({name:state.name,bio:state.bio,avatarData:state.avatar,bannerData:state.banner,links:state.links});
+  alert(L.saved);
+};
+$('reset').onclick=()=>{
+  const L=tr(); if(!confirm(L.confirm_clear)) return;
+  localStorage.removeItem(storeKey);
+  state.name=''; state.bio=''; state.avatar=''; state.banner=''; state.links={tw:'',ig:'',yt:'',web:''};
+  ['avInput','bannerInput','tw','ig','yt','web','name','bio'].forEach(id=>{const el=$(id); if(el && el.type==='file') el.value=''; else if(el) el.value='';});
+  $('avFileName').textContent=''; $('bannerFileName').textContent='';
+  render(); renderSocietyCard();
+};
+
+$('saveLocale').onclick=()=>{
+  const prefs=loadPrefs();
+  prefs.locale = { region: $('pv_region').value, country: $('pv_country').value };
+  savePrefs(prefs);
+  alert(tr().saved);
+};
+
+$('savePrefs').onclick=()=>{
+  const prefs=loadPrefs();
+  prefs.notifications = {
+    emailTips: $('nf_email_tips').checked,
+    digest: $('nf_digest').value,
+    productUpdates: $('nf_updates').checked
+  };
+  prefs.privacy = Object.assign({}, prefs.privacy, {
+    searchable: $('pv_search').checked,
+    showLinks: $('pv_links').checked,
+    hideNSFW : $('pv_safe').checked,
+    hideSpend: $('pv_hide_spent').checked,
+    hideEarn : $('pv_hide_earned').checked
+  });
+  savePrefs(prefs);
+  renderSocietyCard();
+  alert(tr().saved);
+};
+
+/* Preview */
+function render(){
+  $('avBox').innerHTML = state.avatar ? `<img src="${state.avatar}" alt="avatar">` : '👤';
+  const used=state.bio.length; $('count').textContent=`${used} / ${MAX}`;
+  $('count').className='counter '+(used>MAX?'bad':used>160?'warn':'');
+}
+
+/* Society ID Card */
+function limitWords(text, n=20){
+  const w=(text||'').trim().split(/\s+/).filter(Boolean);
+  if(w.length<=n) return w.join(' ');
+  return w.slice(0,n).join(' ')+'…';
+}
+function formatHidden(){ return '•••'; }
+function supporterTier(usd){ return tierFor(usd, supporterSteps); }
+function creatorTier(usd){ return tierFor(usd, creatorSteps); }
+
+function renderSocietyCard(){
+  const acc = loadAccount();
+  const role = acc?.role || 'supporter';
+  const {spent, earned} = getTotalsUSD();
+
+  $('socAva').innerHTML = state.avatar ? `<img src="${state.avatar}" alt="avatar">` : 'S';
+  $('socName').textContent = state.name || (activeLang()==='th'?'ชื่อของคุณ':'Your name');
+  $('socId').textContent = 'ID • '+SOC_ID;
+
+  const both = (role==='creator' && spent>0);
+  $('socRole').textContent = both ? 'Creator • Supporter' : (role==='creator'?'Creator':'Supporter');
+  $('socDesc').textContent = limitWords(state.bio || (activeLang()==='th'?'คำอธิบายสั้นจะแสดงที่นี่':'Your short bio appears here'), 20);
+
+  const prefs=loadPrefs();
+  const hideSpend = prefs.privacy?.hideSpend ?? false;
+  const hideEarn  = prefs.privacy?.hideEarn  ?? false;
+  const isPublic  = $('publicView').checked;
+
+  const wrap=$('socBadges'); wrap.innerHTML='';
+  if(spent>0 || role!=='creator'){
+    const t=supporterTier(spent);
+    const b=document.createElement('span'); b.className='tier'; b.innerHTML=`${iconSVG(t.kind)} ${t.name}`;
+    wrap.appendChild(b);
+  }
+  if(role==='creator' || earned>0){
+    const t=creatorTier(earned);
+    const b=document.createElement('span'); b.className='tier'; b.innerHTML=`${iconSVG(t.kind)} ${t.name}`;
+    wrap.appendChild(b);
+  }
+
+  function setStat(el, val, hidden){
+    el.textContent = hidden ? formatHidden() : formatUSD(val);
+    el.classList.toggle('obscured', !!hidden);
+  }
+  const sHidden = hideSpend && isPublic;
+  const eHidden = hideEarn  && isPublic;
+
+  setStat($('socSpent'), spent, sHidden);
+  setStat($('socEarned'), earned, eHidden);
+
+  const base = (role==='creator') ? creatorTier(earned) : supporterTier(spent);
+  $('progBar').style.width = (base.pct*100).toFixed(0)+'%';
+}
+
+/* Reveal */
+function tempReveal(el, value){
+  el.textContent = formatUSD(value);
+  el.classList.remove('obscured');
+  let t=setTimeout(()=>{
+    const prefs=loadPrefs();
+    const isPublic=$('publicView').checked;
+    const shouldHide = (el.id==='socSpent') ? (prefs.privacy?.hideSpend && isPublic) : (prefs.privacy?.hideEarn && isPublic);
+    if(shouldHide){ el.textContent = formatHidden(); el.classList.add('obscured'); }
+    clearTimeout(t);
+  }, 5000);
+}
+$('revealSpent').onclick=()=>{ const {spent}=getTotalsUSD(); tempReveal($('socSpent'), spent); };
+$('revealEarned').onclick=()=>{ const {earned}=getTotalsUSD(); tempReveal($('socEarned'), earned); };
+$('publicView').onchange=()=>renderSocietyCard();
+
+/* Copy/Share */
+$('copyId').onclick=()=>{ navigator.clipboard.writeText(SOC_ID).then(()=>{ $('copyId').textContent='Copied!'; setTimeout(()=>$('copyId').textContent='Copy',1000); }) };
+$('shareId').onclick=()=>{
+  const url=`https://society.app/u/${SOC_ID}`;
+  navigator.clipboard.writeText(url).then(()=>{ $('shareId').textContent='Link copied'; setTimeout(()=>$('shareId').textContent='Share',1200); });
+};
+
+/* Init */
+(function init(){
+  $('year').textContent=new Date().getFullYear();
+  applyLang();
+  render();
+  renderSocietyCard();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Suiciety — Creator Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f8ff; --fg:#0a1223; --muted:#5b6b87; --line:rgba(13,35,78,.14);
+  --card:#fff; --accent1:#7ed3f7; --accent2:#a7e8d6; --accent3:#cbb7ff;
+  --rad:16px; --shadow:0 10px 28px rgba(16,32,64,.06);
+  --green:#15803d; --green-soft:#dcfce7; --green-brd:#86efac;
+  --red:#b91c1c; --red-soft:#fee2e2; --red-brd:#fca5a5;
+}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+
+/* Backdrop */
+.backdrop{
+  position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--accent1) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--accent3) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--accent2) 0%, transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 60%, #eef4ff 100%);
+}
+.container{max-width:1120px;margin:0 auto;padding:16px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:18px;
+  border:1px solid var(--line); background:rgba(255,255,255,.85); backdrop-filter:blur(8px)
+}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#001018;
+  background:conic-gradient(from 210deg,var(--accent2),var(--accent1),var(--accent3),var(--accent2));
+  box-shadow:0 6px 16px rgba(126,211,247,.25)
+}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer}
+.btn.pri{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#032}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+.meta{color:var(--muted);font-size:13px}
+
+/* HEADER */
+.header{margin-top:14px; display:grid; gap:10px}
+.banner{
+  height:140px;border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(135deg,#fff,rgba(6,182,212,.18));
+  display:grid;place-items:center;font-weight:900;color:#031; cursor:pointer; position:relative;
+}
+.banner::after{
+  content:"Edit banner"; position:absolute; bottom:8px; right:10px; font-size:11px;
+  background:#fff; border:1px solid var(--line); padding:4px 8px; border-radius:999px; opacity:.85
+}
+.profile-card{
+  display:flex;gap:14px;align-items:center;
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;
+  box-shadow:var(--shadow)
+}
+.avatar{
+  width:88px;height:88px;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+  background:linear-gradient(135deg,var(--accent2),var(--accent1));display:grid;place-items:center;font-weight:900;flex:0 0 88px;
+  cursor:pointer; position:relative;
+}
+.avatar::after{
+  content:"Edit"; position:absolute; bottom:6px; right:8px; font-size:10px;
+  background:#fff; border:1px solid var(--line); padding:2px 6px; border-radius:999px; opacity:.9
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.title{font-weight:900;font-size:22px;letter-spacing:.2px;margin:0}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.badge{font-size:11px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+
+/* Editable bio row */
+.bio-row{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bio-text{color:var(--fg)}
+.edit-chip{
+  border:1px dashed var(--line); background:#fff; border-radius:999px; padding:6px 10px; cursor:pointer; font-weight:800
+}
+
+/* Composer (under profile) */
+.composer{
+  margin-top:10px;
+  background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  padding:12px; display:flex; gap:10px; align-items:flex-start
+}
+.composer-ava{
+  width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent2),var(--accent1));
+  display:grid;place-items:center;color:#032;font-weight:900;flex:0 0 40px
+}
+.composer-body{flex:1;display:flex;flex-direction:column;gap:10px}
+.composer-input{
+  padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fafcff;min-height:44px;
+}
+.composer-input:focus-within{outline:2px solid rgba(126,211,247,.35)}
+.composer-input textarea{
+  all:unset; display:block; width:100%; min-height:20px; max-height:160px; overflow:auto; white-space:pre-wrap
+}
+.composer-toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap
+}
+.left-tools, .right-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.iconbtn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border:1px dashed var(--line);border-radius:10px;background:#fff;cursor:pointer
+}
+.iconbtn input{display:none}
+.sel{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.price{width:120px;padding:9px 10px;border:1px solid var(--line);border-radius:10px}
+.preview{
+  border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#f4f7ff; display:none;
+}
+.preview img, .preview video{width:100%;height:auto;display:block;max-height:260px;object-fit:contain}
+
+/* schedule row */
+.schedule-row{
+  display:none; gap:8px; align-items:center; margin-top:-2px; justify-content:flex-end; flex-wrap:wrap
+}
+.schedule-row input{
+  padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff
+}
+
+/* LAYOUT */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;margin-top:16px}
+@media(max-width:980px){.main{grid-template-columns:1fr}}
+
+/* FEED */
+.feed{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.post-head{display:flex;gap:10px;align-items:center;padding:12px}
+.post-ava{width:38px;height:38px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--accent2),var(--accent1));display:grid;place-items:center}
+.post-ava img{width:100%;height:100%;object-fit:cover}
+.post-title{font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.post-time{font-size:12px;color:var(--muted)}
+.pill-edited{font-size:11px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 8px}
+.post-text{padding:0 12px 12px 12px}
+.post-media{max-height:560px;display:grid;place-items:center;overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#eef}
+.post-media img, .post-media video{width:100%;height:auto;display:block}
+.actions{display:flex;align-items:center;justify-content:space-between;padding:10px 12px}
+.group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{
+  display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);background:#fff;
+  padding:8px 12px;border-radius:999px;font-weight:800;cursor:pointer;user-select:none
+}
+.chip.active{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#032}
+.sep{height:1px;background:var(--line);border:none;margin:0}
+.lockbox{padding:10px 12px}
+.locknote{font-size:13px;color:#2f3b57}
+
+/* COMMENTS */
+.comments{padding:10px 12px}
+.cmt-item{display:flex;gap:8px;margin-top:8px}
+.cmt-ava{width:26px;height:26px;border-radius:6px;background:#dfe9ff;display:grid;place-items:center;font-size:12px}
+.cmt-body{background:#f7faff;border:1px solid var(--line);padding:8px 10px;border-radius:10px;flex:1}
+.cmt-body .who{font-weight:700;margin-right:8px}
+.cmt-form{display:flex;gap:8px;margin-top:10px}
+.cmt-form input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line)}
+.cmt-form button{padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent2),var(--accent1));font-weight:800;cursor:pointer}
+
+/* NEW: comment votes */
+.vote{display:flex;align-items:center;gap:6px;margin-top:6px}
+.vote-btn{
+  width:24px;height:24px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  display:grid;place-items:center;cursor:pointer;font-size:13px;line-height:1
+}
+.vote-up{color:var(--green)}
+.vote-down{color:var(--red)}
+.vote-btn.active.vote-up{background:var(--green-soft);border-color:var(--green-brd)}
+.vote-btn.active.vote-down{background:var(--red-soft);border-color:var(--red-brd)}
+.vote .uv{font-size:12px;color:var(--green)}
+.vote .dv{font-size:12px;color:var(--red)}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:12px;height:max-content;display:flex;flex-direction:column;gap:12px}
+.side-card{background:#fff;border:1px solid var(--line);border-radius:var(--rad);padding:14px;box-shadow:var(--shadow)}
+.linklist{list-style:none;margin:8px 0 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+.soc-item{display:flex;gap:10px;align-items:center;cursor:pointer}
+.soc-item .label{display:flex;align-items:center;gap:8px}
+.soc-item .val a{border-bottom:1px dashed rgba(13,35,78,.25); padding-bottom:1px}
+.soc-item .none{color:#9aa7c0;font-style:italic;border:1px dashed var(--line);padding:2px 8px;border-radius:999px;font-size:12px}
+
+/* Membership setup card */
+.ms-setup{
+  border:1px dashed var(--line); background:#fff; border-radius:12px; padding:10px 12px; cursor:pointer;
+  display:flex; align-items:center; justify-content:space-between; gap:8px
+}
+.ms-setup .left{display:flex;gap:8px;align-items:center;font-weight:900}
+.tier-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tier-pill{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;background:#fff}
+
+/* Modals */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal.show{display:flex}
+.panel{max-width:560px;width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 8px}
+.panel .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input, .textarea{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--fg)
+}
+.textarea{min-height:100px;resize:vertical}
+.panel .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.small{font-size:12px;color:var(--muted)}
+
+/* Membership modal */
+.tier-row{display:grid;grid-template-columns:1fr 120px 1fr auto;gap:8px;align-items:center;margin-top:8px}
+.tier-row input{padding:10px;border:1px solid var(--line);border-radius:10px}
+.tier-row button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
+.add-tier{margin-top:10px;border:1px dashed var(--line);background:#fff;border-radius:10px;padding:8px 10px;font-weight:800;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+
+<div class="container">
+  <!-- NAV -->
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <div style="font-weight:900">Suiciety</div>
+        <div class="meta">Creator Studio</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="./index.html">← Home</a>
+      <a class="btn ghost" href="./creator.html?h=alice">View as Supporter</a>
+      <button id="connect" class="btn ghost">Connect Wallet</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="banner" id="banner">BANNER</div>
+
+    <div class="profile-card">
+      <div class="avatar" id="avatar">👤</div>
+      <div style="flex:1">
+        <h1 class="title" id="creatorName">Alice</h1>
+        <div class="badges">
+          <span class="badge" id="subBadge">0 subscribers</span>
+          <span class="badge" id="likeBadge">0 likes</span>
+        </div>
+
+        <!-- Editable bio row -->
+        <div class="bio-row">
+          <div class="bio-text" id="creatorBio">Illustrator • cozy vibes • digital art</div>
+          <button class="edit-chip" id="editBio">📝 Edit</button>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer" id="composer">
+          <div class="composer-ava">S</div>
+          <div class="composer-body">
+            <div class="composer-input">
+              <textarea id="descInput" placeholder="Share something… (media required)"></textarea>
+            </div>
+            <div class="preview" id="previewBox"></div>
+            <div class="composer-toolbar">
+              <div class="left-tools">
+                <label class="iconbtn" title="Attach image or video">
+                  📷 Image/Video
+                  <input id="mediaInput" type="file" accept="image/*,video/*">
+                </label>
+                <select id="visSelect" class="sel" title="Visibility">
+                  <option value="public">Public</option>
+                  <option value="members">Members (choose tier)</option>
+                  <option value="ppv">PPV (tip to unlock)</option>
+                </select>
+                <select id="tierSelect" class="sel" style="display:none"></select>
+                <input id="priceInput" class="price" type="number" step="0.1" min="0.1" placeholder="Price" style="display:none">
+              </div>
+              <div class="right-tools">
+                <button class="btn ghost" id="saveDraft">Save Draft</button>
+                <button class="btn ghost" id="toggleSchedule">Schedule</button>
+                <button class="btn pri" id="publishPost">Publish</button>
+              </div>
+            </div>
+            <div class="schedule-row" id="scheduleRow">
+              <input id="whenInput" type="datetime-local">
+              <button class="btn pri" id="confirmSchedule">Set Schedule</button>
+              <button class="btn ghost" id="cancelSchedule">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <!-- /Composer -->
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- FEED -->
+    <div class="feed" id="feed"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-card">
+        <div style="font-weight:900">Follow (click to edit)</div>
+        <ul class="linklist" id="followList"></ul>
+      </div>
+
+      <div class="side-card">
+        <div class="ms-setup" id="openMs">
+          <div class="left">🎟️ Membership setup</div>
+          <div class="small">click to edit</div>
+        </div>
+        <div class="tier-pills" id="tierPills"></div>
+      </div>
+
+      <div class="side-card">
+        <div style="font-weight:900">Drafts</div>
+        <div id="draftList" class="list"></div>
+      </div>
+
+      <div class="side-card">
+        <div style="font-weight:900">Scheduled</div>
+        <div id="schedList" class="list"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Bio Modal -->
+<div class="modal" id="bioModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>📝 Edit bio</h3>
+    <textarea id="bioInput" class="textarea" maxlength="200" placeholder="Describe yourself…"></textarea>
+    <div class="actions">
+      <button class="btn ghost" id="bioCancel">Cancel</button>
+      <button class="btn pri" id="bioSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Link Modal -->
+<div class="modal" id="linkModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3 id="linkTitle">🔗 Edit link</h3>
+    <input id="linkInput" class="input" type="url" placeholder="https://">
+    <div class="meta">Leave empty to set as <strong>none</strong>.</div>
+    <div class="actions">
+      <button class="btn ghost" id="linkCancel">Cancel</button>
+      <button class="btn pri" id="linkSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Modal -->
+<div class="modal" id="avatarModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>🖼️ Update profile photo</h3>
+    <input id="avatarFile" class="input" type="file" accept="image/*">
+    <div class="actions">
+      <button class="btn ghost" id="avatarRemove">Remove</button>
+      <button class="btn pri" id="avatarSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Banner Modal -->
+<div class="modal" id="bannerModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>🖼️ Update banner</h3>
+    <input id="bannerFile" class="input" type="file" accept="image/*">
+    <div class="actions">
+      <button class="btn ghost" id="bannerRemove">Remove</button>
+      <button class="btn pri" id="bannerSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Post Modal -->
+<div class="modal" id="postModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>✏️ Edit post</h3>
+    <textarea id="postInput" class="textarea" maxlength="1000" placeholder="Update description…"></textarea>
+    <div class="actions">
+      <button class="btn ghost" id="postCancel">Cancel</button>
+      <button class="btn pri" id="postSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Membership Modal -->
+<div class="modal" id="msModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>🎟️ Membership tiers</h3>
+    <div class="small">Customize names & prices. Examples: Bear / Bull, หมี / ไก่ ฯลฯ</div>
+    <div id="msRows"></div>
+    <button class="add-tier" id="msAdd">+ Add tier</button>
+    <div class="actions">
+      <button class="btn ghost" id="msCancel">Cancel</button>
+      <button class="btn pri" id="msSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== store helpers ====== */
+const STORE={
+  me:'suiciety_me',posts:'suiciety_posts',
+  creators:'suiciety_creators',orders:'suiciety_orders',
+  drafts:'suiciety_drafts', scheduled:'suiciety_scheduled'
+};
+const $=s=>document.querySelector(s);
+function load(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function ensureUrl(u){ if(!u) return ''; if(/^https?:\/\//i.test(u)) return u; return 'https://' + u.replace(/^\/+/, ''); }
+
+/* ====== seed demo ====== */
+(function seed(){
+  const creators=load(STORE.creators,{});
+  if(!creators.alice){
+    creators.alice={handle:'alice',name:'Alice',bio:'Illustrator • cozy vibes • digital art',avatar:'',banner:'',
+      tiers:[{id:'bear',name:'Bear',price:2,perks:['Early posts']},{id:'bull',name:'Bull',price:5,perks:['Hi-res, PSD']}],
+      links:{ x:'', ig:'', yt:'', web:'' }
+    };
+    save(STORE.creators,creators);
+  }
+  if(!localStorage.getItem(STORE.me)) save(STORE.me,{wallet:'',unlockedPosts:[],subscriptions:[],likes:{}});
+  if(!localStorage.getItem(STORE.drafts)) save(STORE.drafts,[]);
+  if(!localStorage.getItem(STORE.scheduled)) save(STORE.scheduled,[]);
+  const posts=load(STORE.posts,[]);
+  if(posts.length===0){
+    const now=Date.now();
+    const mk=(i)=>({
+      id:'p'+i, creator:'alice',
+      text:['Morning color study 🌤️','Lineart dump ✍️','Poster WIP','Weekend sketchbook','Brush test 🎨'][i%5],
+      img:'', video:'', createdAt: now - i*3600*1000,
+      baseLikes: Math.floor(Math.random()*60)+5,
+      comments:[{by:'tom',wallet:'',txt:'Nice!'}].slice(0,(i%2)),
+      type:['public','members','ppv'][i%3], price: i%3===2? (1.5+ (i%3)).toFixed(1):0,
+      tier: i%3===1? 'bear' : ''
+    });
+    save(STORE.posts, Array.from({length:12},(_,i)=>mk(i+1)));
+  }
+})();
+
+/* ====== state ====== */
+const me=load(STORE.me);
+const creators=load(STORE.creators);
+const creator=creators.alice;
+let allPosts=load(STORE.posts).filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+
+/* ====== wallet mock ====== */
+function updateWallet(){ $('#connect').textContent = me.wallet?('Connected: '+me.wallet):'Connect Wallet';}
+$('#connect').onclick=()=>{ me.wallet = me.wallet?'':('0x'+Math.random().toString(16).slice(2,10)+'…'); save(STORE.me,me); updateWallet(); };
+updateWallet();
+
+/* ====== header media ====== */
+function setMedia(el,src,fb){ el.innerHTML = src?`<img src="${src}" alt="">`:fb }
+setMedia($('#banner'), creator.banner, 'BANNER');
+setMedia($('#avatar'), creator.avatar, '👤');
+$('#creatorName').textContent = creator.name;
+$('#creatorBio').textContent = creator.bio || '—';
+
+/* badges */
+function likedCountForPost(p){ return (me.likes&&me.likes[p.id])?1:0 }
+function displayLikes(p){ return (p.baseLikes||0) + likedCountForPost(p) }
+function computeTotalLikes(){ return allPosts.reduce((s,p)=>s + displayLikes(p), 0) }
+function updateLikeBadge(){ $('#likeBadge').textContent = computeTotalLikes() + ' likes' }
+function updateSubBadge(){
+  const orders=load(STORE.orders,[]);
+  const subs=orders.filter(o=>o.type==='sub' && o.handle===creator.handle).length;
+  $('#subBadge').textContent = subs + ' subscribers';
+}
+updateLikeBadge(); updateSubBadge();
+
+/* ====== Follow (always show icons; 'none' if empty; click to edit) ====== */
+const ICONS={
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18M21 3 3 21"/></svg>`,
+  ig:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r="1"/></svg>`,
+  yt:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 7.5a4 4 0 0 0-2.8-2.9C18.4 4 12 4 12 4s-6.4 0-8.2.6A4 4 0 0 0 1 7.5 41 41 0 0 0 1 16.5a4 4 0 0 0 2.8 2.9C5.6 20 12 20 12 20s6.4 0 8.2-.6A4 4 0 0 0 23 16.5a41 41 0 0 0 0-9zM10 15.5v-7l6 3.5-6 3.5z"/></svg>`,
+  web:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>`
+};
+const FOLLOW_LABELS={x:'Twitter / X', ig:'Instagram', yt:'YouTube', web:'Website'};
+function renderFollowStudio(){
+  const ul=$('#followList'); ul.innerHTML='';
+  const L=creator.links||{x:'',ig:'',yt:'',web:''};
+  ['x','ig','yt','web'].forEach(key=>{
+    const url=L[key]||'';
+    const li=document.createElement('li'); li.className='soc-item'; li.setAttribute('data-social', key);
+    li.innerHTML = `
+      <div class="label">${ICONS[key]} <strong>${FOLLOW_LABELS[key]}</strong></div>
+      <div class="val">${ url ? `<a href="${url}" target="_blank" rel="noopener">${url}</a>` : `<span class="none">none</span>` }</div>
+    `;
+    li.title = 'Click to edit';
+    li.onclick = ()=> openLinkModal(key, url);
+    ul.appendChild(li);
+  });
+}
+renderFollowStudio();
+
+/* ====== Membership setup ====== */
+function renderMembershipSummary(){
+  const box=$('#tierPills'); box.innerHTML='';
+  (creator.tiers||[]).forEach(t=>{
+    const pill=document.createElement('div'); pill.className='tier-pill';
+    pill.textContent = `${t.name} • ${t.price} SUI`;
+    box.appendChild(pill);
+  });
+}
+renderMembershipSummary();
+
+/* ====== BIO modal ====== */
+const bioModal=$('#bioModal'); const bioInput=$('#bioInput');
+function openBio(){ bioInput.value = creator.bio || ''; bioModal.classList.add('show'); }
+function closeBio(){ bioModal.classList.remove('show'); }
+$('#editBio').onclick=openBio; $('#creatorBio').onclick=openBio;
+$('#bioCancel').onclick=closeBio;
+$('#bioSave').onclick=()=>{
+  const val=(bioInput.value||'').trim().slice(0,200);
+  creator.bio = val; creators[creator.handle]=creator; save(STORE.creators, creators);
+  $('#creatorBio').textContent = creator.bio || '—';
+  closeBio();
+};
+
+/* ====== LINK modal ====== */
+const linkModal=$('#linkModal'); const linkInput=$('#linkInput'); const linkTitle=$('#linkTitle');
+let editingSocial=null;
+function openLinkModal(key, cur){
+  editingSocial = key;
+  linkTitle.textContent = '🔗 Edit ' + FOLLOW_LABELS[key];
+  linkInput.value = cur || '';
+  linkModal.classList.add('show');
+}
+function closeLink(){ linkModal.classList.remove('show'); }
+$('#linkCancel').onclick=closeLink;
+$('#linkSave').onclick=()=>{
+  if(!editingSocial) return;
+  let val=(linkInput.value||'').trim();
+  val = ensureUrl(val);
+  if(val && !/^https?:\/\//i.test(val)){ alert('Invalid URL'); return; }
+  creator.links = creator.links || {x:'',ig:'',yt:'',web:''};
+  creator.links[editingSocial] = val; // empty = none
+  creators[creator.handle]=creator; save(STORE.creators, creators);
+  renderFollowStudio();
+  closeLink();
+};
+
+/* ====== Avatar & Banner modals ====== */
+const avatarModal=$('#avatarModal'); const avatarFile=$('#avatarFile');
+const bannerModal=$('#bannerModal'); const bannerFile=$('#bannerFile');
+
+$('#avatar').onclick=()=>{ avatarFile.value=''; avatarModal.classList.add('show'); };
+$('#banner').onclick=()=>{ bannerFile.value=''; bannerModal.classList.add('show'); };
+
+$('#avatarRemove').onclick=()=>{
+  creator.avatar=''; creators[creator.handle]=creator; save(STORE.creators, creators);
+  setMedia($('#avatar'), '', '👤'); avatarModal.classList.remove('show');
+};
+$('#avatarSave').onclick=()=>{
+  const f=avatarFile.files?.[0]; if(!f){ avatarModal.classList.remove('show'); return; }
+  const r=new FileReader(); r.onload=()=>{
+    creator.avatar=r.result; creators[creator.handle]=creator; save(STORE.creators, creators);
+    setMedia($('#avatar'), creator.avatar, '👤'); avatarModal.classList.remove('show');
+  }; r.readAsDataURL(f);
+};
+
+$('#bannerRemove').onclick=()=>{
+  creator.banner=''; creators[creator.handle]=creator; save(STORE.creators, creators);
+  setMedia($('#banner'), '', 'BANNER'); bannerModal.classList.remove('show');
+};
+$('#bannerSave').onclick=()=>{
+  const f=bannerFile.files?.[0]; if(!f){ bannerModal.classList.remove('show'); return; }
+  const r=new FileReader(); r.onload=()=>{
+    creator.banner=r.result; creators[creator.handle]=creator; save(STORE.creators, creators);
+    setMedia($('#banner'), creator.banner, 'BANNER'); bannerModal.classList.remove('show');
+  }; r.readAsDataURL(f);
+};
+
+/* ====== Membership modal ====== */
+const msModal=$('#msModal'); const msRows=$('#msRows');
+function openMs(){
+  msRows.innerHTML='';
+  (creator.tiers||[]).forEach(t=>addTierRow(t.id,t.name,t.price,(t.perks||[]).join(', ')));
+  msModal.classList.add('show');
+}
+function closeMs(){ msModal.classList.remove('show'); }
+$('#openMs').onclick=openMs; $('#msCancel').onclick=closeMs;
+$('#msAdd').onclick=()=>addTierRow('','',2,'');
+
+function addTierRow(id,name,price,perksStr){
+  const row=document.createElement('div'); row.className='tier-row';
+  row.innerHTML=`
+    <input data-k="name" placeholder="Tier name (e.g., Bear / หมี)" value="${name||''}">
+    <input data-k="price" type="number" step="0.1" min="0.1" value="${price||2}">
+    <input data-k="perks" placeholder="Perks (comma separated)" value="${perksStr||''}">
+    <button data-k="del">Delete</button>
+  `;
+  row.dataset.id = id || ('t'+Math.random().toString(36).slice(2,8));
+  row.querySelector('[data-k="del"]').onclick=()=>row.remove();
+  msRows.appendChild(row);
+}
+
+$('#msSave').onclick=()=>{
+  const rows=[...msRows.querySelectorAll('.tier-row')];
+  const tiers=rows.map(r=>{
+    const id=r.dataset.id;
+    const name=r.querySelector('[data-k="name"]').value.trim();
+    const price=parseFloat(r.querySelector('[data-k="price"]').value||'0');
+    const perks=(r.querySelector('[data-k="perks"]').value||'').split(',').map(x=>x.trim()).filter(Boolean);
+    return name && price>0 ? {id, name, price, perks} : null;
+  }).filter(Boolean);
+  if(tiers.length===0){ alert('At least one tier'); return; }
+  creator.tiers=tiers; creators[creator.handle]=creator; save(STORE.creators, creators);
+  renderMembershipSummary(); // pills
+  // update composer tier select
+  tierSelect.innerHTML=''; (creator.tiers||[]).forEach(t=>{ const o=document.createElement('option'); o.value=t.id; o.textContent=t.name; tierSelect.appendChild(o); });
+  msModal.classList.remove('show');
+};
+
+/* close any modal by clicking backdrop */
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+
+/* ====== access rules (supporter preview) ====== */
+function isSubscribed(){ const now=Date.now(); return (me.subscriptions||[]).some(s=>s.handle===creator.handle && (!s.until || s.until>now)); }
+function canView(post){ if(post.type==='public')return true; if(post.type==='members')return isSubscribed(); if(post.type==='ppv')return isSubscribed()||(me.unlockedPosts||[]).includes(post.id); return true; }
+
+/* ====== COMMENT VOTES helpers ====== */
+function countVotes(c){
+  const v=c.votes||{}; let up=0,down=0;
+  for(const w in v){ if(v[w]===1) up++; else if(v[w]===-1) down++; }
+  return {up,down};
+}
+function myVote(c){ if(!me.wallet) return 0; return (c.votes||{})[me.wallet]||0; }
+function toggleVote(postId, idx, dir){
+  if(!me.wallet){ alert('Connect wallet first'); return; }
+  const posts=load(STORE.posts,[]);
+  const p=posts.find(x=>x.id===postId); if(!p) return;
+  const c=p.comments[idx]; c.votes=c.votes||{};
+  const cur=c.votes[me.wallet]||0;
+  if(cur===dir){ delete c.votes[me.wallet]; } else { c.votes[me.wallet]=dir; }
+  save(STORE.posts,posts);
+  // sync local cache
+  const lp=allPosts.find(x=>x.id===postId);
+  if(lp){ lp.comments[idx].votes = c.votes; }
+  // re-render just the comments area of that card
+  const card=document.querySelector(`article[data-id="${postId}"]`);
+  if(!card) return;
+  const box=card.querySelector('.comments');
+  const form=card.querySelector(`[data-cmt-form="${postId}"]`);
+  box.innerHTML = renderCommentsHtml(lp) + (form?form.outerHTML:'');
+  bindCardEvents(card, postId);
+}
+
+/* ====== FEED ====== */
+function renderCommentsHtml(p){
+  const list=p.comments||[];
+  if(list.length===0) return `<div class="meta">No comments yet.</div>`;
+  return list.map((c,i)=>{
+    const {up,down}=countVotes(c);
+    const mine=myVote(c);
+    return `
+    <div class="cmt-item">
+      <div class="cmt-ava">${c.by?.[0]?.toUpperCase()||'U'}</div>
+      <div class="cmt-body">
+        <span class="who">${c.by||'user'}</span> ${c.txt}
+        <div class="vote">
+          <button class="vote-btn vote-up ${mine===1?'active':''}" title="Upvote" data-vote="1" data-pid="${p.id}" data-idx="${i}">👍</button>
+          <span class="uv">${up}</span>
+          <button class="vote-btn vote-down ${mine===-1?'active':''}" title="Downvote" data-vote="-1" data-pid="${p.id}" data-idx="${i}">👎</button>
+          <span class="dv">${down}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function postCard(p){
+  const lock=!canView(p);
+  const likeNow=displayLikes(p);
+  const time=new Date(p.createdAt).toLocaleString();
+  const media = p.video ? `<video src="${p.video}" controls playsinline></video>` :
+                (p.img ? `<img src="${p.img}" alt="">` : '');
+  const tierName = (creator.tiers||[]).find(t=>t.id===p.tier)?.name || 'Members';
+  return `
+  <article class="card" data-id="${p.id}">
+    <div class="post-head">
+      <div class="post-ava">${creator.avatar?`<img src="${creator.avatar}">`:'👤'}</div>
+      <div>
+        <div class="post-title">
+          ${creator.name}
+          <span class="post-time">· ${time}</span>
+          ${p.edited?`<span class="pill-edited">edited</span>`:''}
+        </div>
+        <div class="post-time">@${creator.handle} • ${p.type==='public'?'Public': p.type==='members'?`${tierName}`:`PPV`}</div>
+      </div>
+    </div>
+    ${media?`<div class="post-media">${media}</div>`:''}
+    <div class="post-text">${(p.text||'').replace(/</g,'&lt;')}</div>
+    ${lock?`<div class="lockbox">
+      <div class="locknote">This post is locked in supporter view.</div>
+      <div class="group" style="margin-top:6px">
+        ${p.type==='ppv'?`<a class="btn pri" href="./checkout.html?type=ppv&h=${creator.handle}&post=${p.id}">Unlock • ${p.price} SUI</a>`:''}
+      </div>
+    </div>`:''}
+    <div class="actions">
+      <div class="group">
+        <button class="chip like" data-like="${p.id}">❤ <span class="lc">${likeNow}</span></button>
+        <button class="chip" data-cmt-toggle="${p.id}">💬 Comment</button>
+      </div>
+      <div class="group">
+        <button class="chip" data-editpost="${p.id}">✏️ Edit</button>
+        <button class="chip" data-delpost="${p.id}">🗑 Delete</button>
+        ${p.type==='ppv'?`<a class="chip" href="./checkout.html?type=ppv&h=${creator.handle}&post=${p.id}">🔓 PPV</a>`:''}
+      </div>
+    </div>
+    <hr class="sep">
+    <div class="comments">
+      ${renderCommentsHtml(p)}
+      <form class="cmt-form" data-cmt-form="${p.id}">
+        <input placeholder="Write a comment…" maxlength="200"/>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </article>`;
+}
+function refreshCard(id){
+  const p=allPosts.find(x=>x.id===id); if(!p) return;
+  const old=document.querySelector(`article[data-id="${id}"]`); if(!old) return;
+  const wrap=document.createElement('div'); wrap.innerHTML=postCard(p);
+  const card=wrap.firstElementChild; old.replaceWith(card); bindCardEvents(card, id);
+}
+const FEED_BATCH=6; let cursor=0;
+function bindCardEvents(card, id){
+  const btn=card.querySelector('[data-like]');
+  if(btn){
+    btn.onclick=()=>{
+      me.likes = me.likes||{};
+      me.likes[id] = !me.likes[id];
+      save(STORE.me,me);
+      const p = allPosts.find(x=>x.id===id);
+      const lc = card.querySelector('.lc');
+      lc.textContent = displayLikes(p);
+      btn.classList.toggle('active', !!me.likes[id]);
+      updateLikeBadge();
+    };
+    btn.classList.toggle('active', !!(me.likes||{})[id]);
+  }
+  const cbtn=card.querySelector('[data-cmt-toggle]');
+  if(cbtn){
+    cbtn.onclick=()=>{
+      const form=card.querySelector(`[data-cmt-form="${id}"]`);
+      if(form) form.scrollIntoView({behavior:'smooth',block:'center'});
+    };
+  }
+  const form=card.querySelector(`[data-cmt-form="${id}"]`);
+  if(form){
+    form.onsubmit=(e)=>{
+      e.preventDefault();
+      const input=form.querySelector('input'); const txt=(input.value||'').trim(); if(!txt) return;
+      const p=allPosts.find(x=>x.id===id); p.comments=p.comments||[]; p.comments.push({by:(me.wallet||'you'), wallet:(me.wallet||''), txt, votes:{}});
+      save(STORE.posts, allPosts);
+      const listHtml = renderCommentsHtml(p);
+      form.parentElement.innerHTML = listHtml + form.outerHTML;
+      bindCardEvents(card, id);
+      input.value='';
+    };
+  }
+  const del=card.querySelector('[data-delpost]');
+  if(del){
+    del.onclick=()=>{
+      if(!confirm('Delete this post?')) return;
+      const posts=load(STORE.posts,[]).filter(p=>p.id!==id);
+      save(STORE.posts, posts);
+      allPosts = posts.filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+      card.remove();
+      updateLikeBadge();
+    };
+  }
+  const edit=card.querySelector('[data-editpost]');
+  if(edit){
+    edit.onclick=()=>openEditPost(id);
+  }
+  // bind votes buttons
+  card.querySelectorAll('[data-vote]').forEach(b=>{
+    b.onclick=()=>{
+      const dir = parseInt(b.getAttribute('data-vote'),10);
+      const pid = b.getAttribute('data-pid');
+      const idx = parseInt(b.getAttribute('data-idx'),10);
+      toggleVote(pid, idx, dir);
+    };
+  });
+}
+function renderMore(){
+  const feed=$('#feed');
+  const next=allPosts.slice(cursor, cursor+FEED_BATCH);
+  next.forEach(p=>{
+    const wrap=document.createElement('div'); wrap.innerHTML=postCard(p);
+    const card=wrap.firstElementChild; feed.appendChild(card);
+    bindCardEvents(card, p.id);
+  });
+  cursor += next.length;
+  updateLikeBadge();
+}
+renderMore();
+window.addEventListener('scroll', ()=>{
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 400;
+  if(nearBottom && cursor < allPosts.length){ renderMore(); }
+});
+
+/* ====== Edit Post modal ====== */
+const postModal=$('#postModal'); const postInput=$('#postInput'); let editingPostId=null;
+function openEditPost(id){
+  editingPostId=id;
+  const p=allPosts.find(x=>x.id===id); if(!p) return;
+  postInput.value=p.text||'';
+  postModal.classList.add('show');
+}
+$('#postCancel').onclick=()=>{ postModal.classList.remove('show'); editingPostId=null; };
+$('#postSave').onclick=()=>{
+  if(!editingPostId) return;
+  const txt=(postInput.value||'').trim();
+  const posts=load(STORE.posts,[]);
+  const p=posts.find(x=>x.id===editingPostId); if(!p) return;
+  p.text=txt; p.edited=true; p.editedAt=Date.now();
+  save(STORE.posts,posts);
+  const lp=allPosts.find(x=>x.id===editingPostId); if(lp){ lp.text=txt; lp.edited=true; lp.editedAt=p.editedAt; }
+  refreshCard(editingPostId);
+  postModal.classList.remove('show'); editingPostId=null;
+};
+
+/* ====== Composer / Draft / Schedule ====== */
+const mediaInput=$('#mediaInput');
+const previewBox=$('#previewBox');
+const descInput=$('#descInput');
+const visSelect=$('#visSelect');
+const tierSelect=$('#tierSelect');
+const priceInput=$('#priceInput');
+const saveDraftBtn=$('#saveDraft');
+
+(function initTiers(){
+  tierSelect.innerHTML='';
+  (creator.tiers||[]).forEach(t=>{
+    const opt=document.createElement('option'); opt.value=t.id; opt.textContent=t.name; tierSelect.appendChild(opt);
+  });
+})();
+function updateVisUI(){
+  const v=visSelect.value;
+  tierSelect.style.display = v==='members' ? 'inline-block' : 'none';
+  priceInput.style.display = v==='ppv' ? 'inline-block' : 'none';
+}
+visSelect.onchange=updateVisUI; updateVisUI();
+
+mediaInput.onchange=(e)=>{
+  const f=e.target.files?.[0]; if(!f){ clearPreview(); return; }
+  if(!(f.type.startsWith('image/') || f.type.startsWith('video/'))){
+    alert('Media only: image or video'); mediaInput.value=''; return;
+  }
+  const isVideo=f.type.startsWith('video/'); const r=new FileReader();
+  r.onload=()=>{
+    previewBox.style.display='block';
+    previewBox.innerHTML = isVideo
+      ? `<video src="${r.result}" controls playsinline></video>`
+      : `<img src="${r.result}" alt="">`;
+    previewBox.dataset.blob = r.result;
+    previewBox.dataset.kind = isVideo?'video':'image';
+  };
+  r.readAsDataURL(f);
+};
+function clearPreview(){ previewBox.style.display='none'; previewBox.innerHTML=''; delete previewBox.dataset.blob; delete previewBox.dataset.kind; }
+function resetComposer(){
+  mediaInput.value=''; clearPreview();
+  descInput.value=''; visSelect.value='public'; updateVisUI(); priceInput.value='';
+  editingDraftId=null;
+}
+
+/* Drafts */
+function loadDrafts(){ return load(STORE.drafts,[]) }
+function saveDrafts(L){ save(STORE.drafts,L) }
+let editingDraftId=null;
+
+saveDraftBtn.onclick=()=>{
+  const draft={ id: editingDraftId || ('d'+Math.random().toString(36).slice(2,8)),
+    text:(descInput.value||''),
+    media: previewBox.dataset.blob||'', kind: previewBox.dataset.kind||'',
+    vis: visSelect.value, tier: tierSelect.value||'', price: parseFloat(priceInput.value||'0')||0,
+    ts: Date.now()
+  };
+  const L=loadDrafts();
+  const idx=L.findIndex(d=>d.id===draft.id);
+  if(idx>=0) L[idx]=draft; else L.unshift(draft);
+  saveDrafts(L); renderDrafts(); alert('Draft saved'); editingDraftId=draft.id;
+};
+
+function renderDrafts(){
+  const box=$('#draftList'); box.innerHTML='';
+  const L=loadDrafts();
+  if(L.length===0){ box.innerHTML='<div class="meta">No drafts</div>'; return; }
+  L.forEach(d=>{
+    const row=document.createElement('div'); row.className='item';
+    row.innerHTML=`
+      <div>
+        <div style="font-weight:800">Draft</div>
+        <div class="meta">${new Date(d.ts).toLocaleString()} — ${(d.text||'(no text)')}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="pill" data-edit="${d.id}">Edit</button>
+        <button class="pill" data-del="${d.id}">Delete</button>
+      </div>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.getAttribute('data-edit'); const d=loadDrafts().find(x=>x.id===id); if(!d) return;
+      descInput.value=d.text||'';
+      clearPreview();
+      if(d.media){
+        previewBox.style.display='block';
+        previewBox.innerHTML = d.kind==='video'?`<video src="${d.media}" controls playsinline></video>`:`<img src="${d.media}" alt="">`;
+        previewBox.dataset.blob=d.media; previewBox.dataset.kind=d.kind||'';
+      }
+      visSelect.value=d.vis||'public'; updateVisUI();
+      if(d.vis==='members'){ tierSelect.value=d.tier||''; }
+      if(d.vis==='ppv'){ priceInput.value = d.price||''; }
+      editingDraftId=id;
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
+  });
+  box.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick=()=>{ const id=btn.getAttribute('data-del'); const L=loadDrafts().filter(x=>x.id!==id); saveDrafts(L); renderDrafts(); };
+  });
+}
+renderDrafts();
+
+/* Publish (media required) */
+function buildPostFromComposer(){
+  const vis=visSelect.value;
+  let type='public', price=0, tier='';
+  if(vis==='members'){ type='members'; tier=tierSelect.value||''; if(!tier){ alert('Choose a tier'); return null; } }
+  if(vis==='ppv'){ type='ppv'; price=parseFloat(priceInput.value||'0'); if(!(price>0)){ alert('Enter price'); return null; } }
+  const media=previewBox.dataset.blob||''; const kind=previewBox.dataset.kind||'';
+  if(!media){ alert('Media required (image/video)'); return null; }
+  return {
+    id:'p'+Math.random().toString(36).slice(2,8),
+    creator:creator.handle,
+    text:(descInput.value||'').trim(),
+    img: kind==='image'?media:'', video: kind==='video'?media:'',
+    createdAt: Date.now(),
+    baseLikes: Math.floor(Math.random()*10),
+    comments:[],
+    type, price, tier
+  };
+}
+$('#publishPost').onclick=()=>{
+  if(!me.wallet){ alert('Connect wallet first'); return; }
+  const post=buildPostFromComposer(); if(!post) return;
+  const posts=load(STORE.posts,[]); posts.unshift(post); save(STORE.posts,posts);
+  allPosts = posts.filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+  const feed=$('#feed'); const wrap=document.createElement('div'); wrap.innerHTML=postCard(post);
+  const card=wrap.firstElementChild; feed.prepend(card); bindCardEvents(card, post.id);
+  updateLikeBadge();
+  if(editingDraftId){ const L=loadDrafts().filter(d=>d.id!==editingDraftId); saveDrafts(L); renderDrafts(); editingDraftId=null; }
+  resetComposer(); alert('Published!');
+};
+
+/* Schedule */
+const scheduleRow=$('#scheduleRow');
+$('#toggleSchedule').onclick=()=>{ scheduleRow.style.display = scheduleRow.style.display==='flex'?'none':'flex'; };
+$('#cancelSchedule').onclick=()=>{ scheduleRow.style.display='none'; };
+function loadScheduled(){ return load(STORE.scheduled,[]) }
+function saveScheduled(L){ save(STORE.scheduled,L) }
+$('#confirmSchedule').onclick=()=>{
+  if(!me.wallet){ alert('Connect wallet first'); return; }
+  const whenVal=$('#whenInput').value; if(!whenVal){ alert('Pick date & time'); return; }
+  const whenTs = new Date(whenVal).getTime();
+  if(!(whenTs> Date.now()+ 10*1000)){ alert('Schedule time should be in the future (≥10s)'); return; }
+  const post=buildPostFromComposer(); if(!post) return;
+  const sched={id:'s'+Math.random().toString(36).slice(2,8), when:whenTs, post};
+  const L=loadScheduled(); L.unshift(sched); saveScheduled(L); renderScheduled();
+  if(editingDraftId){ const D=loadDrafts().filter(d=>d.id!==editingDraftId); saveDrafts(D); renderDrafts(); editingDraftId=null; }
+  scheduleRow.style.display='none'; resetComposer(); alert('Scheduled!');
+  publishDue();
+};
+function renderScheduled(){
+  const box=$('#schedList'); box.innerHTML='';
+  const L=loadScheduled().sort((a,b)=>a.when-b.when);
+  if(L.length===0){ box.innerHTML='<div class="meta">No scheduled posts</div>'; return; }
+  L.forEach(s=>{
+    const row=document.createElement('div'); row.className='item';
+    row.innerHTML=`
+      <div>
+        <div style="font-weight:800">Scheduled</div>
+        <div class="meta">${new Date(s.when).toLocaleString()} — ${s.post.text||'(media post)'} </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="pill" data-cancel="${s.id}">Cancel</button>
+      </div>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('[data-cancel]').forEach(btn=>{
+    btn.onclick=()=>{ const id=btn.getAttribute('data-cancel'); const L=loadScheduled().filter(x=>x.id!==id); saveScheduled(L); renderScheduled(); };
+  });
+}
+function publishDue(){
+  const now=Date.now();
+  const L=loadScheduled(); const due=L.filter(s=>s.when<=now);
+  if(due.length===0) return;
+  const remain=L.filter(s=>s.when>now); saveScheduled(remain); renderScheduled();
+  const posts=load(STORE.posts,[]);
+  due.forEach(s=>posts.unshift({...s.post, createdAt: now}));
+  save(STORE.posts,posts);
+  allPosts = posts.filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+  const feed=$('#feed');
+  due.forEach(s=>{
+    const wrap=document.createElement('div'); wrap.innerHTML=postCard({...s.post, createdAt: now});
+    const card=wrap.firstElementChild; feed.prepend(card); bindCardEvents(card, card.getAttribute('data-id'));
+  });
+  updateLikeBadge();
+}
+renderScheduled(); publishDue(); setInterval(publishDue, 30000);
+</script>
+</body>
+</html>

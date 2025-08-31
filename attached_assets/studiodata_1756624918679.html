@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Suiciety — Studio Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f8ff; --fg:#0a1223; --muted:#5b6b87; --line:rgba(13,35,78,.14);
+  --card:#fff; --accent1:#7ed3f7; --accent2:#a7e8d6; --accent3:#cbb7ff;
+  --rad:16px; --shadow:0 10px 28px rgba(16,32,64,.06);
+  --good:#0a9b73; --warn:#b77700; --bad:#c62828;
+}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+.backdrop{
+  position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--accent1) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--accent3) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--accent2) 0%, transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 60%, #eef4ff 100%);
+}
+.container{max-width:1180px;margin:0 auto;padding:16px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:18px;
+  border:1px solid var(--line); background:rgba(255,255,255,.85); backdrop-filter:blur(8px)
+}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#001018;
+  background:conic-gradient(from 210deg,var(--accent2),var(--accent1),var(--accent3),var(--accent2));
+  box-shadow:0 6px 16px rgba(126,211,247,.25)
+}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer}
+.btn.pri{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#032}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+
+/* TABBAR */
+.tabbar{
+  margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;
+  background:#ffffffb3; border:1px solid var(--line); border-radius:14px; padding:6px
+}
+.tab{padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:800}
+.tab.active{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#032}
+.view{display:none;margin-top:14px}
+.view.show{display:block}
+
+/* CARDS & GRIDS */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.pad{padding:14px}
+.grid{display:grid;gap:12px}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:980px){.kpi{grid-template-columns:1fr 1fr}}
+.kpi .item{
+  padding:14px;border-radius:14px;border:1px solid var(--line);background:#fff;
+}
+.kpi .title{font-size:12px;color:var(--muted)}
+.kpi .val{font-size:24px;font-weight:900;margin-top:6px}
+.kpi .sub{font-size:12px;color:var(--muted);margin-top:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-size:11px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+
+/* TABLES */
+.table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.table thead th{background:#f7faff;color:#2f3b57;text-align:left;font-size:12px;padding:10px;border-bottom:1px solid var(--line)}
+.table tbody td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.table tbody tr:last-child td{border-bottom:none}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;cursor:pointer;font-weight:800}
+
+/* POSTS: inline composer modal-ish */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal.show{display:flex}
+.panel{max-width:640px;width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 8px}
+.input, .textarea, .select{
+  width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--fg)
+}
+.textarea{min-height:100px;resize:vertical}
+.row.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mediaPrev{
+  margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#f4f7ff;display:none
+}
+.mediaPrev img, .mediaPrev video{width:100%;height:auto;display:block;max-height:280px;object-fit:contain}
+.panel .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+/* MEMBERSHIPS */
+.tierlist{display:flex;flex-direction:column;gap:10px}
+.tierrow{display:grid;grid-template-columns:1fr 120px 1fr auto auto;gap:8px;align-items:center}
+.tierrow input{padding:10px;border:1px solid var(--line);border-radius:10px}
+.tierrow .iconbtn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;cursor:pointer}
+
+/* PAYOUTS */
+.note{font-size:12px;color:var(--muted)}
+.green{color:var(--good)} .red{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+
+<div class="container">
+  <!-- NAV -->
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <div style="font-weight:900">Suiciety</div>
+        <div class="meta">Creator Studio · Data</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="./discover.html">Explore more</a>
+      <a class="btn ghost" href="./studio.html?h=alice">Back to Studio</a>
+      <a class="btn ghost" href="./creator.html?h=alice">View as Supporter</a>
+      <button id="connect" class="btn pri">Connect Wallet</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabbar">
+    <div class="tab active" data-tab="dashboard">Dashboard</div>
+    <div class="tab" data-tab="posts">Posts</div>
+    <div class="tab" data-tab="memberships">Memberships</div>
+    <div class="tab" data-tab="payouts">Payouts</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="view-dashboard" class="view show">
+    <div class="grid">
+      <div class="kpi">
+        <div class="item">
+          <div class="title">MRR (mock)</div>
+          <div class="val" id="mrr">0 SUI</div>
+          <div class="sub" id="mrrSub">from subscriptions</div>
+        </div>
+        <div class="item">
+          <div class="title">Lifetime revenue</div>
+          <div class="val" id="revLife">0 SUI</div>
+          <div class="sub">tips + PPV + subs</div>
+        </div>
+        <div class="item">
+          <div class="title">Subscribers</div>
+          <div class="val" id="subsCount">0</div>
+          <div class="sub" id="subsSub">total joined</div>
+        </div>
+        <div class="item">
+          <div class="title">Tips (7d)</div>
+          <div class="val" id="tips7d">0 SUI</div>
+          <div class="sub">recent supporter tips</div>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:900">Recent tips</div>
+          <div class="chips">
+            <span class="badge">Creator: <span id="creatorNameTop">—</span></span>
+            <span class="badge" id="walletShort">—</span>
+          </div>
+        </div>
+        <table class="table" style="margin-top:10px">
+          <thead><tr><th>When</th><th>Amount</th><th>From</th><th>Message</th></tr></thead>
+          <tbody id="tipsTable"></tbody>
+        </table>
+        <div class="note" style="margin-top:6px">Data is local-only for demo.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <section id="view-posts" class="view">
+    <div class="card pad">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:900">Posts</div>
+          <div class="note">Create or edit posts. Media required. Visibility: Public / Members / PPV</div>
+        </div>
+        <button class="pill" id="newPost">+ New Post</button>
+      </div>
+
+      <table class="table" style="margin-top:10px">
+        <thead>
+          <tr><th>Date</th><th>Text</th><th>Visibility</th><th>Price/Tier</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="postsTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MEMBERSHIPS -->
+  <section id="view-memberships" class="view">
+    <div class="card pad">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div style="font-weight:900">Membership tiers</div>
+          <div class="note">Rename, set price & perks. Reorder with ↑/↓</div>
+        </div>
+        <button class="pill" id="addTier">+ Add tier</button>
+      </div>
+
+      <div class="tierlist" id="tierList" style="margin-top:10px"></div>
+
+      <div class="row" style="justify-content:flex-end;margin-top:10px">
+        <button class="pill" id="saveTiers">Save changes</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAYOUTS -->
+  <section id="view-payouts" class="view">
+    <div class="grid">
+      <div class="card pad">
+        <div style="font-weight:900">Payout settings</div>
+        <div class="row split" style="margin-top:8px">
+          <div>
+            <label>Wallet address (Sui)</label>
+            <input id="payoutAddr" class="input" placeholder="0x..." />
+          </div>
+          <div>
+            <label>Note</label>
+            <input id="payoutNote" class="input" placeholder="e.g., Payout weekly on Fridays" />
+          </div>
+        </div>
+        <div class="row" style="justify-content:flex-end;margin-top:10px">
+          <button id="savePayoutCfg" class="pill">Save settings</button>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div style="font-weight:900">Payouts (mock)</div>
+            <div class="note">Request from available balance. This is a local demo, not on-chain.</div>
+          </div>
+          <div class="chips">
+            <span class="badge">Available: <span id="availBal">0 SUI</span></span>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input id="payoutAmount" class="input" type="number" step="0.1" min="0" placeholder="Amount (SUI)" style="max-width:220px">
+          <button id="reqPayout" class="btn pri">Request Payout</button>
+        </div>
+
+        <table class="table" style="margin-top:10px">
+          <thead><tr><th>When</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody id="payoutTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Post Modal -->
+<div class="modal" id="postModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3 id="postTitle">New post</h3>
+    <textarea id="postText" class="textarea" maxlength="1000" placeholder="Write description… (media required)"></textarea>
+    <div class="row split" style="margin-top:8px">
+      <div>
+        <label>Visibility</label>
+        <select id="postVis" class="select">
+          <option value="public">Public</option>
+          <option value="members">Members</option>
+          <option value="ppv">PPV</option>
+        </select>
+      </div>
+      <div>
+        <label id="priceTierLabel">Price (SUI)</label>
+        <input id="postPrice" class="input" type="number" step="0.1" min="0.1" placeholder="e.g., 1.5"/>
+        <select id="postTier" class="select" style="display:none"></select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="pill" style="cursor:pointer">
+        📎 Attach media
+        <input id="postMedia" type="file" accept="image/*,video/*" style="display:none">
+      </label>
+      <span class="note">Image/Video only</span>
+    </div>
+    <div class="mediaPrev" id="mediaPrev"></div>
+    <div class="actions">
+      <button class="btn ghost" id="postCancel">Cancel</button>
+      <button class="btn pri" id="postSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== stores ===== */
+const STORE={
+  me:'suiciety_me',posts:'suiciety_posts',creators:'suiciety_creators',
+  orders:'suiciety_orders', payouts:'suiciety_payouts'
+};
+const $=s=>document.querySelector(s);
+function load(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d}}
+function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+/* ===== seed demo ===== */
+(function seed(){
+  const creators=load(STORE.creators,{});
+  if(!creators.alice){
+    creators.alice={handle:'alice',name:'Alice',bio:'Illustrator • cozy vibes • digital art',avatar:'',banner:'',
+      tiers:[{id:'bear',name:'Bear',price:2,perks:['Early posts']},{id:'bull',name:'Bull',price:5,perks:['Hi-res, PSD']}],
+      links:{x:'',ig:'',yt:'',web:''}, payout:{addr:'',note:''}
+    };
+    save(STORE.creators,creators);
+  }
+  if(!localStorage.getItem(STORE.me)) save(STORE.me,{wallet:'',unlockedPosts:[],subscriptions:[],likes:{}});
+  if(!localStorage.getItem(STORE.payouts)) save(STORE.payouts,[]);
+  const posts=load(STORE.posts,[]);
+  if(posts.filter(p=>p.creator==='alice').length===0){
+    const now=Date.now();
+    const mk=(i)=>({
+      id:'p'+i, creator:'alice',
+      text:['Morning color study 🌤️','Lineart dump ✍️','Poster WIP','Weekend sketchbook','Brush test 🎨'][i%5],
+      img:'', video:'', createdAt: now - i*3600*1000,
+      baseLikes: Math.floor(Math.random()*60)+5,
+      comments:[{by:'tom',txt:'Nice!'}].slice(0,(i%2)),
+      type:['public','members','ppv'][i%3], price: i%3===2? (1.5+ (i%3)).toFixed(1):0,
+      tier: i%3===1? 'bear' : ''
+    });
+    posts.push(...Array.from({length:8},(_,i)=>mk(i+1)));
+    save(STORE.posts,posts);
+  }
+  const orders=load(STORE.orders,[]);
+  if(orders.filter(o=>o.handle==='alice').length===0){
+    const now=Date.now();
+    // seed tips + subs + ppv
+    orders.push(
+      {id:'t1', ts:now-2*864e5, type:'tip', handle:'alice', amount:2.5, msg:'Love your work!'},
+      {id:'t2', ts:now-1*864e5, type:'tip', handle:'alice', amount:1.2, msg:''},
+      {id:'s1', ts:now-15*864e5, type:'sub', handle:'alice', amount:2.0, tier:'bear'},
+      {id:'s2', ts:now-8*864e5,  type:'sub', handle:'alice', amount:5.0, tier:'bull'},
+      {id:'p1', ts:now-5*864e5,  type:'ppv', handle:'alice', amount:1.5, post:'p2'}
+    );
+    save(STORE.orders,orders);
+  }
+})();
+
+/* ===== state ===== */
+const me=load(STORE.me);
+const creators=load(STORE.creators);
+const creator=creators.alice;
+let allPosts=load(STORE.posts).filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+let orders=load(STORE.orders,[]).filter(o=>o.handle===creator.handle);
+let payouts=load(STORE.payouts,[]).filter(p=>p.handle===creator.handle);
+
+/* ===== nav wallet ===== */
+function updateWallet(){ $('#connect').textContent = me.wallet?('Connected: '+me.wallet):'Connect Wallet';}
+$('#connect').onclick=()=>{ me.wallet = me.wallet?'':('0x'+Math.random().toString(16).slice(2,10)+'…'); save(STORE.me,me); updateWallet(); };
+updateWallet();
+
+/* ===== tab switch ===== */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const key=t.getAttribute('data-tab');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('show'));
+    $('#view-'+key).classList.add('show');
+  };
+});
+
+/* ===== DASHBOARD ===== */
+function sum(arr){return arr.reduce((s,n)=>s+(+n||0),0)}
+function fmt(n){return (Math.round(n*100)/100).toString()}
+function compute(){
+  orders=load(STORE.orders,[]).filter(o=>o.handle===creator.handle);
+  payouts=load(STORE.payouts,[]).filter(p=>p.handle===creator.handle);
+  allPosts=load(STORE.posts).filter(p=>p.creator===creator.handle).sort((a,b)=>b.createdAt-a.createdAt);
+}
+function renderDashboard(){
+  compute();
+  $('#creatorNameTop').textContent = creator.name || '—';
+  $('#walletShort').textContent = me.wallet?('Wallet: '+me.wallet):'Wallet: —';
+
+  const subs=orders.filter(o=>o.type==='sub');
+  const mrr = sum(subs.map(o=>o.amount||0));
+  const life = sum(orders.map(o=>o.amount||0));
+  const tips7 = sum(orders.filter(o=>o.type==='tip' && o.ts>=Date.now()-7*864e5).map(o=>o.amount||0));
+
+  $('#mrr').textContent = fmt(mrr)+' SUI';
+  $('#revLife').textContent = fmt(life)+' SUI';
+  $('#subsCount').textContent = subs.length.toString();
+  $('#tips7d').textContent = fmt(tips7)+' SUI';
+  $('#mrrSub').textContent = subs.length? 'from '+subs.length+' subs' : 'no subscribers yet';
+
+  const tb=$('#tipsTable'); tb.innerHTML='';
+  const tips=orders.filter(o=>o.type==='tip').sort((a,b)=>b.ts-a.ts).slice(0,10);
+  if(tips.length===0){ tb.innerHTML='<tr><td colspan="4" class="note" style="padding:12px">No tips yet</td></tr>'; }
+  tips.forEach(o=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td>${new Date(o.ts).toLocaleString()}</td>
+                    <td><strong>${fmt(o.amount||0)} SUI</strong></td>
+                    <td>${o.from||'—'}</td>
+                    <td>${(o.msg||'').replace(/</g,'&lt;')||'—'}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // payouts available
+  const paid=sum(payouts.filter(p=>p.status!=='rejected').map(p=>p.amount||0));
+  $('#availBal').textContent = fmt(Math.max(life - paid, 0)) + ' SUI';
+}
+renderDashboard();
+
+/* ===== POSTS ===== */
+function visLabel(p){
+  if(p.type==='public') return 'Public';
+  if(p.type==='members'){
+    const name=(creator.tiers||[]).find(t=>t.id===p.tier)?.name || 'Members';
+    return 'Members ('+name+')';
+  }
+  return 'PPV';
+}
+function renderPosts(){
+  compute();
+  const tb=$('#postsTable'); tb.innerHTML='';
+  if(allPosts.length===0){ tb.innerHTML='<tr><td colspan="5" class="note" style="padding:12px">No posts yet</td></tr>'; return; }
+  allPosts.forEach(p=>{
+    const tr=document.createElement('tr');
+    const text=(p.text||'').slice(0,100);
+    tr.innerHTML=`
+      <td>${new Date(p.createdAt).toLocaleString()}</td>
+      <td>${text?text.replace(/</g,'&lt;'):'(media post)'}</td>
+      <td>${visLabel(p)}</td>
+      <td>${p.type==='members'?( (creator.tiers||[]).find(t=>t.id===p.tier)?.name || '—' ):(p.type==='ppv'?(p.price+' SUI'):'—')}</td>
+      <td>
+        <div class="row">
+          <button class="pill" data-edit="${p.id}">Edit</button>
+          <button class="pill" data-del="${p.id}">Delete</button>
+        </div>
+      </td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.getAttribute('data-del');
+      if(!confirm('Delete this post?')) return;
+      const posts=load(STORE.posts,[]).filter(x=>x.id!==id);
+      save(STORE.posts,posts); renderPosts();
+    };
+  });
+  tb.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.onclick=()=>openPostModal(btn.getAttribute('data-edit'));
+  });
+}
+renderPosts();
+
+/* Post modal */
+const postModal=$('#postModal');
+const postText=$('#postText'), postVis=$('#postVis'), postPrice=$('#postPrice'), postTier=$('#postTier'), postMedia=$('#postMedia'), mediaPrev=$('#mediaPrev'), postTitle=$('#postTitle');
+let editingPostId=null;
+function fillTierOptions(){
+  postTier.innerHTML=''; (creator.tiers||[]).forEach(t=>{ const o=document.createElement('option'); o.value=t.id; o.textContent=t.name; postTier.appendChild(o); });
+}
+fillTierOptions();
+function updateVisUI(){
+  const v=postVis.value;
+  if(v==='members'){ postTier.style.display='block'; postPrice.style.display='none'; $('#priceTierLabel').textContent='Tier'; }
+  else if(v==='ppv'){ postTier.style.display='none'; postPrice.style.display='block'; $('#priceTierLabel').textContent='Price (SUI)'; }
+  else { postTier.style.display='none'; postPrice.style.display='none'; $('#priceTierLabel').textContent='Price (SUI)'; }
+}
+postVis.onchange=updateVisUI;
+
+function openPostModal(id){
+  editingPostId=id||null;
+  mediaPrev.style.display='none'; mediaPrev.innerHTML=''; postMedia.value='';
+  if(id){
+    postTitle.textContent='Edit post';
+    const p=allPosts.find(x=>x.id===id); if(!p) return;
+    postText.value=p.text||'';
+    if(p.type==='members'){ postVis.value='members'; postTier.value=p.tier||''; }
+    else if(p.type==='ppv'){ postVis.value='ppv'; postPrice.value=p.price||''; }
+    else { postVis.value='public'; }
+    updateVisUI();
+    const media = p.video ? ['video', p.video] : (p.img?['image',p.img]:null);
+    if(media){ mediaPrev.style.display='block'; mediaPrev.innerHTML = media[0]==='video'?`<video src="${media[1]}" controls playsinline></video>`:`<img src="${media[1]}">`; mediaPrev.dataset.blob=media[1]; mediaPrev.dataset.kind=media[0]; }
+  }else{
+    postTitle.textContent='New post';
+    postText.value=''; postVis.value='public'; postPrice.value=''; postTier.value='';
+    updateVisUI(); delete mediaPrev.dataset.blob; delete mediaPrev.dataset.kind;
+  }
+  postModal.classList.add('show');
+}
+$('#newPost').onclick=()=>openPostModal(null);
+$('#postCancel').onclick=()=>postModal.classList.remove('show');
+
+postMedia.onchange=e=>{
+  const f=e.target.files?.[0]; if(!f){ mediaPrev.style.display='none'; mediaPrev.innerHTML=''; return; }
+  if(!(f.type.startsWith('image/')||f.type.startsWith('video/'))){ alert('Media only'); postMedia.value=''; return; }
+  const isVideo=f.type.startsWith('video/'); const r=new FileReader();
+  r.onload=()=>{ mediaPrev.style.display='block'; mediaPrev.innerHTML=isVideo?`<video src="${r.result}" controls playsinline></video>`:`<img src="${r.result}">`; mediaPrev.dataset.blob=r.result; mediaPrev.dataset.kind=isVideo?'video':'image'; };
+  r.readAsDataURL(f);
+};
+
+$('#postSave').onclick=()=>{
+  const vis=postVis.value;
+  let type='public', price=0, tier='';
+  if(vis==='members'){ type='members'; tier=postTier.value||''; if(!tier){ alert('Choose tier'); return; } }
+  if(vis==='ppv'){ type='ppv'; price=parseFloat(postPrice.value||'0'); if(!(price>0)){ alert('Enter price'); return; } }
+  const media=mediaPrev.dataset.blob||''; const kind=mediaPrev.dataset.kind||'';
+  if(!media){ alert('Media required'); return; }
+
+  const posts=load(STORE.posts,[]);
+  if(editingPostId){
+    const p=posts.find(x=>x.id===editingPostId); if(!p) return;
+    p.text=(postText.value||'').trim();
+    p.type=type; p.price=price; p.tier=tier;
+    p.img = kind==='image'?media:''; p.video = kind==='video'?media:'';
+    p.edited=true; p.editedAt=Date.now();
+    save(STORE.posts,posts);
+  }else{
+    const post={ id:'p'+Math.random().toString(36).slice(2,8), creator:creator.handle,
+      text:(postText.value||'').trim(), img: kind==='image'?media:'', video: kind==='video'?media:'',
+      createdAt: Date.now(), baseLikes: Math.floor(Math.random()*10), comments:[], type, price, tier
+    };
+    posts.unshift(post); save(STORE.posts,posts);
+  }
+  postModal.classList.remove('show'); renderPosts();
+};
+
+/* ===== MEMBERSHIPS ===== */
+function rowTier(t){
+  const perks=(t.perks||[]).join(', ');
+  const el=document.createElement('div'); el.className='tierrow'; el.dataset.id=t.id;
+  el.innerHTML=`
+    <input data-k="name" value="${t.name||''}" placeholder="Tier name (e.g., Bear / หมี)">
+    <input data-k="price" type="number" step="0.1" min="0.1" value="${t.price||2}">
+    <input data-k="perks" value="${perks}" placeholder="Perks (comma separated)">
+    <button class="iconbtn" data-k="up">↑</button>
+    <button class="iconbtn" data-k="down">↓</button>
+    <button class="iconbtn" data-k="del">Delete</button>
+  `;
+  return el;
+}
+function renderTiers(){
+  const box=$('#tierList'); box.innerHTML='';
+  (creator.tiers||[]).forEach(t=>box.appendChild(rowTier(t)));
+  // bind
+  box.querySelectorAll('[data-k="up"]').forEach(btn=>btn.onclick=()=>moveTier(btn.closest('.tierrow').dataset.id,-1));
+  box.querySelectorAll('[data-k="down"]').forEach(btn=>btn.onclick=()=>moveTier(btn.closest('.tierrow').dataset.id,1));
+  box.querySelectorAll('[data-k="del"]').forEach(btn=>btn.onclick=()=>{ btn.closest('.tierrow').remove(); });
+}
+function moveTier(id,dir){
+  const list=[...document.querySelectorAll('.tierrow')];
+  const idx=list.findIndex(el=>el.dataset.id===id);
+  const to=idx+dir; if(to<0||to>=list.length) return;
+  const box=$('#tierList'); box.insertBefore(list[idx], dir<0?list[to]:list[to].nextSibling);
+}
+renderTiers();
+$('#addTier').onclick=()=>{
+  const id='t'+Math.random().toString(36).slice(2,8);
+  const t={id,name:'New Tier',price:2,perks:[]};
+  const el=rowTier(t); $('#tierList').appendChild(el); renderTiers();
+};
+$('#saveTiers').onclick=()=>{
+  const rows=[...document.querySelectorAll('.tierrow')];
+  const tiers=rows.map(r=>{
+    const id=r.dataset.id || ('t'+Math.random().toString(36).slice(2,8));
+    const name=r.querySelector('[data-k="name"]').value.trim();
+    const price=parseFloat(r.querySelector('[data-k="price"]').value||'0');
+    const perks=(r.querySelector('[data-k="perks"]').value||'').split(',').map(x=>x.trim()).filter(Boolean);
+    return name && price>0 ? {id,name,price,perks} : null;
+  }).filter(Boolean);
+  if(tiers.length===0){ alert('At least one tier'); return; }
+  creator.tiers=tiers; creators[creator.handle]=creator; save(STORE.creators,creators);
+  fillTierOptions(); alert('Saved!');
+};
+
+/* ===== PAYOUTS ===== */
+function renderPayoutCfg(){
+  $('#payoutAddr').value = (creator.payout?.addr)||'';
+  $('#payoutNote').value = (creator.payout?.note)||'';
+}
+renderPayoutCfg();
+$('#savePayoutCfg').onclick=()=>{
+  creator.payout=creator.payout||{};
+  creator.payout.addr = ($('#payoutAddr').value||'').trim();
+  creator.payout.note = ($('#payoutNote').value||'').trim();
+  creators[creator.handle]=creator; save(STORE.creators,creators);
+  alert('Payout settings saved');
+};
+function renderPayouts(){
+  compute();
+  const life=sum(orders.map(o=>o.amount||0));
+  const paid=sum(payouts.filter(p=>p.status!=='rejected').map(p=>p.amount||0));
+  $('#availBal').textContent = (life - paid > 0 ? fmt(life-paid):'0') + ' SUI';
+
+  const tb=$('#payoutTable'); tb.innerHTML='';
+  if(payouts.length===0){ tb.innerHTML='<tr><td colspan="3" class="note" style="padding:12px">No payout requests</td></tr>'; return; }
+  payouts.sort((a,b)=>b.ts-a.ts).forEach(p=>{
+    const tr=document.createElement('tr');
+    const status=p.status||'requested';
+    tr.innerHTML=`<td>${new Date(p.ts).toLocaleString()}</td>
+                  <td><strong>${fmt(p.amount||0)} SUI</strong></td>
+                  <td>${status==='requested'?'<span class="badge">requested</span>':
+                        status==='paid'?'<span class="badge green">paid</span>':
+                        '<span class="badge red">rejected</span>'}</td>`;
+    tb.appendChild(tr);
+  });
+}
+renderPayouts();
+
+$('#reqPayout').onclick=()=>{
+  const amount=parseFloat(($('#payoutAmount').value||'0')); if(!(amount>0)) return;
+  const life=sum(orders.map(o=>o.amount||0));
+  const paid=sum(payouts.filter(p=>p.status!=='rejected').map(p=>p.amount||0));
+  const avail=Math.max(life-paid,0);
+  if(amount>avail){ alert('Amount exceeds available'); return; }
+  const L=load(STORE.payouts,[]);
+  L.unshift({id:'po'+Math.random().toString(36).slice(2,8), handle:creator.handle, ts:Date.now(), amount, status:'requested'});
+  save(STORE.payouts,L);
+  $('#payoutAmount').value='';
+  renderPayouts();
+  alert('Payout requested (mock)');
+};
+
+/* ===== init ===== */
+function initTables(){ renderPosts(); renderDashboard(); }
+initTables();
+
+/* close modals by backdrop */
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+</script>
+</body>
+</html>

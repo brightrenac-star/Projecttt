@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Society — Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --fg:#0a1223; --muted:#4b5e80;
+  --g1:#7ed3f7; --g2:#a7e8d6; --g3:#cbb7ff; --g4:#b6f2ff;
+  --line:rgba(255,255,255,.25);
+  --shadow:0 14px 42px rgba(10,18,35,.16);
+
+  --glass-bg: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
+  --glass-border: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.15));
+  --glass-blur: 16px; --glass-sat: 160%; --glass-radius: 18px;
+
+  --gap-lg:16px; --gap-md:14px; --gap-sm:10px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:#eaf3ff;overflow-x:hidden}
+
+/* BG */
+.backdrop{
+  position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--g4) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--g1) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--g3) 0%, transparent 70%),
+    radial-gradient(30% 40% at 0% 90%,   var(--g2) 0%, transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #ecf4ff 100%);
+}
+.bg-shine{
+  position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(70% 40% at 50% 0%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(80% 50% at 50% 100%, rgba(255,255,255,.55), transparent 65%);
+}
+
+/* Glass */
+.glass{
+  position:relative;background:var(--glass-bg);border-radius:var(--glass-radius);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  box-shadow:var(--shadow);
+}
+.glass::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--glass-border);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.glare{position:relative}
+.glare::after{content:"";position:absolute;left:0;right:0;top:0;height:55%;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.35),transparent 70%);mix-blend-mode:screen;pointer-events:none}
+
+/* Layout & NAV */
+.container{max-width:980px;margin:0 auto;padding:16px}
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;
+  padding-top:calc(12px + env(safe-area-inset-top,0px)/2);
+}
+.brand{display:flex;gap:10px;align-items:center;min-width:0}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#00323a;
+  background:conic-gradient(from 210deg,var(--g2),var(--g1),var(--g3),var(--g2));box-shadow:0 6px 14px rgba(126,211,247,.25)}
+.brandword{font-family:"Plus Jakarta Sans",Inter;font-weight:800;letter-spacing:.2px;font-size:20px;white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:9px 12px;font-weight:800;cursor:pointer;
+  background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.15));
+  backdrop-filter:blur(10px) saturate(150%);-webkit-backdrop-filter:blur(10px) saturate(150%);
+}
+.btn.primary{color:#053;background:linear-gradient(135deg,rgba(167,232,214,.9),rgba(126,211,247,.9));border-color:rgba(255,255,255,.6);box-shadow:0 8px 24px rgba(126,211,247,.28)}
+a.btn{color:inherit;text-decoration:none}
+.btn:hover{transform:translateY(-1px)}
+
+/* Mobile menu */
+.menu-toggle{display:none; border:1px solid rgba(255,255,255,.35); border-radius:12px; padding:8px 10px; background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.25)); font-weight:800}
+.menu{position:fixed; right:16px; top:calc(60px + env(safe-area-inset-top,0px)); z-index:50; display:none; min-width:160px}
+.menu.show{display:block}
+.menu .menu-item{display:block; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.35); text-decoration:none; color:inherit}
+.menu .menu-item:last-child{border-bottom:none}
+
+@media(max-width:640px){
+  .actions{display:none}
+  .menu-toggle{display:inline-flex}
+}
+
+/* Card */
+.card{margin-top:16px}.pad{padding:16px}
+
+/* Header / cute gradient */
+.h1{margin:0;font-size:28px;font-family:"Plus Jakarta Sans",Inter;
+  background:linear-gradient(90deg,#ffb6d9,#a7e8d6,#7ed3f7,#cbb7ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 1px 0 rgba(255,255,255,.35)
+}
+.meta{color:var(--muted);font-size:13px}
+
+/* Modern step rail (cute pastel + spacing) */
+.rail{display:flex;align-items:center;gap:10px;margin-top:12px}
+.stepdot{display:grid;place-items:center;width:30px;height:30px;border-radius:999px;font-weight:900;color:#053;
+  background:conic-gradient(from 210deg,#ffe3f0,#c6e7ff,#d7ffd9,#fde6b6,#ffe3f0);
+  border:1px solid rgba(255,255,255,.9); box-shadow:0 4px 16px rgba(126,211,247,.25)}
+.stepdot.active{ box-shadow:0 6px 20px rgba(126,211,247,.45) }
+.stepline{flex:1;height:6px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.8),rgba(255,255,255,.35));overflow:hidden}
+.stepline>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb6d9,#a7e8d6,#7ed3f7,#cbb7ff)}
+.steplabels{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;margin:8px 0 14px;gap:10px}
+.steplabels .lab{font-size:12px;text-align:center;font-weight:800;color:#2e405f;opacity:.7}
+.steplabels .lab.active{opacity:1}
+
+/* Steps */
+.step{display:none; margin-top:18px}
+.step.active{display:block}
+
+/* Inputs */
+label{font-size:13px;color:#2e405f;font-weight:700}
+input[type="text"],textarea,select{
+  width:100%;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.45));color:#0a1223;outline:none
+}
+input::placeholder,textarea::placeholder{color:#5b6c88}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 2px rgba(37,99,235,.35),0 0 0 6px rgba(6,182,212,.18)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.counter{font-size:12px;color:#6b7a96}.warn{color:#b77700}.bad{color:#c62828}
+hr.sep{border:none;height:1px;background:rgba(255,255,255,.6);margin:14px 0}
+
+/* Role tiles with nicer spacing */
+.rolewrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+.role{padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.75);
+  background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(255,255,255,.28));cursor:pointer;font-weight:800;text-align:center;
+  transition:transform .08s ease, box-shadow .12s ease}
+.role:hover{ transform:translateY(-1px); box-shadow:0 10px 24px rgba(10,18,35,.10) }
+.role.active{color:#053;background:linear-gradient(135deg,#ffe3f0,#a7e8d6,#7ed3f7);box-shadow:0 12px 28px rgba(126,211,247,.35)}
+#roleHint{margin-top:10px}
+
+/* 18+ files */
+.filegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.filebox{position:relative;display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.7);
+  background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.35));line-height:1.35}
+.thumb{width:48px;height:48px;border-radius:12px;border:1px solid rgba(255,255,255,.7);
+  background:linear-gradient(135deg,var(--g2),var(--g1));display:grid;place-items:center;font-size:20px;font-weight:900;color:#053;overflow:hidden;flex:0 0 auto}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.fileinfo{min-width:0}
+.filetitle{font-weight:800}
+.filehint{font-size:12.5px;color:#6b7a96}
+.filebtn{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;margin-top:6px;border-radius:12px;border:1px solid rgba(255,255,255,.7);
+  background:linear-gradient(135deg,rgba(167,232,214,.9),rgba(126,211,247,.9));font-weight:800;color:#053;cursor:pointer;overflow:hidden}
+.filebtn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* Agreement modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal.show{display:flex}
+.panel{max-width:720px;width:100%}
+.panel .head{display:flex;align-items:center;justify-content:space-between}
+.panel .body{max-height:60vh;overflow:auto;margin-top:8px}
+.panel .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
+/* Business card */
+.bc{display:flex;gap:12px;align-items:center;padding:14px;border-radius:16px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(167,232,214,.85),rgba(126,211,247,.85),rgba(203,183,255,.85));border:1px solid rgba(255,255,255,.85)}
+.bc-ava{width:64px;height:64px;border-radius:16px;background:#fff;display:grid;place-items:center;font-weight:900;color:#053;border:2px solid rgba(255,255,255,.7)}
+.bc-name{font-weight:900;font-size:18px}
+.badge{font-size:11px;padding:6px 10px;border-radius:999px;display:inline-flex;gap:6px;align-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.18));border:1px solid rgba(255,255,255,.7)}
+
+/* Footer & Lang — single line + horizontal scroll */
+.footerwrap{margin:16px 0}
+.langbar{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-bottom:10px;flex-wrap:wrap}
+.langbar .sel{padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.55);
+  background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.15));backdrop-filter:blur(10px) saturate(150%)}
+.footer{padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.footlinks{
+  display:block; overflow:auto; white-space:nowrap;
+  -webkit-overflow-scrolling:touch; scrollbar-width:thin; max-width:100%;
+}
+.footlinks a{
+  display:inline-block; margin-right:12px;
+  border:1px solid rgba(255,255,255,.55); background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.18));
+  padding:8px 10px;border-radius:999px;font-weight:700;font-size:13px;color:inherit;text-decoration:none
+}
+
+/* Chat (demo) */
+.chat-fab{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));z-index:99;
+  width:56px;height:56px;border-radius:16px;cursor:pointer;border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(135deg,rgba(167,232,214,.9),rgba(126,211,247,.95));box-shadow:0 16px 40px rgba(16,32,64,.22);display:grid;place-items:center}
+.chat-panel{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(86px + env(safe-area-inset-bottom));z-index:99;width:min(360px,92vw);max-height:62vh;display:none;overflow:hidden}
+.chat-panel.show{display:flex;flex-direction:column}
+.chat-head{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-weight:800}
+.chat-body{padding:10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:80%;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.2));border:1px solid rgba(255,255,255,.6)}
+.msg.me{margin-left:auto;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.35))}
+.chat-input{display:flex;gap:8px;padding:10px}
+.chat-input input{all:unset;flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.25))}
+.chat-input button{padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.6);
+  background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.25));cursor:pointer;font-weight:800}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="backdrop"></div><div class="bg-shine"></div>
+
+  <div class="container">
+    <!-- NAV -->
+    <div class="nav glass glare">
+      <div class="brand"><div class="logo">S</div><div class="brandword">Society</div></div>
+      <div class="actions">
+        <a class="btn" href="./index.html">Home</a>
+        <a class="btn" href="./discover.html">Discover</a>
+        <!-- Removed Settings + Connect on header (per requirement) -->
+      </div>
+      <button class="menu-toggle" id="menuToggle">Menu ▾</button>
+    </div>
+    <!-- Mobile menu (Home only as requested) -->
+    <div id="menu" class="menu glass glare" role="menu" aria-label="Mobile menu">
+      <a class="menu-item" href="./index.html">Home</a>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="card glass glare pad">
+      <h1 class="h1" id="t_title">Create your account</h1>
+
+      <!-- Modern step rail -->
+      <div class="rail">
+        <div class="stepdot" id="dot1">1</div>
+        <div class="stepline"><span id="bar12"></span></div>
+        <div class="stepdot" id="dot2">2</div>
+        <div class="stepline"><span id="bar23"></span></div>
+        <div class="stepdot" id="dot3">3</div>
+        <div class="stepline"><span id="bar34"></span></div>
+        <div class="stepdot" id="dot4">4</div>
+      </div>
+      <div class="steplabels">
+        <div class="lab" id="lab1">Wallet</div>
+        <div class="lab" id="lab2">Role</div>
+        <div class="lab" id="lab3">Details</div>
+        <div class="lab" id="lab4">Confirm</div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step active" id="s1">
+        <p class="meta" id="t_s1p">Connect your Sui wallet to start. (mock for demo)</p>
+        <div class="row" style="margin:8px 0 12px">
+          <button class="btn primary" id="btnConnect">Connect Wallet</button>
+          <div class="badge" id="addrLabel" style="display:none"></div>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn primary" id="next1">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step" id="s2">
+        <p class="meta" id="t_s2p">Choose your role.</p>
+        <div class="rolewrap">
+          <div class="role" id="rCreator">👩‍🎨 Creator</div>
+          <div class="role" id="rSupporter">🫶 Supporter</div>
+        </div>
+        <div class="meta" id="roleHint">Creators can post & earn. Supporters subscribe & tip.</div>
+        <div class="row" style="justify-content:space-between; margin-top:16px">
+          <button class="btn" id="back2">Back</button>
+          <button class="btn primary" id="next2">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step" id="s3">
+        <!-- Creator -->
+        <div id="creatorFields">
+          <div class="grid">
+            <div>
+              <label id="t_name">Display name</label>
+              <input id="cName" type="text" maxlength="64" placeholder="e.g. Alice">
+            </div>
+            <div>
+              <label id="t_cat">Category</label>
+              <select id="cat">
+                <option value="">{Select…}</option>
+                <optgroup label="Art & Design">
+                  <option value="illustration">Illustration</option>
+                  <option value="digital-art">Digital Art</option>
+                  <option value="comics-manga">Comics & Manga</option>
+                  <option value="animation-2d">Animation (2D)</option>
+                  <option value="animation-3d">Animation (3D)</option>
+                  <option value="3d-modeling">3D Modeling</option>
+                  <option value="graphic-design">Graphic Design</option>
+                  <option value="ui-ux">UI / UX</option>
+                  <option value="calligraphy">Calligraphy</option>
+                  <option value="crafts-diy">Crafts / DIY</option>
+                </optgroup>
+                <optgroup label="Music & Audio">
+                  <option value="singer">Singer</option>
+                  <option value="producer">Producer</option>
+                  <option value="dj">DJ</option>
+                  <option value="composer">Composer</option>
+                  <option value="instrumentalist">Instrumentalist</option>
+                  <option value="podcast">Podcast</option>
+                  <option value="voice-acting">Voice Acting</option>
+                </optgroup>
+                <optgroup label="Video & Streaming">
+                  <option value="filmmaker">Filmmaker</option>
+                  <option value="vlogger">Vlogger</option>
+                  <option value="short-form">Short-form (Reels/Shorts)</option>
+                  <option value="editor">Video Editor</option>
+                  <option value="gaming">Gaming Streamer</option>
+                  <option value="irl-stream">IRL Stream</option>
+                  <option value="asmr">ASMR</option>
+                  <option value="education-stream">Education Stream</option>
+                </optgroup>
+                <optgroup label="Writing & Education">
+                  <option value="novelist">Novelist</option>
+                  <option value="blogger">Blogger</option>
+                  <option value="journalism">Journalism</option>
+                  <option value="poetry">Poetry</option>
+                  <option value="courses">Courses</option>
+                  <option value="language-learning">Language Learning</option>
+                  <option value="research">Research / Essays</option>
+                </optgroup>
+                <optgroup label="Photo & Lifestyle">
+                  <option value="photography">Photography</option>
+                  <option value="travel">Travel</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="beauty">Beauty</option>
+                  <option value="cosplay">Cosplay</option>
+                  <option value="fitness">Fitness</option>
+                  <option value="food-cooking">Food / Cooking</option>
+                  <option value="parenting">Parenting</option>
+                  <option value="mindfulness">Mindfulness</option>
+                  <option value="sports">Sports</option>
+                </optgroup>
+                <optgroup label="Tech & Business">
+                  <option value="coding">Coding / Dev</option>
+                  <option value="no-code">No-code</option>
+                  <option value="data">Data / AI</option>
+                  <option value="product-design">Product Design</option>
+                  <option value="business">Business / Finance</option>
+                  <option value="marketing">Marketing</option>
+                </optgroup>
+                <optgroup label="18+ (Age-gated)">
+                  <option value="adult">18+ General</option>
+                  <option value="glamour">Glamour (18+)</option>
+                  <option value="nsfw-cosplay">NSFW Cosplay (18+)</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label id="t_bio">Short bio (≤200)</label>
+            <textarea id="cBio" rows="4" maxlength="200" placeholder="Tell your fans who you are..."></textarea>
+            <div class="row" style="justify-content:space-between">
+              <span class="meta" id="t_hint">Keep it friendly & concise.</span>
+              <span id="count" class="counter">0 / 200</span>
+            </div>
+          </div>
+
+          <!-- 18+ verify -->
+          <div id="ageBox" class="glass pad" style="margin-top:12px; display:none">
+            <div style="font-weight:900" id="t_age_title">18+ verification required</div>
+            <div class="meta" id="t_age_note">If you pick an 18+ category, please upload: selfie holding your ID + the ID photo. Review may take 12–16 hours.</div>
+
+            <div class="filegrid" style="margin-top:8px">
+              <!-- Selfie -->
+              <div class="filebox">
+                <div class="thumb" id="selfieThumb">📷</div>
+                <div class="fileinfo">
+                  <div class="filetitle" id="t_age_selfie">Selfie with ID</div>
+                  <div class="filehint" id="t_age_hint1">Face + ID readable</div>
+                  <div class="filebtn">
+                    Upload
+                    <input id="selfieInput" type="file" accept="image/*"/>
+                  </div>
+                </div>
+              </div>
+              <!-- ID -->
+              <div class="filebox">
+                <div class="thumb" id="idThumb">🪪</div>
+                <div class="fileinfo">
+                  <div class="filetitle" id="t_age_id">ID document</div>
+                  <div class="filehint" id="t_age_hint2">Front side / passport</div>
+                  <div class="filebtn">
+                    Upload
+                    <input id="idInput" type="file" accept="image/*,application/pdf"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:8px">
+              <label><input id="ageConsent" type="checkbox"> <span class="meta" id="t_age_consent">I consent to submit my ID for age/identity verification.</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Supporter -->
+        <div id="supporterFields" style="display:none">
+          <div>
+            <label id="t_sup_name">Display name</label>
+            <input id="supName" type="text" maxlength="64" placeholder="e.g. Alex">
+          </div>
+          <div class="meta" style="margin-top:6px" id="t_sid_note">Your Society ID (SID) is auto-generated and tied to your wallet. You can't choose it, but you can customize profile later in Settings.</div>
+        </div>
+
+        <hr class="sep"/>
+        <div class="row" style="justify-content:space-between">
+          <button class="btn" id="back3">Back</button>
+          <button class="btn primary" id="next3">Next</button>
+        </div>
+      </div>
+
+      <!-- Step 4: universal confirm (both roles must read) -->
+      <div class="step" id="s4">
+        <div class="glass pad">
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div class="meta" id="t_agree_intro">Open and read the Agreement before accepting.</div>
+            <div class="row">
+              <button class="btn" id="openAgreement">📜 <span id="t_view_agreement">View Agreement</span></button>
+              <span class="badge">Read: <span id="readState">0%</span></span>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <label><input type="checkbox" id="agreeUniversal" disabled> <span id="t_read_accept">I have read and accept the Agreement & platform policies.</span></label>
+          </div>
+          <div style="margin-top:8px">
+            <label><input type="checkbox" id="agreeTerms"> <span id="t_ag1">I accept Terms & Privacy.</span></label>
+          </div>
+          <div style="margin-top:4px">
+            <label><input type="checkbox" id="agreeAge"> <span id="t_ag2">I confirm I am over legal age for any adult content.</span></label>
+          </div>
+        </div>
+
+        <hr class="sep"/>
+        <div class="row" style="justify-content:space-between">
+          <button class="btn" id="back4">Back</button>
+          <button class="btn primary" id="submit">Create account</button>
+        </div>
+      </div>
+
+      <!-- Done -->
+      <div class="step" id="done">
+        <div class="bc">
+          <div class="bc-ava" id="bAva">S</div>
+          <div style="min-width:0">
+            <div class="bc-name" id="bc_name">—</div>
+            <div class="meta" id="bc_role">Role: —</div>
+            <div class="meta" id="bc_bio">Bio: —</div>
+            <div class="row" style="margin-top:6px">
+              <span class="badge">SID: <span id="sidInline">—</span></span>
+              <button class="btn" id="copySid">Copy SID</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass pad" id="holdBox" style="display:none; margin-top:10px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <div class="thumb">⏳</div>
+            <div>
+              <div style="font-weight:900">On hold for 18+ verification</div>
+              <div class="meta" id="t_hold_text">You can post after an admin review (12–16 hours). Thanks for your patience.</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 id="t_congrats_head" style="margin-top:12px">Welcome to Society 🎉</h3>
+        <p class="meta" id="t_congrats_sub">You're now part of Society. You can customize your profile anytime in Settings.</p>
+        <div class="row" style="margin-top:8px">
+          <a class="btn primary" href="./profile.html" id="t_edit_profile">Edit profile</a>
+          <a class="btn" href="./discover.html" id="t_explore">Explore creators</a>
+          <a class="btn" href="./index.html">Home</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer + Lang -->
+    <div class="footerwrap">
+      <div class="langbar">
+        <div class="meta" id="t_lang_label" style="margin-right:4px">Language</div>
+        <select id="lang" class="sel" aria-label="Language">
+          <option value="auto">Auto (device)</option>
+          <option value="en">English</option>
+          <option value="th">ไทย</option>
+        </select>
+      </div>
+      <footer class="footer glass glare">
+        <div class="footlinks" id="footlinks">
+          <a href="./about.html" id="f_about">About</a>
+          <a href="./contact.html" id="f_contact">Contact us</a>
+          <a href="./help.html" id="f_help">Help & Safety</a>
+          <a href="./terms.html" id="f_terms">Terms</a>
+          <a href="./privacy.html" id="f_privacy">Privacy</a>
+        </div>
+        <div class="meta">© <span id="year"></span> Society</div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Agreement Modal -->
+  <div class="modal" id="agreeModal" role="dialog" aria-modal="true" aria-labelledby="ag_title">
+    <div class="panel glass glare pad">
+      <div class="head">
+        <div style="font-weight:900" id="ag_title">Agreement (draft)</div>
+        <button class="btn" id="ag_close">✕</button>
+      </div>
+      <div class="body" id="ag_body">
+        <h3 id="ag_h0">A) Platform Rules (All users)</h3>
+        <ul id="ag_l0"></ul>
+        <h3 id="ag_h1">B) Role-specific</h3>
+        <ul id="ag_l1"></ul>
+        <h3 id="ag_h2">C) Payments</h3>
+        <ul id="ag_l2"></ul>
+        <h3 id="ag_h3">D) Enforcement & Privacy</h3>
+        <ul id="ag_l3"></ul>
+        <p class="meta" id="ag_end">This is a non-binding draft for demo. Your production terms may vary by jurisdiction.</p>
+      </div>
+      <div class="foot">
+        <button class="btn primary" id="ag_done">I’ve read</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Chat -->
+  <button class="chat-fab" id="chatFab" aria-label="Open chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5H7l-4 3.5V12A8.5 8.5 0 0 1 21 12Z"/></svg>
+  </button>
+  <div class="chat-panel glass glare" id="chatPanel" role="dialog" aria-modal="true" aria-label="Chat">
+    <div class="chat-head"><div>Society Chat</div><button class="btn" id="chatClose">✕</button></div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-input"><input id="chatText" placeholder="Message…"/><button class="btn" id="chatSend">Send</button></div>
+  </div>
+
+<script>
+/* ===== Helpers ===== */
+const $=id=>document.getElementById(id);
+
+/* ===== Mobile menu ===== */
+menuToggle.addEventListener('click', ()=>{
+  menu.classList.toggle('show');
+});
+document.addEventListener('click', (e)=>{
+  if(!menu.contains(e.target) && !menuToggle.contains(e.target)){
+    menu.classList.remove('show');
+  }
+});
+
+/* ===== i18n ===== */
+const I18N={
+  en:{
+    title:"Create your account",
+    s1p:"Connect your Sui wallet to start. (mock for demo)",
+    s2p:"Choose your role.",
+    name:"Display name", cat:"Category", bio:"Short bio (≤200)", hint:"Keep it friendly & concise.",
+    sup_name:"Display name",
+    sid_note:"Your Society ID (SID) is auto-generated and tied to your wallet. You can't choose it, but you can customize profile later in Settings.",
+    age_title:"18+ verification required",
+    age_note:"If you pick an 18+ category, please upload: selfie holding your ID + the ID photo. Review may take 12–16 hours.",
+    age_selfie:"Selfie with ID", age_hint1:"Face + ID readable",
+    age_id:"ID document", age_hint2:"Front side / passport",
+    age_consent:"I consent to submit my ID for age/identity verification.",
+    agree_intro:"Open and read the Agreement before accepting.",
+    view_agreement:"View Agreement",
+    read_accept:"I have read and accept the Agreement & platform policies.",
+    ag_title:"Agreement (draft)",
+    ag_end:"This is a non-binding draft for demo. Your production terms may vary by jurisdiction.",
+    // Agreement bullets
+    common:[
+      "No CSAM, illegal, or non-consensual content; respect privacy and local laws.",
+      "Respect intellectual property. Upload only content you have rights to.",
+      "Tag and age-gate 18+ content. Do not share personal data without consent."
+    ],
+    creator:[
+      "You retain ownership; grant Society a license to host and deliver to members.",
+      "You must age-verify for 18+ categories and comply with local regulations."
+    ],
+    supporter:[
+      "Do not redistribute paid content outside the platform.",
+      "Chargebacks/fraud investigations may temporarily restrict access."
+    ],
+    pay:[
+      "Crypto-native payouts; on-chain transfers are generally irreversible.",
+      "5% platform fee on earnings (subject to change in production)."
+    ],
+    enforce:[
+      "We may remove content or suspend accounts violating policies.",
+      "We follow applicable data protection laws; see Privacy for details."
+    ],
+    hold_text:"You can post after an admin review (12–16 hours). Thanks for your patience.",
+    congrats_head:"Welcome to Society 🎉",
+    congrats_sub:"You're now part of Society. You can customize your profile anytime in Settings.",
+    edit_profile:"Edit profile", explore:"Explore creators",
+    lang_label:"Language",
+    about:"About", contact:"Contact us", help:"Help & Safety", terms:"Terms", privacy:"Privacy"
+  },
+  th:{
+    title:"สร้างบัญชีของคุณ",
+    s1p:"เชื่อมต่อกระเป๋า Sui เพื่อเริ่มต้น (เดโม)",
+    s2p:"เลือกบทบาทของคุณ",
+    name:"ชื่อที่แสดง", cat:"หมวดหมู่", bio:"คำอธิบายสั้น (≤200)", hint:"เขียนสั้น กระชับ เป็นกันเอง",
+    sup_name:"ชื่อที่แสดง",
+    sid_note:"SID (Society ID) จะสุ่มอัตโนมัติและผูกกับวอลเล็ตของคุณ เลือกเองไม่ได้ แต่ปรับแต่งโปรไฟล์ได้ภายหลังที่ Settings",
+    age_title:"ต้องยืนยันตัวตนสำหรับคอนเทนต์ 18+",
+    age_note:"หากเลือกหมวด 18+ โปรดอัปโหลดเซลฟี่ถือบัตร + ภาพบัตรประชาชน/พาสปอร์ต อาจใช้เวลา 12–16 ชม. ในการตรวจ",
+    age_selfie:"เซลฟี่พร้อมบัตร", age_hint1:"เห็นหน้าและข้อมูลบัตรชัดเจน",
+    age_id:"รูปบัตร/พาสปอร์ต", age_hint2:"ด้านหน้าหรือหน้าพาสปอร์ต",
+    age_consent:"ยินยอมส่งข้อมูลเพื่อยืนยันอายุ/ตัวตน",
+    agree_intro:"โปรดเปิดอ่านข้อตกลงก่อนกดยอมรับ",
+    view_agreement:"เปิดข้อตกลง",
+    read_accept:"ฉันได้อ่านและยอมรับข้อตกลงและนโยบายแพลตฟอร์ม",
+    ag_title:"ข้อตกลง (ร่าง)",
+    ag_end:"นี่เป็นร่างสำหรับเดโม ข้อกำหนดจริงอาจแตกต่างตามเขตอำนาจ",
+    common:[
+      "ห้าม CSAM เนื้อหาผิดกฎหมาย หรือไม่ยินยอม; เคารพข้อมูลส่วนบุคคลและกฎหมายท้องถิ่น",
+      "เคารพลิขสิทธิ์ โพสต์เฉพาะสิ่งที่คุณมีสิทธิ์",
+      "คอนเทนต์ 18+ ต้องติดแท็กและจำกัดอายุ ห้ามเผยข้อมูลส่วนตัวโดยไม่ยินยอม"
+    ],
+    creator:[
+      "คุณยังคงเป็นเจ้าของเนื้อหา ให้สิทธิ์ Society โฮสต์/ส่งให้สมาชิก",
+      "ต้องยืนยันอายุเมื่อทำคอนเทนต์ 18+ และปฏิบัติตามกฎหมายที่เกี่ยวข้อง"
+    ],
+    supporter:[
+      "ห้ามนำคอนเทนต์ที่จ่ายเงินไปเผยแพร่ภายนอก",
+      "กรณีชาร์จแบ็ก/ฉ้อโกง อาจถูกจำกัดสิทธิ์ชั่วคราว"
+    ],
+    pay:[
+      "การจ่ายเงินเป็นคริปโต ธุรกรรมบนเชนโดยทั่วไปย้อนกลับไม่ได้",
+      "ค่าธรรมเนียมแพลตฟอร์ม 5% (ตัวเลขผลิตจริงอาจเปลี่ยน)"
+    ],
+    enforce:[
+      "เราอาจลบเนื้อหาหรือระงับบัญชีที่ฝ่าฝืนนโยบาย",
+      "ปฏิบัติตามกฎหมายคุ้มครองข้อมูล โปรดอ่าน Privacy"
+    ],
+    hold_text:"จะโพสต์ได้หลังแอดมินตรวจผ่าน (ประมาณ 12–16 ชม.)",
+    congrats_head:"ยินดีต้อนรับสู่ Society 🎉",
+    congrats_sub:"คุณเป็นส่วนหนึ่งของ Society แล้ว ปรับแต่งโปรไฟล์ได้ทุกเมื่อที่ Settings",
+    edit_profile:"แก้ไขโปรไฟล์", explore:"สำรวจครีเอเตอร์",
+    lang_label:"ภาษา",
+    about:"เกี่ยวกับเรา", contact:"ติดต่อเรา", help:"ศูนย์ช่วยเหลือ", terms:"เงื่อนไข", privacy:"ความเป็นส่วนตัว"
+  }
+};
+function deviceLang(){return (navigator.language||'en').toLowerCase().startsWith('th')?'th':'en'}
+function activeLang(){const sel=localStorage.getItem('lang')||'auto';return sel==='auto'?deviceLang():sel}
+function L(){return I18N[activeLang()]||I18N.en}
+function applyLang(){
+  const l=L(); year.textContent=new Date().getFullYear();
+  t_title.textContent=l.title; t_s1p.textContent=l.s1p; t_s2p.textContent=l.s2p;
+  t_name.textContent=l.name; t_cat.textContent=l.cat; t_bio.textContent=l.bio; t_hint.textContent=l.hint;
+  t_sup_name.textContent=l.sup_name; t_sid_note.textContent=l.sid_note;
+  t_age_title.textContent=l.age_title; t_age_note.textContent=l.age_note;
+  t_age_selfie.textContent=l.age_selfie; t_age_hint1.textContent=l.age_hint1; t_age_id.textContent=l.age_id; t_age_hint2.textContent=l.age_hint2; t_age_consent.textContent=l.age_consent;
+  t_agree_intro.textContent=l.agree_intro; t_view_agreement.textContent=l.view_agreement; t_read_accept.textContent=l.read_accept;
+  t_hold_text.textContent=l.hold_text; t_congrats_head.textContent=l.congrats_head; t_congrats_sub.textContent=l.congrats_sub;
+  t_edit_profile.textContent=l.edit_profile; t_explore.textContent=l.explore; t_lang_label.textContent=l.lang_label;
+  ag_title.textContent=l.ag_title; ag_end.textContent=l.ag_end;
+  // footer labels
+  f_about.textContent=l.about; f_contact.textContent=l.contact; f_help.textContent=l.help; f_terms.textContent=l.terms; f_privacy.textContent=l.privacy;
+  // placeholders
+  cName.placeholder = activeLang()==='th'?'เช่น Alice':'e.g. Alice';
+  supName.placeholder = activeLang()==='th'?'เช่น Alex':'e.g. Alex';
+  cBio.placeholder  = activeLang()==='th'?'บอกแฟน ๆ แบบสั้น ๆ ว่าคุณคือใคร…':'Tell your fans who you are...';
+  lang.value=localStorage.getItem('lang')||'auto';
+}
+lang.onchange=e=>{localStorage.setItem('lang',e.target.value);applyLang()};
+
+/* ===== Step rail ===== */
+const steps=['s1','s2','s3','s4','done'];
+function setRail(i){
+  [dot1,dot2,dot3,dot4].forEach((d,idx)=>d.classList.toggle('active', idx<=i));
+  bar12.style.width = i>=1?'100%': '0%';
+  bar23.style.width = i>=2?'100%': i===1?'50%':'0%';
+  bar34.style.width = i>=3?'100%': i===2?'50%':'0%';
+  [lab1,lab2,lab3,lab4].forEach((l,idx)=>l.classList.toggle('active', idx===i));
+}
+function setStep(i){ steps.forEach((id,idx)=>$(id).classList.toggle('active', idx===i)); setRail(i); }
+
+/* ===== Wallet connect mock (step only) ===== */
+function connectWallet(){
+  const addr='0x'+Math.random().toString(16).slice(2,10)+'…';
+  localStorage.setItem('last_wallet', addr);
+  addrLabel.style.display='inline-flex'; addrLabel.textContent='Connected: '+addr;
+}
+btnConnect.onclick=connectWallet;
+next1.onclick=()=>{ if(!localStorage.getItem('last_wallet')){ alert(activeLang()==='th'?'กรุณาเชื่อมต่อวอลเล็ตก่อน':'Connect your wallet first'); return; } setStep(1); };
+
+/* ===== Role ===== */
+let role='creator';
+function setRole(r){ role=r; rCreator.classList.toggle('active',r==='creator'); rSupporter.classList.toggle('active',r==='supporter'); }
+rCreator.onclick=()=>setRole('creator'); rSupporter.onclick=()=>setRole('supporter');
+back2.onclick=()=>setStep(0);
+next2.onclick=()=>{ showFields(); setStep(2); };
+
+/* ===== Fields per role ===== */
+function showFields(){
+  if(role==='creator'){ creatorFields.style.display='block'; supporterFields.style.display='none'; }
+  else{ creatorFields.style.display='none'; supporterFields.style.display='block'; }
+}
+
+/* ===== Bio counter ===== */
+const MAX=200;
+cBio.addEventListener('input',e=>{
+  const used=e.target.value.length; count.textContent=`${used} / ${MAX}`;
+  count.className='counter '+(used>MAX?'bad':used>160?'warn':'');
+});
+
+/* ===== 18+ detection & uploads ===== */
+const ADULT_SET=new Set(['adult','glamour','nsfw-cosplay']);
+function isAdult(){ return role==='creator' && ADULT_SET.has(cat.value); }
+function toggleAgeBox(){ ageBox.style.display = isAdult()? 'block':'none'; }
+cat.addEventListener('change', toggleAgeBox);
+function readFile(input,cb){ const f=input.files?.[0]; if(!f) return cb(null); const r=new FileReader(); r.onload=()=>cb(r.result); r.readAsDataURL(f); }
+selfieInput.addEventListener('change',()=>{readFile(selfieInput,(d)=>{ selfieThumb.innerHTML=d?`<img src="${d}" alt="">`:'📷'; localStorage.setItem('society_verif_selfie', d||''); })});
+idInput.addEventListener('change',()=>{readFile(idInput,(d)=>{ idThumb.innerHTML=d?`<img src="${d}" alt="">`:'🪪'; localStorage.setItem('society_verif_id', d||''); })});
+
+/* ===== Step 3 validate ===== */
+back3.onclick=()=>setStep(1);
+next3.onclick=()=>{
+  if(role==='creator'){
+    const nm=(cName.value||'').trim(); const category=cat.value;
+    if(!nm || !category){ alert(activeLang()==='th'?'กรุณากรอกชื่อและเลือกหมวด':'Please fill name & choose a category'); return; }
+    if(ADULT_SET.has(category)){
+      const hasSelfie=!!localStorage.getItem('society_verif_selfie');
+      const hasId=!!localStorage.getItem('society_verif_id');
+      if(!hasSelfie || !hasId || !ageConsent.checked){
+        alert(activeLang()==='th'?'กรุณาอัปโหลดเซลฟี่+บัตร และติ๊กยินยอม':'Please upload selfie+ID and check consent'); return;
+      }
+    }
+  }else{
+    const sn=(supName.value||'').trim(); if(!sn){ alert(activeLang()==='th'?'กรุณากรอกชื่อที่แสดง':'Please enter a display name'); return; }
+  }
+  setStep(3);
+};
+
+/* ===== Agreement modal (both roles must read) ===== */
+function buildAgreement(){
+  const l=L();
+  ag_l0.innerHTML = (l.common||[]).map(x=>`<li>${x}</li>`).join('');
+  const roleList = role==='creator' ? (l.creator||[]) : (l.supporter||[]);
+  ag_l1.innerHTML = roleList.map(x=>`<li>${x}</li>`).join('');
+  ag_l2.innerHTML = (l.pay||[]).map(x=>`<li>${x}</li>`).join('');
+  ag_l3.innerHTML = (l.enforce||[]).map(x=>`<li>${x}</li>`).join('');
+  ag_title.textContent = l.ag_title; ag_end.textContent = l.ag_end;
+}
+openAgreement.onclick=()=>{ buildAgreement(); agreeModal.classList.add('show'); readState.textContent='0%'; agreeUniversal.disabled=true; };
+ag_close.onclick=()=>{ agreeModal.classList.remove('show'); };
+ag_body.addEventListener('scroll', ()=>{
+  const p=(ag_body.scrollTop+ag_body.clientHeight)/ag_body.scrollHeight;
+  readState.textContent=Math.round(p*100)+'%';
+  if(p>=0.95){ agreeUniversal.disabled=false; }
+});
+ag_done.onclick=()=>{ readState.textContent='100%'; agreeModal.classList.remove('show'); agreeUniversal.checked=true; agreeUniversal.disabled=false; };
+
+/* ===== Back from Step 4 ===== */
+back4.onclick=()=>setStep(2);
+
+/* ===== SID mapping ===== */
+function genSID(){ const chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<15;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+
+/* ===== Submit => Done ===== */
+submit.onclick=()=>{
+  if(!agreeUniversal.checked || !agreeTerms.checked || !agreeAge.checked){
+    alert(activeLang()==='th'?'โปรดเปิดอ่านและยอมรับเงื่อนไขทั้งหมด':'Please read and accept all confirmations'); return;
+  }
+  const wallet=localStorage.getItem('last_wallet')||''; if(!wallet){ alert(activeLang()==='th'?'กรุณาเชื่อมต่อวอลเล็ตก่อน':'Connect your wallet first'); setStep(0); return; }
+
+  const MAP_KEY='society_sid_map'; let map={}; try{map=JSON.parse(localStorage.getItem(MAP_KEY)||'{}')}catch{}
+  let sid=map[wallet]; if(!sid){ sid=genSID(); map[wallet]=sid; localStorage.setItem(MAP_KEY, JSON.stringify(map)); }
+
+  const account={
+    wallet, role, sid,
+    name: role==='creator' ? (cName.value||'').trim() : (supName.value||'').trim(),
+    cat: role==='creator' ? (cat.value||'') : '',
+    bio: role==='creator' ? (cBio.value||'').trim() : '',
+    ageGated: role==='creator' ? new Set(['adult','glamour','nsfw-cosplay']).has((cat.value||'')) : false,
+    verification: (role==='creator' && new Set(['adult','glamour','nsfw-cosplay']).has((cat.value||'')))
+      ? { status:'pending', etaHours:'12–16', selfie:!!localStorage.getItem('society_verif_selfie'), id:!!localStorage.getItem('society_verif_id') }
+      : { status:'approved' }
+  };
+  localStorage.setItem('society_account', JSON.stringify(account));
+  localStorage.setItem('suiciety_account', JSON.stringify(account)); // legacy
+
+  // Business card
+  bAva.textContent = (account.name||'S').slice(0,1).toUpperCase();
+  bc_name.textContent = account.name || (role==='creator'?'Creator':'Supporter');
+  bc_role.textContent = (activeLang()==='th'?'บทบาท: ':'Role: ') + (role==='creator'?'Creator':'Supporter');
+  bc_bio.textContent  = 'Bio: ' + (account.bio || '—');
+  sidInline.textContent = sid;
+
+  // 18+ hold
+  holdBox.style.display = (account.role==='creator' && account.ageGated && account.verification.status==='pending') ? 'block' : 'none';
+
+  setStep(4);
+};
+
+/* ===== Copy SID ===== */
+copySid.onclick=()=>{ const t=sidInline.textContent||''; navigator.clipboard?.writeText(t).then(()=>{ copySid.textContent='Copied!'; setTimeout(()=>copySid.textContent='Copy SID',900) }); };
+
+/* ===== Chat demo ===== */
+const CHAT_KEY='society_chat';
+function loadChat(){ try{return JSON.parse(localStorage.getItem(CHAT_KEY)||'[]')}catch{return[]} }
+function saveChat(L){ localStorage.setItem(CHAT_KEY, JSON.stringify(L)) }
+function renderChat(){ chatBody.innerHTML=''; loadChat().forEach(m=>{ const d=document.createElement('div'); d.className='msg'+(m.me?' me':''); d.textContent=m.text; chatBody.appendChild(d); }); chatBody.scrollTop=chatBody.scrollHeight; }
+function openChat(){ chatPanel.classList.add('show'); renderChat(); chatText.focus(); }
+function closeChat(){ chatPanel.classList.remove('show'); }
+function sendChat(){ const txt=(chatText.value||'').trim(); if(!txt) return; const L=loadChat(); L.push({me:true,text:txt,ts:Date.now()}); saveChat(L); chatText.value=''; renderChat(); setTimeout(()=>{ const L2=loadChat(); L2.push({me:false,text:"(Demo) Thanks! We'll get back soon.",ts:Date.now()}); saveChat(L2); renderChat(); }, 500); }
+chatFab.onclick=openChat; chatClose.onclick=closeChat; chatSend.onclick=sendChat; chatText.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* ===== Init ===== */
+(function init(){
+  applyLang();
+  setRole('creator'); showFields(); setStep(0);
+  const last=localStorage.getItem('last_wallet'); if(last){ addrLabel.style.display='inline-flex'; addrLabel.textContent='Connected: '+last; }
+  year.textContent=new Date().getFullYear();
+
+  // Improve touch scroll hint for footer when narrow
+  const fl=$('footlinks'); fl.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)) fl.scrollLeft += e.deltaY; }, {passive:true});
+})();
+</script>
+
+<!-- Year target -->
+<span id="year" style="display:none"></span>
+</body>
+</html>

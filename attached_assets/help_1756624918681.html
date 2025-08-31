@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Suiciety — Help & Safety</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f8ff; --fg:#0a1223; --muted:#5b6b87; --line:rgba(13,35,78,.14);
+  --card:#fff; --accent1:#7ed3f7; --accent2:#a7e8d6; --accent3:#cbb7ff;
+  --rad:16px; --shadow:0 10px 28px rgba(16,32,64,.06);
+  --good:#0a9b73; --warn:#b77700; --bad:#c62828;
+}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,Arial;color:var(--fg);background:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+
+/* Backdrop */
+.backdrop{
+  position:fixed; inset:0; z-index:-1;
+  background:
+    radial-gradient(35% 55% at 15% 10%,  var(--accent1) 0%, transparent 65%),
+    radial-gradient(40% 60% at 85% 12%,  var(--accent3) 0%, transparent 70%),
+    radial-gradient(50% 60% at 75% 85%,  var(--accent2) 0%, transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 60%, #eef4ff 100%);
+}
+.container{max-width:1100px;margin:0 auto;padding:16px}
+
+/* NAV */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:18px;
+  border:1px solid var(--line); background:rgba(255,255,255,.85); backdrop-filter:blur(8px)
+}
+.brand{display:flex;gap:10px;align-items:center}
+.logo{
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#001018;
+  background:conic-gradient(from 210deg,var(--accent2),var(--accent1),var(--accent3),var(--accent2));
+  box-shadow:0 6px 16px rgba(126,211,247,.25)
+}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:none;border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer}
+.btn.pri{background:linear-gradient(135deg,var(--accent2),var(--accent1));color:#032}
+.btn.ghost{background:#fff;border:1px solid var(--line)}
+.meta{color:var(--muted);font-size:13px}
+
+/* HERO */
+.hero{margin-top:14px}
+h1{margin:0;font-size:30px}
+.sub{color:var(--muted)}
+
+/* LAYOUT */
+.grid{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px}
+@media(max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.pad{padding:14px}
+
+/* Quick links */
+.qrow{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 12px;cursor:pointer;font-weight:800}
+
+/* Accordion */
+.acc{display:flex;flex-direction:column;gap:8px}
+.acc-item{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
+.acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;font-weight:800}
+.acc-body{display:none;padding:0 14px 14px 14px;color:#2f3b57}
+.acc-item.open .acc-body{display:block}
+.acc-item.open .acc-head{background:#f7faff}
+
+/* Lists */
+.ul{margin:6px 0 0 18px}
+.badge{font-size:11px;padding:6px 10px;border-radius:999px;background:#fff;border:1px solid var(--line)}
+.warn{color:var(--warn)} .good{color:var(--good)} .bad{color:var(--bad)}
+
+/* Sidebar */
+.side{position:sticky;top:12px;height:max-content;display:flex;flex-direction:column;gap:12px}
+.side .line{height:1px;background:var(--line);margin:10px 0}
+
+/* Report Modal (reusable) */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal.show{display:flex}
+.panel{max-width:520px;width:100%;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input,.textarea,select{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff
+}
+.textarea{min-height:90px;resize:vertical}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.small{font-size:12px;color:var(--muted)}
+.toast{
+  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+  background:#fff; border:1px solid var(--line); border-radius:999px; padding:10px 14px; box-shadow:var(--shadow); display:none
+}
+.toast.show{display:block}
+.demo-post{
+  margin-top:8px;border:1px dashed var(--line);border-radius:12px;padding:10px;background:#fff
+}
+.demo-post .head{display:flex;gap:8px;align-items:center}
+.demo-post .ava{width:28px;height:28px;border-radius:8px;background:#dfe9ff;display:grid;place-items:center;font-weight:800}
+.demo-post .body{margin-top:6px}
+.badgelist{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
+/* Regional block bits */
+.jur-block{margin-top:8px}
+#jurSel{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+
+/* RTL support (Arabic, etc.) */
+.rtl{direction:rtl}
+.rtl .ul{margin:6px 18px 0 0}
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+
+<div class="container">
+  <!-- NAV -->
+  <div class="nav" role="navigation">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <div style="font-weight:900">Suiciety</div>
+        <div class="meta" data-i18n="nav.subtitle">Help & Safety</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" href="./discover.html" data-i18n="nav.explore">Explore more</a>
+      <a class="btn ghost" href="./index.html" data-i18n="nav.home">Home</a>
+      <button id="connect" class="btn pri" data-i18n="nav.connect">Connect Wallet</button>
+      <select id="lang" class="btn ghost" aria-label="Language">
+        <option value="auto" id="optAuto">Auto (device)</option>
+        <option value="en">English</option>
+        <option value="th">ไทย</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="zh">中文</option>
+        <option value="es">Español</option>
+        <option value="pt">Português</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="ar">العربية</option>
+        <option value="hi">हिन्दी</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ru">Русский</option>
+      </select>
+      <button id="openTxMgr" class="btn ghost" title="Developer-only" style="opacity:.8">Manage translations (dev)</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1 data-i18n="hero.title">Help & Safety</h1>
+    <div class="sub" data-i18n="hero.subtitle">Safe usage · Reporting · FAQ · Refunds (mock)</div>
+    <div class="qrow" style="margin-top:10px">
+      <button class="pill" id="quickReport" data-i18n="hero.reportBtn">⚠️ Report content</button>
+      <a class="pill" href="#refunds" data-i18n="hero.refundsBtn">💳 Refunds (crypto)</a>
+      <a class="pill" href="#guidelines" data-i18n="hero.guidelinesBtn">📜 Community Guidelines</a>
+      <a class="pill" href="#legal" data-i18n="hero.legalBtn">🛡️ Legal & Takedown</a>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="grid">
+    <div>
+      <!-- FAQ -->
+      <div class="card pad">
+        <h2 style="margin:0 0 8px" data-i18n="faq.h2">FAQ</h2>
+        <div class="acc" id="faq">
+          <div class="acc-item open">
+            <div class="acc-head" data-i18n="faq.q1">Crypto payments: can I cancel/refund?</div>
+            <div class="acc-body" data-i18n="faq.a1">
+              On-chain transactions (e.g., SUI) are technically irreversible. Tips are generally non-refundable. PPV/Subscriptions may be refundable for clear system error or fraud. See “Refunds”.
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-head" data-i18n="faq.q2">How do I report content?</div>
+            <div class="acc-body" data-i18n="faq.a2">
+              Click the <strong>Report</strong> button under a post or on a creator page. Choose reasons and add URLs/evidence. We’ll contact you if more info is needed.
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-head" data-i18n="faq.q3">NSFW / 18+ requirements?</div>
+            <div class="acc-body" data-i18n="faq.a3">
+              Creators must tag <strong>NSFW</strong> on applicable posts/profile and comply with local age rules (this demo is mock).
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-head" data-i18n="faq.q4">Copyright / DMCA</div>
+            <div class="acc-body" data-i18n="faq.a4">
+              If you own the copyright, send a specific takedown request with precise URLs, proof of ownership, and contact info (see Legal & Takedown).
+            </div>
+          </div>
+          <div class="acc-item">
+            <div class="acc-head" data-i18n="faq.q5">Block / mute abusive users</div>
+            <div class="acc-body" data-i18n="faq.a5">
+              Blocking/muting is in development (demo). Meanwhile, please use Report so our team can review.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GUIDELINES -->
+      <div id="guidelines" class="card pad" style="margin-top:12px">
+        <h2 style="margin:0 0 8px" data-i18n="guide.h2">Community Guidelines (summary)</h2>
+        <ul class="ul">
+          <li data-i18n="guide.li1"><strong>Strictly prohibited</strong>: CSAM, severe violence, hate/harassment, fraud/phishing/scams, malware/spyware, illegal weapons/drugs sales.</li>
+          <li data-i18n="guide.li2">NSFW/18+ must be clearly tagged <span class="badge" style="border-color:#eaa">NSFW</span> and follow local age laws.</li>
+          <li data-i18n="guide.li3">IP: Post only content you have rights to use.</li>
+          <li data-i18n="guide.li4">Privacy: Don’t share sensitive personal info without consent.</li>
+          <li data-i18n="guide.li5">Safety: Don’t promote self-harm or violence. In emergencies, contact local authorities immediately.</li>
+        </ul>
+        <div class="badgelist">
+          <span class="badge" data-i18n="guide.badge1">NSFW tagged</span>
+          <span class="badge" data-i18n="guide.badge2">No CSAM</span>
+          <span class="badge" data-i18n="guide.badge3">No scams</span>
+          <span class="badge" data-i18n="guide.badge4">Respect IP</span>
+        </div>
+        <div class="small" style="margin-top:8px" data-i18n="guide.note">Note: This is a quick summary—see full Terms/Privacy for binding requirements.</div>
+      </div>
+
+      <!-- REFUNDS -->
+      <div id="refunds" class="card pad" style="margin-top:12px">
+        <h2 style="margin:0 0 8px" data-i18n="refund.h2">Refunds & Disputes (demo)</h2>
+        <p class="small" data-i18n="refund.p1">On-chain payments are generally irreversible—policy below is demo-only. Adjust for your jurisdiction.</p>
+        <ul class="ul">
+          <li data-i18n="refund.li1"><strong>Tips</strong>: generally non-refundable except provable mistakes (contact within 24h).</li>
+          <li data-i18n="refund.li2"><strong>PPV</strong>: refundable within 48h if media is inaccessible or materially misdescribed.</li>
+          <li data-i18n="refund.li3"><strong>Subscriptions</strong>: cancel anytime—effective next cycle (no refund for current). Fraud cases reviewed with evidence.</li>
+          <li data-i18n="refund.li4"><strong>Chargebacks</strong>: may suspend content access pending dispute resolution.</li>
+        </ul>
+        <div class="qrow" style="margin-top:8px">
+          <button class="pill" id="openRefundForm" data-i18n="refund.btn">📝 Request refund (mock)</button>
+          <a class="pill" href="#legal" data-i18n="refund.dmca">📮 DMCA / Takedown</a>
+        </div>
+      </div>
+
+      <!-- LEGAL -->
+      <div id="legal" class="card pad" style="margin-top:12px">
+        <h2 style="margin:0 0 8px" data-i18n="legal.h2">Legal & Takedown</h2>
+        <ul class="ul">
+          <li data-i18n="legal.li1"><strong>Copyright/DMCA</strong>: send a request with precise URLs, proof of ownership, and contact info.</li>
+          <li data-i18n="legal.li2"><strong>Emergency / CSAM</strong>: do not redistribute; contact local law enforcement immediately.</li>
+          <li data-i18n="legal.li3"><strong>Jurisdiction</strong>: specify in your Terms; this page is a demo.</li>
+          <li data-i18n="legal.li4"><strong>Not legal advice</strong>: consult local counsel.</li>
+        </ul>
+        <div class="qrow" style="margin-top:8px">
+          <a class="pill" href="#" data-i18n="legal.terms">Terms of Service (mock)</a>
+          <a class="pill" href="#" data-i18n="legal.privacy">Privacy Policy (mock)</a>
+          <a class="pill" href="mailto:support@example.com" data-i18n="legal.support">Contact Support</a>
+        </div>
+      </div>
+
+      <!-- REGIONAL LEGAL (drop-in) -->
+      <div id="regional" class="card pad" style="margin-top:12px">
+        <div style="display:flex;align-items:end;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <h2 style="margin:0 0 4px" data-i18n="regional.h2">Regional Legal & Compliance</h2>
+            <div class="small" data-i18n="regional.note">Choose your country/region (draft content, not legal advice).</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label class="small" for="jurSel" data-i18n="regional.label">Jurisdiction:</label>
+            <select id="jurSel">
+              <option value="US">United States</option>
+              <option value="EU">EU / EEA</option>
+              <option value="UK">United Kingdom</option>
+              <option value="TH">Thailand</option>
+              <option value="SG">Singapore</option>
+              <option value="JP">Japan</option>
+              <option value="KR">South Korea</option>
+              <option value="BR">Brazil</option>
+              <option value="AU">Australia</option>
+              <option value="CA">Canada</option>
+              <option value="IN">India</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- US -->
+        <div data-jur="US" class="jur-block">
+          <h3 style="margin:10px 0 6px">United States</h3>
+          <ul class="ul">
+            <li><strong>DMCA safe harbor</strong>: Designated Agent + clear Notice/Counter-Notice.</li>
+            <li><strong>18 U.S.C. §2257</strong> (for explicit content): age-verification records & custodian notice.</li>
+            <li><strong>COPPA</strong>: no targeting under 13s.</li>
+            <li><strong>CCPA/CPRA</strong>: privacy rights & DSAR workflow.</li>
+            <li><strong>OFAC/AML</strong>: if custodial/treasury—KYC/screening as needed.</li>
+            <li><strong>Taxes</strong>: sales/marketplace facilitator rules.</li>
+          </ul>
+        </div>
+
+        <!-- EU/EEA -->
+        <div data-jur="EU" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">EU / EEA</h3>
+          <ul class="ul">
+            <li><strong>GDPR</strong>: lawful basis, DPA/SCCs, data subject rights, DPO (if required).</li>
+            <li><strong>DSA</strong>: notice & action, transparency reporting, EU point of contact.</li>
+            <li><strong>VAT (OSS)</strong>: cross-border digital services.</li>
+            <li><strong>Consumer</strong>: withdrawal rights (exceptions for started digital delivery).</li>
+          </ul>
+        </div>
+
+        <!-- UK -->
+        <div data-jur="UK" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">United Kingdom</h3>
+          <ul class="ul">
+            <li><strong>UK GDPR</strong> & DPA.</li>
+            <li><strong>Online Safety Act 2023</strong>.</li>
+            <li><strong>VAT</strong> for digital services.</li>
+          </ul>
+        </div>
+
+        <!-- TH -->
+        <div data-jur="TH" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Thailand</h3>
+          <ul class="ul">
+            <li><strong>PDPA</strong>: notice, rights, DPO (if applicable), cross-border transfer.</li>
+            <li><strong>Computer Crime Act</strong>: lawful takedown process.</li>
+            <li><strong>VAT e-service</strong> (if applicable).</li>
+            <li><strong>18+</strong>: age-gating for NSFW.</li>
+          </ul>
+        </div>
+
+        <!-- SG -->
+        <div data-jur="SG" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Singapore</h3>
+          <ul class="ul">
+            <li><strong>PDPA (SG)</strong>: collection/use/disclosure rules.</li>
+            <li><strong>IMDA codes</strong>: content restrictions.</li>
+            <li><strong>PSA</strong>: DPT service providers (if applicable).</li>
+          </ul>
+        </div>
+
+        <!-- JP -->
+        <div data-jur="JP" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Japan</h3>
+          <ul class="ul">
+            <li><strong>APPI</strong>: purpose notice, cross-border transfers.</li>
+            <li><strong>Provider Liability Act</strong>: defamation/infringement procedures.</li>
+            <li><strong>JCT</strong>: consumption tax on digital services.</li>
+          </ul>
+        </div>
+
+        <!-- KR -->
+        <div data-jur="KR" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">South Korea</h3>
+          <ul class="ul">
+            <li><strong>PIPA/ICNA</strong>: privacy & security obligations.</li>
+            <li><strong>Youth protection</strong>: NSFW age controls.</li>
+          </ul>
+        </div>
+
+        <!-- BR -->
+        <div data-jur="BR" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Brazil</h3>
+          <ul class="ul">
+            <li><strong>LGPD</strong>: controller/processor duties & rights.</li>
+            <li><strong>Marco Civil</strong>: provider liability framework.</li>
+          </ul>
+        </div>
+
+        <!-- AU -->
+        <div data-jur="AU" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Australia</h3>
+          <ul class="ul">
+            <li><strong>Online Safety Act</strong>: harmful content responses.</li>
+            <li><strong>GST</strong>: digital services.</li>
+          </ul>
+        </div>
+
+        <!-- CA -->
+        <div data-jur="CA" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">Canada</h3>
+          <ul class="ul">
+            <li><strong>PIPEDA</strong> (+ provincial laws): privacy rules.</li>
+            <li><strong>GST/HST</strong>: digital services.</li>
+          </ul>
+        </div>
+
+        <!-- IN -->
+        <div data-jur="IN" class="jur-block" style="display:none">
+          <h3 style="margin:10px 0 6px">India</h3>
+          <ul class="ul">
+            <li><strong>IT Rules 2021</strong>: grievance & takedown timelines.</li>
+            <li><strong>GST</strong>: digital services.</li>
+            <li><strong>Age-gating</strong> for NSFW.</li>
+          </ul>
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          Legal contact: <a href="mailto:law@suiciety.example">law@suiciety.example</a> ·
+          Data requests: <a href="mailto:privacy@suiciety.example">privacy@suiciety.example</a> ·
+          <span data-i18n="regional.updated">Updated: </span><span id="jurUpdated">—</span>
+        </div>
+      </div>
+
+      <!-- DEMO: Report a sample post -->
+      <div class="card pad" style="margin-top:12px">
+        <div style="font-weight:900" data-i18n="demo.h3">Demo: Report component</div>
+        <div class="demo-post" id="demoTarget">
+          <div class="head">
+            <div class="ava">A</div>
+            <div><strong>@alice</strong> · <span class="meta" data-i18n="demo.sample">sample post</span></div>
+          </div>
+          <div class="body">Poster WIP — feedback welcome!</div>
+          <div class="qrow" style="margin-top:8px">
+            <button class="pill" id="DemoReportBtn" data-i18n="hero.reportBtn">⚠️ Report content</button>
+          </div>
+        </div>
+        <div class="small" style="margin-top:6px" data-i18n="demo.note">Click “Report” to test the modal (stored locally in this demo).</div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="side">
+      <div class="card pad">
+        <div style="font-weight:900" data-i18n="side.quick">Safety quick links</div>
+        <div class="qrow" style="margin-top:8px">
+          <button class="pill" id="quickReport2" data-i18n="hero.reportBtn">⚠️ Report content</button>
+          <a class="pill" href="#guidelines" data-i18n="hero.guidelinesBtn">📜 Community Guidelines</a>
+          <a class="pill" href="#refunds" data-i18n="hero.refundsBtn">💳 Refunds (crypto)</a>
+        </div>
+        <div class="line"></div>
+        <div class="small" data-i18n="side.emergency">
+          If this is an emergency, contact local authorities immediately. This is a demo UI — not connected to mainnet.
+        </div>
+      </div>
+
+      <div class="card pad">
+        <div style="font-weight:900" data-i18n="side.how">How reporting works</div>
+        <ol class="ul">
+          <li data-i18n="side.li1">Choose up to two most relevant reasons.</li>
+          <li data-i18n="side.li2">Add details and links/evidence.</li>
+          <li data-i18n="side.li3">We review under Guidelines & local law.</li>
+          <li data-i18n="side.li4">Actions may include temporary hide/suspension/ban.</li>
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+  <div class="panel">
+    <h3 id="reportTitle" data-i18n="report.title">Report content</h3>
+    <div class="small" id="reportTarget">Target: —</div>
+    <div class="row" style="margin-top:8px">
+      <select id="repType">
+        <option value="post" data-i18n-static="report.type.post">Post</option>
+        <option value="creator" data-i18n-static="report.type.creator">Creator page</option>
+        <option value="comment" data-i18n-static="report.type.comment">Comment</option>
+        <option value="other" data-i18n-static="report.type.other">Other</option>
+      </select>
+      <input id="repUrl" class="input" data-i18n-ph="report.urlPh" placeholder="URL or ID (optional)">
+    </div>
+    <div class="small" data-i18n="report.selectUpTo">Select up to 2 reasons</div>
+    <div class="qrow" id="reasonWrap" style="margin-top:6px"></div>
+    <textarea id="repNote" class="textarea" data-i18n-ph="report.notePh" placeholder="Details, timestamps, evidence links…"></textarea>
+    <div class="small" data-i18n="report.hint">Providing accurate details helps us review faster.</div>
+    <div class="actions">
+      <button class="btn ghost" id="repCancel" data-i18n="common.cancel">Cancel</button>
+      <button class="btn pri" id="repSubmit" data-i18n="common.submit">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- REFUND MODAL -->
+<div class="modal" id="refundModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3 data-i18n="refund.modalTitle">Refund request (mock)</h3>
+    <div class="row">
+      <select id="rfType">
+        <option value="ppv" data-i18n-static="refund.type.ppv">PPV</option>
+        <option value="sub" data-i18n-static="refund.type.sub">Subscription</option>
+        <option value="tip" data-i18n-static="refund.type.tip">Tip (exception)</option>
+      </select>
+      <input id="rfAmt" class="input" type="number" step="0.1" min="0" data-i18n-ph="refund.amtPh" placeholder="Amount (SUI)">
+    </div>
+    <input id="rfUrl" class="input" data-i18n-ph="refund.urlPh" placeholder="Related URL or Post ID">
+    <textarea id="rfNote" class="textarea" data-i18n-ph="refund.notePh" placeholder="What went wrong?"></textarea>
+    <div class="actions">
+      <button class="btn ghost" id="rfCancel" data-i18n="common.cancel">Cancel</button>
+      <button class="btn pri" id="rfSend" data-i18n="common.send">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRANSLATION MANAGER (dev tool) -->
+<div class="modal" id="txModal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h3>Translation Manager</h3>
+    <div class="row">
+      <select id="txLang">
+        <option value="th">ไทย</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="zh">中文</option>
+        <option value="es">Español</option>
+        <option value="pt">Português</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="ar">العربية</option>
+        <option value="hi">हिन्दी</option>
+        <option value="id">Bahasa Indonesia</option>
+        <option value="vi">Tiếng Việt</option>
+        <option value="ru">Русский</option>
+      </select>
+      <button id="txExport" class="btn ghost">Export JSON</button>
+      <button id="txImportBtn" class="btn ghost">Import JSON</button>
+    </div>
+    <div class="small">Edit values below. Saved to localStorage and applied instantly.</div>
+    <div id="txList" style="max-height:45vh;overflow:auto;margin-top:8px"></div>
+    <div class="actions">
+      <button class="btn ghost" id="txClose">Close</button>
+      <button class="btn pri" id="txSave">Save</button>
+    </div>
+    <textarea id="txImportArea" class="textarea" placeholder='Paste JSON here' style="display:none;margin-top:8px"></textarea>
+  </div>
+</div>
+
+<div class="toast" id="toast">Submitted (local demo)</div>
+
+<script>
+/* ===== Storage & helpers ===== */
+const STORE={ me:'suiciety_me', reports:'suiciety_reports', refunds:'suiciety_refunds', i18n:'suiciety_i18n' };
+const $=s=>document.querySelector(s);
+function load(k,d){ try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch{return d} }
+function save(k,v){ localStorage.setItem(k,JSON.stringify(v)) }
+
+/* ===== Wallet mock ===== */
+const me=load(STORE.me) || {wallet:''};
+function updateWallet(){ $('#connect').textContent = me.wallet? (tr('nav.connected')+': '+me.wallet) : tr('nav.connect'); }
+$('#connect').onclick=()=>{ me.wallet = me.wallet?'':('0x'+Math.random().toString(16).slice(2,10)+'…'); save(STORE.me,me); updateWallet(); };
+
+/* ===== I18N ===== */
+const BASE_I18N={
+  en:{
+    "nav.subtitle":"Help & Safety","nav.explore":"Explore more","nav.home":"Home","nav.connect":"Connect Wallet","nav.connected":"Connected",
+    "hero.title":"Help & Safety","hero.subtitle":"Safe usage · Reporting · FAQ · Refunds (mock)","hero.reportBtn":"⚠️ Report content","hero.refundsBtn":"💳 Refunds (crypto)","hero.guidelinesBtn":"📜 Community Guidelines","hero.legalBtn":"🛡️ Legal & Takedown",
+    "faq.h2":"FAQ","faq.q1":"Crypto payments: can I cancel/refund?","faq.a1":"On-chain transactions (e.g., SUI) are technically irreversible. Tips are generally non-refundable. PPV/Subscriptions may be refundable for clear system error or fraud. See “Refunds”.",
+    "faq.q2":"How do I report content?","faq.a2":"Click the <strong>Report</strong> button under a post or on a creator page. Choose reasons and add URLs/evidence. We’ll contact you if more info is needed.",
+    "faq.q3":"NSFW / 18+ requirements?","faq.a3":"Creators must tag <strong>NSFW</strong> on applicable posts/profile and comply with local age rules (this demo is mock).",
+    "faq.q4":"Copyright / DMCA","faq.a4":"If you own the copyright, send a specific takedown request with precise URLs, proof of ownership, and contact info (see Legal & Takedown).",
+    "faq.q5":"Block / mute abusive users","faq.a5":"Blocking/muting is in development (demo). Meanwhile, please use Report so our team can review.",
+    "guide.h2":"Community Guidelines (summary)","guide.li1":"<strong>Strictly prohibited</strong>: CSAM, severe violence, hate/harassment, fraud/phishing/scams, malware/spyware, illegal weapons/drugs sales.",
+    "guide.li2":"NSFW/18+ must be clearly tagged <span class='badge' style='border-color:#eaa'>NSFW</span> and follow local age laws.",
+    "guide.li3":"IP: Post only content you have rights to use.","guide.li4":"Privacy: Don’t share sensitive personal info without consent.","guide.li5":"Safety: Don’t promote self-harm or violence. In emergencies, contact local authorities immediately.",
+    "guide.badge1":"NSFW tagged","guide.badge2":"No CSAM","guide.badge3":"No scams","guide.badge4":"Respect IP","guide.note":"Note: This is a quick summary—see full Terms/Privacy for binding requirements.",
+    "refund.h2":"Refunds & Disputes (demo)","refund.p1":"On-chain payments are generally irreversible—policy below is demo-only. Adjust for your jurisdiction.",
+    "refund.li1":"<strong>Tips</strong>: generally non-refundable except provable mistakes (contact within 24h).",
+    "refund.li2":"<strong>PPV</strong>: refundable within 48h if media is inaccessible or materially misdescribed.",
+    "refund.li3":"<strong>Subscriptions</strong>: cancel anytime—effective next cycle (no refund for current). Fraud cases reviewed with evidence.",
+    "refund.li4":"<strong>Chargebacks</strong>: may suspend content access pending dispute resolution.",
+    "refund.btn":"📝 Request refund (mock)","refund.dmca":"📮 DMCA / Takedown",
+    "legal.h2":"Legal & Takedown","legal.li1":"<strong>Copyright/DMCA</strong>: send a request with precise URLs, proof of ownership, and contact info.",
+    "legal.li2":"<strong>Emergency / CSAM</strong>: do not redistribute; contact local law enforcement immediately.",
+    "legal.li3":"<strong>Jurisdiction</strong>: specify in your Terms; this page is a demo.","legal.li4":"<strong>Not legal advice</strong>: consult local counsel.",
+    "legal.terms":"Terms of Service (mock)","legal.privacy":"Privacy Policy (mock)","legal.support":"Contact Support",
+    "regional.h2":"Regional Legal & Compliance","regional.note":"Choose your country/region (draft content, not legal advice).","regional.label":"Jurisdiction:","regional.updated":"Updated: ",
+    "demo.h3":"Demo: Report component","demo.sample":"sample post","demo.note":"Click “Report” to test the modal (stored locally in this demo).",
+    "side.quick":"Safety quick links","side.emergency":"If this is an emergency, contact local authorities immediately. This is a demo UI — not connected to mainnet.",
+    "side.how":"How reporting works","side.li1":"Choose up to two most relevant reasons.","side.li2":"Add details and links/evidence.","side.li3":"We review under Guidelines & local law.","side.li4":"Actions may include temporary hide/suspension/ban.",
+    "report.title":"Report content","report.selectUpTo":"Select up to 2 reasons","report.urlPh":"URL or ID (optional)","report.notePh":"Details, timestamps, evidence links…","report.hint":"Providing accurate details helps us review faster.",
+    "report.type.post":"Post","report.type.creator":"Creator page","report.type.comment":"Comment","report.type.other":"Other",
+    "refund.modalTitle":"Refund request (mock)","refund.type.ppv":"PPV","refund.type.sub":"Subscription","refund.type.tip":"Tip (exception)","refund.amtPh":"Amount (SUI)","refund.urlPh":"Related URL or Post ID","refund.notePh":"What went wrong?",
+    "common.cancel":"Cancel","common.submit":"Submit","common.send":"Send","toast.submitted":"Submitted (local demo)",
+    "reasons.csam":"Child sexual abuse imagery (CSAM) — banned","reasons.nonconsent":"Non-consensual / privacy violation","reasons.hate":"Hate / harassment / threats",
+    "reasons.violence":"Graphic violence / extremism","reasons.scam":"Fraud / phishing / scams","reasons.ip":"Copyright / trademark infringement",
+    "reasons.impersonation":"Impersonation","reasons.spam":"Spam / mass advertising","reasons.illegal":"Illegal goods/services","reasons.nsfw":"NSFW not properly tagged","reasons.other":"Other"
+  },
+  th:{
+    "nav.subtitle":"ศูนย์ช่วยเหลือ & ความปลอดภัย","nav.explore":"สำรวจเพิ่มเติม","nav.home":"หน้าแรก","nav.connect":"เชื่อมต่อวอลเล็ต","nav.connected":"เชื่อมต่อแล้ว",
+    "hero.title":"ศูนย์ช่วยเหลือ & ความปลอดภัย","hero.subtitle":"ใช้งานอย่างปลอดภัย · รายงานคอนเทนต์ · คำถามที่พบบ่อย · รีฟันด์ (เดโม)","hero.reportBtn":"⚠️ รายงานคอนเทนต์","hero.refundsBtn":"💳 การคืนเงิน (คริปโต)","hero.guidelinesBtn":"📜 แนวทางชุมชน","hero.legalBtn":"🛡️ กฎหมาย & การลบ",
+    "faq.h2":"คำถามที่พบบ่อย","faq.q1":"จ่ายเป็นคริปโต ยกเลิก/ขอคืนได้ไหม?","faq.a1":"ธุรกรรมบนเชน (เช่น SUI) โดยหลักย้อนกลับไม่ได้ ทิปโดยทั่วไปไม่คืนเงิน PPV/สมาชิก อาจคืนได้เมื่อเป็นความผิดพลาดของระบบชัดเจนหรือมีการฉ้อโกง — ดูหัวข้อ “การคืนเงิน”.",
+    "faq.q2":"รายงานคอนเทนต์อย่างไร?","faq.a2":"กดปุ่ม <strong>Report</strong> ใต้โพสต์หรือบนหน้าเพจครีเอเตอร์ เลือกเหตุผลและแนบลิงก์/หลักฐาน หากต้องการข้อมูลเพิ่ม เราจะติดต่อกลับ",
+    "faq.q3":"ข้อกำหนด NSFW / 18+","faq.a3":"ครีเอเตอร์ต้องติดแท็ก <strong>NSFW</strong> ให้ชัดเจนและปฏิบัติตามกฎหมายอายุในพื้นที่ (หน้านี้เป็นเดโม)",
+    "faq.q4":"ลิขสิทธิ์ / DMCA","faq.a4":"หากคุณเป็นเจ้าของลิขสิทธิ์ ให้ส่งคำขอระบุ URL ที่ชัดเจน หลักฐานความเป็นเจ้าของ และข้อมูลติดต่อ (ดู กฎหมาย & การลบ)",
+    "faq.q5":"บล็อก/มิวต์ ผู้ใช้ก่อกวน","faq.a5":"ฟีเจอร์กำลังพัฒนา ในระหว่างนี้โปรดใช้ Report ให้ทีมตรวจสอบ",
+    "guide.h2":"แนวทางชุมชน (สรุป)","guide.li1":"<strong>ห้ามเด็ดขาด</strong>: CSAM ความรุนแรงร้ายแรง ความเกลียดชัง/คุกคาม สแกม/ฟิชชิง มัลแวร์ การขายอาวุธ/ยาเสพติดผิดกฎหมาย",
+    "guide.li2":"คอนเทนต์ 18+ ต้องติดป้าย <span class='badge' style='border-color:#eaa'>NSFW</span> ชัดเจน และทำตามกฎหมายอายุท้องถิ่น",
+    "guide.li3":"ทรัพย์สินทางปัญญา: โพสต์เฉพาะสิ่งที่คุณมีสิทธิ์","guide.li4":"ความเป็นส่วนตัว: ห้ามเผยข้อมูลส่วนบุคคลอ่อนไหวโดยไม่ได้รับอนุญาต","guide.li5":"ความปลอดภัย: ห้ามส่งเสริมการทำร้ายตัวเอง/ผู้อื่น ฉุกเฉินให้ติดต่อหน่วยงานรัฐทันที",
+    "guide.badge1":"ติดแท็ก NSFW","guide.badge2":"ห้าม CSAM","guide.badge3":"ห้ามสแกม","guide.badge4":"เคารพลิขสิทธิ์","guide.note":"นี่เป็นสรุปย่อ—โปรดอ่าน Terms/Privacy ฉบับเต็มสำหรับข้อผูกพัน",
+    "refund.h2":"การคืนเงิน & ข้อพิพาท (เดโม)","refund.p1":"ธุรกรรมบนเชนโดยทั่วไปย้อนกลับไม่ได้—นโยบายนี้เป็นเดโม โปรดปรับให้เหมาะกับกฎหมายในพื้นที่ของคุณ",
+    "refund.li1":"<strong>ทิป</strong>: โดยหลักไม่คืน ยกเว้นโอนผิดที่พิสูจน์ได้ (ภายใน 24 ชม.)",
+    "refund.li2":"<strong>PPV</strong>: ขอคืนได้ใน 48 ชม. หากสื่อเข้าไม่ได้หรือไม่ตรงคำอธิบายอย่างมีนัยสำคัญ",
+    "refund.li3":"<strong>สมาชิก</strong>: ยกเลิกต่ออายุได้ทุกเมื่อ มีผลรอบถัดไป (ไม่คืนรอบปัจจุบัน) กรณีฉ้อโกงให้หลักฐานครับ",
+    "refund.li4":"<strong>ชาร์จแบ็ก</strong>: อาจระงับการเข้าถึงคอนเทนต์ชั่วคราวจนกว่าข้อพิพาทจะสิ้นสุด",
+    "refund.btn":"📝 ขอคืนเงิน (เดโม)","refund.dmca":"📮 DMCA / Takedown",
+    "legal.h2":"กฎหมาย & การลบเนื้อหา","legal.li1":"<strong>ลิขสิทธิ์/DMCA</strong>: ส่งคำขอพร้อม URL ที่เฉพาะเจาะจง หลักฐานความเป็นเจ้าของ และข้อมูลติดต่อ",
+    "legal.li2":"<strong>กรณีฉุกเฉิน/CSAM</strong>: ห้ามส่งต่อ และให้ติดต่อหน่วยงานรัฐทันที",
+    "legal.li3":"<strong>เขตอำนาจ</strong>: โปรดระบุในเอกสาร Terms — หน้านี้เป็นเดโม","legal.li4":"<strong>ไม่ใช่คำแนะนำทางกฎหมาย</strong>: ควรปรึกษาทนายในพื้นที่",
+    "legal.terms":"ข้อกำหนดการใช้บริการ (เดโม)","legal.privacy":"นโยบายความเป็นส่วนตัว (เดโม)","legal.support":"ติดต่อฝ่ายสนับสนุน",
+    "regional.h2":"ข้อกำหนดตามประเทศ/ภูมิภาค","regional.note":"เลือกประเทศ/ภูมิภาค (เนื้อหาร่าง ไม่ใช่คำแนะนำทางกฎหมาย)","regional.label":"เขตอำนาจ:","regional.updated":"อัปเดต: ",
+    "demo.h3":"เดโม: คอมโพเนนต์ Report","demo.sample":"ตัวอย่างโพสต์","demo.note":"กด “Report” เพื่อทดสอบ (เก็บข้อมูลไว้ในเครื่อง)",
+    "side.quick":"ลิงก์ด่วนด้านความปลอดภัย","side.emergency":"หากเป็นเหตุฉุกเฉิน โปรดติดต่อหน่วยงานรัฐทันที หน้านี้เป็นเดโม ยังไม่เชื่อม mainnet",
+    "side.how":"ขั้นตอนการรายงาน","side.li1":"เลือกเหตุผลที่ตรงที่สุด (ได้สูงสุด 2 ข้อ)","side.li2":"ใส่รายละเอียดและลิงก์หลักฐาน","side.li3":"เราตรวจสอบตาม Guideline และกฎหมายในพื้นที่","side.li4":"การดำเนินการอาจรวมถึงซ่อน/พักใช้งาน/ปิดบัญชี",
+    "report.title":"รายงานคอนเทนต์","report.selectUpTo":"เลือกเหตุผลได้สูงสุด 2 ข้อ","report.urlPh":"URL หรือ ID (ถ้ามี)","report.notePh":"รายละเอียด เวลา ลิงก์หลักฐาน…","report.hint":"ให้รายละเอียดครบถ้วนช่วยให้ตรวจเร็วขึ้น",
+    "report.type.post":"โพสต์","report.type.creator":"หน้าเพจครีเอเตอร์","report.type.comment":"คอมเมนต์","report.type.other":"อื่น ๆ",
+    "refund.modalTitle":"คำขอคืนเงิน (เดโม)","refund.type.ppv":"PPV","refund.type.sub":"สมาชิก","refund.type.tip":"ทิป (ข้อยกเว้น)","refund.amtPh":"จำนวน (SUI)","refund.urlPh":"URL หรือ ID ของโพสต์","refund.notePh":"เกิดปัญหาอะไรขึ้น?",
+    "common.cancel":"ยกเลิก","common.submit":"ส่ง","common.send":"ส่ง","toast.submitted":"ส่งข้อมูลแล้ว (เดโม)",
+    "reasons.csam":"สื่อเกี่ยวกับการล่วงละเมิดเด็ก (CSAM) — ห้ามเด็ดขาด","reasons.nonconsent":"ละเมิดความเป็นส่วนตัว/ไม่ยินยอม","reasons.hate":"ความเกลียดชัง/คุกคาม/ขู่ทำร้าย",
+    "reasons.violence":"ความรุนแรงรุนแรง/สุดโต่ง","reasons.scam":"ฉ้อโกง/ฟิชชิง/สแกม","reasons.ip":"ละเมิดลิขสิทธิ์/เครื่องหมายการค้า",
+    "reasons.impersonation":"ปลอมแปลงตัวตน","reasons.spam":"สแปม/โฆษณา","reasons.illegal":"สินค้าหรือบริการผิดกฎหมาย","reasons.nsfw":"NSFW ไม่ได้ติดป้ายอย่างถูกต้อง","reasons.other":"อื่น ๆ"
+  }
+};
+// user-supplied translations (from Translation Manager)
+const USER_I18N = load(STORE.i18n, {}); // { lang: { key: value } }
+
+const LANG_MAP={ zh:'zh', 'zh-cn':'zh', 'zh-tw':'zh', ja:'ja', 'ja-jp':'ja', ko:'ko', 'ko-kr':'ko',
+  es:'es', 'es-es':'es', pt:'pt', 'pt-br':'pt', fr:'fr', de:'de', ar:'ar', hi:'hi',
+  id:'id', 'in':'id', vi:'vi', ru:'ru', th:'th', en:'en' };
+
+function deviceLangKey(){
+  const raw=(navigator.language||'en').toLowerCase();
+  return LANG_MAP[raw] || LANG_MAP[raw.split('-')[0]] || 'en';
+}
+function activeLang(){
+  const sel=localStorage.getItem('lang')||'auto';
+  return sel==='auto' ? deviceLangKey() : sel;
+}
+function tr(key){
+  const lang = activeLang();
+  const user = (USER_I18N[lang]||{});
+  const base = (BASE_I18N[lang]||{});
+  return user[key] ?? base[key] ?? (BASE_I18N.en[key] ?? key);
+}
+function applyLang(){
+  // direction
+  document.body.classList.toggle('rtl', activeLang()==='ar');
+  // buttons/text
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-i18n');
+    const html=tr(k);
+    el.innerHTML = html;
+  });
+  // placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const k=el.getAttribute('data-i18n-ph');
+    el.setAttribute('placeholder', tr(k));
+  });
+  // static <option> etc
+  document.querySelectorAll('[data-i18n-static]').forEach(el=>{
+    const k=el.getAttribute('data-i18n-static');
+    el.textContent = tr(k);
+  });
+  // auto option label
+  const nameMap={en:"English",th:"ไทย",ja:"日本語",ko:"한국어",zh:"中文",es:"Español",pt:"Português",fr:"Français",de:"Deutsch",ar:"العربية",hi:"हिन्दी",id:"Bahasa Indonesia",vi:"Tiếng Việt",ru:"Русский"};
+  const dk=deviceLangKey(); const dn=nameMap[dk]||"English";
+  const optAuto=document.getElementById('optAuto'); if(optAuto) optAuto.textContent = `Auto (${dn})`;
+  // wallet label
+  updateWallet();
+  // rebuild reasons with translation
+  renderReasons();
+}
+document.getElementById('lang').onchange = (e)=>{ localStorage.setItem('lang', e.target.value); applyLang(); };
+
+/* ===== Accordion ===== */
+document.querySelectorAll('.acc-head').forEach(h=>{ h.onclick=()=>{ h.parentElement.classList.toggle('open'); }; });
+
+/* ===== Report component ===== */
+const REASONS_KEYS=['csam','nonconsent','hate','violence','scam','ip','impersonation','spam','illegal','nsfw','other'];
+const reportModal=$('#reportModal'); const reasonWrap=$('#reasonWrap');
+const repType=$('#repType'); const repUrl=$('#repUrl'); const repNote=$('#repNote'); const reportTarget=$('#reportTarget');
+
+function renderReasons(){
+  reasonWrap.innerHTML='';
+  REASONS_KEYS.forEach(key=>{
+    const b=document.createElement('button');
+    b.className='pill'; b.type='button'; b.textContent=tr('reasons.'+key);
+    b.dataset.val=key;
+    b.onclick=()=>{
+      b.classList.toggle('active');
+      if(reasonWrap.querySelectorAll('.pill.active').length>2) b.classList.remove('active');
+    };
+    reasonWrap.appendChild(b);
+  });
+}
+function openReport(target){
+  reportTarget.textContent = 'Target: ' + (target?.by? (target.by+' • '):'') + (target?.id||'–');
+  repType.value = (target?.type)||'post';
+  repUrl.value = (target?.url)||'';
+  repNote.value='';
+  reasonWrap.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  reportModal.classList.add('show');
+}
+function closeReport(){ reportModal.classList.remove('show'); }
+
+$('#repCancel').onclick=closeReport;
+$('#repSubmit').onclick=()=>{
+  const reasons=[...reasonWrap.querySelectorAll('.pill.active')].map(x=>x.dataset.val);
+  if(reasons.length===0){ alert(tr('report.selectUpTo')); return; }
+  const item={ id:'r'+Math.random().toString(36).slice(2,8), ts:Date.now(), by: me.wallet || 'anon',
+    type: repType.value, url: repUrl.value.trim(), reasons, note: repNote.value.trim() };
+  const L=load(STORE.reports,[]); L.unshift(item); save(STORE.reports,L);
+  closeReport(); toast(tr('toast.submitted'));
+};
+window.SuicietyReport = { open: openReport };
+
+$('#quickReport').onclick=()=>openReport({type:'post', id:'demo', url:location.href, by:'@alice'});
+$('#quickReport2').onclick=()=>openReport({type:'creator', id:'alice', url:location.href, by:'@alice'});
+$('#DemoReportBtn').onclick=()=>openReport({type:'post', id:'p_demo', url:location.href+'#demo', by:'@alice'});
+
+/* ===== Refund mock ===== */
+const refundModal=$('#refundModal');
+$('#openRefundForm').onclick=()=>{ refundModal.classList.add('show'); };
+$('#rfCancel').onclick=()=>{ refundModal.classList.remove('show'); };
+$('#rfSend').onclick=()=>{
+  const item={ id:'f'+Math.random().toString(36).slice(2,8), ts:Date.now(),
+    type:$('#rfType').value, amt: parseFloat($('#rfAmt').value||'0')||0,
+    url: ($('#rfUrl').value||'').trim(), note: ($('#rfNote').value||'').trim(), by: me.wallet || 'anon' };
+  if(!(item.amt>0)){ alert(tr('refund.amtPh')); return; }
+  const L=load(STORE.refunds,[]); L.unshift(item); save(STORE.refunds,L);
+  refundModal.classList.remove('show'); toast(tr('toast.submitted'));
+};
+
+/* ===== Modals backdrop close ===== */
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+
+/* ===== Toast ===== */
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1800); }
+
+/* ===== Regional legal selector ===== */
+(function jurisdictionModule(){
+  const sel = document.getElementById('jurSel');
+  const updated = document.getElementById('jurUpdated');
+  if(!sel) return;
+  const q = new URLSearchParams(location.search);
+  const urlJur = (q.get('jur')||'').toUpperCase();
+  const saved = localStorage.getItem('suiciety_jur') || '';
+  const ALL=['US','EU','UK','TH','SG','JP','KR','BR','AU','CA','IN'];
+  const def = ALL.includes(urlJur) ? urlJur : (ALL.includes(saved)? saved : 'US');
+  sel.value=def;
+  function showJur(v){
+    document.querySelectorAll('.jur-block').forEach(el=>{
+      el.style.display = el.getAttribute('data-jur')===v ? '' : 'none';
+    });
+    localStorage.setItem('suiciety_jur', v);
+    const d = new Date(); if(updated) updated.textContent = d.toLocaleDateString()+' '+d.toLocaleTimeString();
+  }
+  sel.onchange=()=>showJur(sel.value);
+  showJur(sel.value);
+})();
+
+/* ===== Translation Manager (dev) ===== */
+const txModal=$('#txModal'), txLang=$('#txLang'), txList=$('#txList'), txImportArea=$('#txImportArea');
+$('#openTxMgr').onclick=()=>{ buildTxList(); txModal.classList.add('show'); };
+$('#txClose').onclick=()=>txModal.classList.remove('show');
+$('#txLang').onchange=buildTxList;
+$('#txExport').onclick=()=>{
+  const lang=txLang.value; const data=USER_I18N[lang]||{};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`help_i18n_${lang}.json`; a.click();
+};
+$('#txImportBtn').onclick=()=>{ txImportArea.style.display = txImportArea.style.display==='none'?'block':'none'; };
+$('#txSave').onclick=()=>{
+  const lang=txLang.value; USER_I18N[lang]=USER_I18N[lang]||{};
+  // read from inputs
+  txList.querySelectorAll('input[data-k], textarea[data-k]').forEach(el=>{
+    const k=el.getAttribute('data-k'); const v=el.value;
+    if(v && v.trim().length>0) USER_I18N[lang][k]=v;
+    else delete USER_I18N[lang][k];
+  });
+  // import area
+  if(txImportArea.style.display==='block' && txImportArea.value.trim()){
+    try{
+      const obj=JSON.parse(txImportArea.value.trim());
+      Object.assign(USER_I18N[lang], obj||{});
+      txImportArea.value='';
+    }catch(e){ alert('Invalid JSON'); }
+  }
+  save(STORE.i18n, USER_I18N);
+  applyLang();
+  toast('Saved translations');
+  buildTxList();
+};
+function buildTxList(){
+  const lang=txLang.value; const user=USER_I18N[lang]||{};
+  const keys=Object.keys(BASE_I18N.en).sort();
+  txList.innerHTML='';
+  keys.forEach(k=>{
+    const base=BASE_I18N.en[k]||''; const cur = (USER_I18N[lang]&&USER_I18N[lang][k]) || (BASE_I18N[lang]&&BASE_I18N[lang][k]) || '';
+    const wrap=document.createElement('div'); wrap.style.marginBottom='8px';
+    const label=document.createElement('div'); label.className='small'; label.textContent=k;
+    const area = base.length>80 || k.startsWith('faq.a') || k.startsWith('guide.li') || k.startsWith('refund.li') || k.startsWith('legal.li')
+      ? document.createElement('textarea') : document.createElement('input');
+    area.className = area.tagName==='TEXTAREA' ? 'textarea' : 'input';
+    area.setAttribute('data-k', k);
+    area.value = cur || '';
+    const baseLine=document.createElement('div'); baseLine.className='small'; baseLine.innerHTML = `<em>EN:</em> ${base}`;
+    wrap.appendChild(label); wrap.appendChild(area); wrap.appendChild(baseLine);
+    txList.appendChild(wrap);
+  });
+}
+
+/* ===== Init ===== */
+(function init(){
+  // apply language once DOM is ready
+  applyLang();
+  // wallet button text after i18n
+  updateWallet();
+  // auto-open report via query
+  const q=new URLSearchParams(location.search);
+  if(q.get('report')) openReport({type:q.get('report'), id:q.get('id'), by:q.get('by'), url:q.get('url')||location.href});
+})();
+</script>
+</body>
+</html>
