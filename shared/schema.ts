@@ -21,6 +21,7 @@ export const creators = pgTable("creators", {
   avatar: text("avatar"),
   banner: text("banner"),
   category: text("category"),
+  fandomName: text("fandom_name").default("Supporters"), // Name for subscriber badges
   tiers: json("tiers").$type<Array<{
     id: string;
     name: string;
@@ -61,15 +62,48 @@ export const subscriptions = pgTable("subscriptions", {
   tier: text("tier").notNull(),
   amount: integer("amount").notNull(), // in cents
   active: boolean("active").default(true),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date").notNull(), // Subscription expiration
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const tips = pgTable("tips", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   supporterId: varchar("supporter_id").notNull().references(() => users.id),
-  creatorId: varchar("creator_id").notNull().references(() => creators.id),
+  creatorId: varchar("creator_id"),
+  postId: varchar("post_id"), // For tip-to-unlock posts
   amount: integer("amount").notNull(), // in cents
   message: text("message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Comments table for post discussions
+export const comments = pgTable("comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => posts.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  isHidden: boolean("is_hidden").default(false), // Creator can hide comments
+  upvotes: integer("upvotes").default(0),
+  downvotes: integer("downvotes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Comment votes for upvote/downvote functionality
+export const commentVotes = pgTable("comment_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").notNull().references(() => comments.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  voteType: text("vote_type").notNull(), // "upvote" | "downvote"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Post unlocks for tip-to-unlock content
+export const postUnlocks = pgTable("post_unlocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  postId: varchar("post_id").notNull().references(() => posts.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  tipId: varchar("tip_id").notNull().references(() => tips.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -140,6 +174,23 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+  createdAt: true,
+  upvotes: true,
+  downvotes: true,
+});
+
+export const insertCommentVoteSchema = createInsertSchema(commentVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPostUnlockSchema = createInsertSchema(postUnlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -164,3 +215,12 @@ export type InsertConversation = z.infer<typeof insertConversationSchema>;
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+
+export type Comment = typeof comments.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+export type CommentVote = typeof commentVotes.$inferSelect;
+export type InsertCommentVote = z.infer<typeof insertCommentVoteSchema>;
+
+export type PostUnlock = typeof postUnlocks.$inferSelect;
+export type InsertPostUnlock = z.infer<typeof insertPostUnlockSchema>;

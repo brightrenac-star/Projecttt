@@ -1,0 +1,183 @@
+Suiet Wallet Integration – Dev Instructions (for React frontend)
+
+We will integrate Suiet Wallet Kit so users (creators & supporters) can connect a Sui wallet and sign/execute transactions (e.g., tips, subscriptions, unlocks). Suiet Wallet Kit currently targets React projects. 
+kit.suiet.app
+
+1) Install dependencies
+npm install @mysten/sui @suiet/wallet-kit
+# or: yarn add @mysten/sui @suiet/wallet-kit
+
+
+Suiet Wallet Kit wraps the official @mysten/sui SDK and follows the Sui wallet standard. 
+kit.suiet.app
+npm
+
+2) Wrap the app with WalletProvider
+
+In your React entry (e.g., src/main.tsx or src/index.jsx):
+
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { WalletProvider } from "@suiet/wallet-kit";
+import App from "./App";
+
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <WalletProvider>
+      <App />
+    </WalletProvider>
+  </React.StrictMode>
+);
+
+
+WalletProvider exposes wallet state & functions to your components. 
+kit.suiet.app
+
+3) Add a one-click connect UI
+
+Use the ready-made ConnectButton anywhere in your navbar/header:
+
+import { ConnectButton } from "@suiet/wallet-kit";
+
+export function Nav() {
+  return (
+    <header className="nav">
+      {/* ... your brand links ... */}
+      <ConnectButton /> {/* handles connect, account display, disconnect */}
+    </header>
+  );
+}
+
+
+ConnectButton opens a wallet-select modal and shows account status when connected. 
+kit.suiet.app
+
+Tip: If you prefer a custom UI, you can use hooks only (useWallet) to build your own selector and account panel. 
+kit.suiet.app
++1
+
+4) Read wallet state in components
+import { useWallet } from "@suiet/wallet-kit";
+
+export function WalletStatus() {
+  const wallet = useWallet(); // address, connected, select(), disconnect(), signAndExecuteTransaction() ...
+  if (!wallet.connected) return <p>Wallet not connected</p>;
+  return <p>Connected: {wallet.address}</p>;
+}
+
+
+useWallet exposes connection state, account address, and tx methods. 
+kit.suiet.app
+
+5) Sign & execute a transaction (tip / subscribe / unlock)
+
+For MVP, you can execute a simple transaction from the client using signAndExecuteTransaction (or the newer helpers from the kit).
+
+import { useWallet } from "@suiet/wallet-kit";
+import { Transaction } from "@mysten/sui/transactions";
+
+export function TipButton({ to, amount }) {
+  const wallet = useWallet();
+
+  async function tip() {
+    if (!wallet.connected) throw new Error("Connect wallet first");
+    const tx = new Transaction();
+    // Example: transfer SUI. Replace with your real Move call / coin logic.
+    tx.setGasBudget(10_000_000); // adjust per network
+    tx.transferObjects(
+      [tx.gas], // using gas coin for demo; use proper coin selection in prod
+      to
+    );
+    const result = await wallet.signAndExecuteTransaction({ transaction: tx });
+    console.log("Tx result:", result);
+  }
+
+  return <button onClick={tip}>Tip</button>;
+}
+
+
+This follows the “sign & execute” flow recommended by the kit. For production, replace with proper coin selection and/or a Move call to your payment/subscription contract. 
+kit.suiet.app
+
+6) Map wallet → platform account (secure linking)
+
+To link a connected wallet to the user’s platform account (creator/supporter):
+
+Client: request a nonce from your backend:
+
+GET /wallet/nonce
+→ { nonce: "random-string" }
+
+
+Client: ask wallet to sign the nonce (message signing— or sign a zero-value tx if you standardize on tx-based auth).
+
+Client → Server: send { address, signature, nonce }.
+
+Server: verify signature belongs to address, then store address on the user account.
+
+Use the Sui crypto primitives from @mysten/sui server-side (Node) to verify.
+
+Always validate nonce freshness and single-use.
+
+Never trust client-only checks. Always verify signatures server-side before granting “subscriber”, “tip unlocked”, or “creator payout” rights.
+
+7) Gating content with wallet state
+
+Subscribers-only posts: After successful on-chain subscription (or off-chain record keyed by tx digest), your backend marks the user’s subscription active until endAt.
+
+Tip-to-unlock: Store postId + walletAddress + txDigest as proof of unlock.
+
+On GET /posts/:id, backend checks either:
+
+Active subscription (server DB), or
+
+Existing unlock record for walletAddress.
+
+If not authorized, return a locked preview.
+
+8) Network & dev environment
+
+Let users install Suiet from Chrome Web Store (docs provide getting-started & faucet/test tokens). Provide a “Get Suiet / Get Test SUI” help link. 
+Chrome Web Store
+suiet.app
+
+9) Optional: support multiple Sui wallets
+
+Suiet Wallet Kit can aggregate multiple wallets (auto-detect via Sui Wallet Standard). You get a selection modal out of the box—no extra work. Keep kit updated to benefit from wallet-standard support. 
+GitHub
+kit.suiet.app
+
+Minimal checklist you can paste into your task tracker
+
+ Install @suiet/wallet-kit and @mysten/sui. 
+kit.suiet.app
+
+ Wrap app with <WalletProvider>. 
+kit.suiet.app
+
+ Add <ConnectButton /> to navbar. 
+kit.suiet.app
+
+ Expose wallet state via useWallet() (show address, connect/disconnect). 
+kit.suiet.app
+
+ Implement Tip and Subscribe actions using signAndExecuteTransaction (replace demo with real Move calls). 
+kit.suiet.app
+
+ Backend endpoints: GET /wallet/nonce, POST /wallet/verify (signature verification) and DB columns for walletAddress, subscription, unlock.
+
+ Content gating: check subscription/unlock by walletAddress on post fetch.
+
+ Add Help: link to Suiet install + faucet/test tokens. 
+suiet.app
+Chrome Web Store
+
+If your frontend is NOT React
+
+Suiet Wallet Kit is React-only right now. Two options:
+
+Embed a small React island for wallet connect (mount a tiny React root just for the Connect button + flows), or
+
+Use the lower-level Sui SDK directly and implement wallet-standard connectors yourself (more work).
+
+Docs note: “Suiet wallet kit only supports React.js projects for now.

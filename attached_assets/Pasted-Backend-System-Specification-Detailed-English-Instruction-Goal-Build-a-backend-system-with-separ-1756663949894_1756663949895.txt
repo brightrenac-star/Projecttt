@@ -1,0 +1,165 @@
+Backend System Specification (Detailed English Instruction)
+
+Goal:
+Build a backend system with separate user accounts. The model is similar to OnlyFans: creators can publish posts with different visibility levels (public, private for subscribers, or tip-to-unlock).
+
+Core Features
+1. Account System
+
+Separate account roles: CREATOR and SUPPORTER (a user may act as both).
+
+Authentication: Registration, login, logout (JWT or session-based).
+
+Profile management: avatar, display name, bio.
+
+2. Subscription System
+
+A creator can define subscription tiers (e.g., Bronze, Silver, Gold).
+
+Each tier has:
+
+Name (custom by creator)
+
+Price per month
+
+Description (optional)
+
+Creators can also define a fandom name. Supporters who subscribe will receive a fandom badge with this name, displayed on their profile.
+
+(Future extension: creators can upload custom badge images).
+
+Supporters can subscribe to any creator (no restrictions, voluntary).
+
+Track subscription duration:
+
+Remaining days are calculated and shown on the creator’s page for each supporter.
+
+Auto-expiration after period ends (supporter loses access unless renewed).
+
+3. Post System
+
+Creators can post with 3 visibility types:
+
+Public: visible to everyone.
+
+Private (Subscribers Only): visible only to active subscribers.
+
+Tip to Unlock: locked post; supporter must pay one-time tip to unlock.
+
+Post content: text, media (images/videos), timestamp.
+
+Creator can delete their own posts at any time.
+
+4. Comment System
+
+Each post has a comment section.
+
+Supporters and creators can comment.
+
+Creator (owner of the post) can:
+
+Delete their own comments.
+
+Hide comments from others (soft-hide).
+
+Comments include:
+
+Upvote / Downvote functionality.
+
+User avatar + fandom badge (if supporter has one).
+
+5. Cross-Subscription
+
+A Creator A can also subscribe to Creator B.
+
+No limitation: roles are flexible, users can be both creators and supporters simultaneously.
+
+APIs (Example)
+
+Auth:
+
+POST /auth/register, POST /auth/login, POST /auth/logout
+
+Users:
+
+GET /users/me (profile)
+
+PATCH /users/me (update profile)
+
+Subscriptions:
+
+POST /creators/:id/subscribe
+
+GET /creators/:id/subscribers
+
+GET /users/me/subscriptions (list active subscriptions)
+
+Posts:
+
+POST /posts (create with visibility flag)
+
+GET /posts?creatorId=xxx (filter by visibility and role)
+
+DELETE /posts/:id
+
+Comments:
+
+POST /posts/:id/comments
+
+PATCH /comments/:id/hide
+
+DELETE /comments/:id
+
+PATCH /comments/:id/vote (upvote/downvote)
+
+Database Structure (Simplified)
+
+Users Table
+
+id, role, email, password_hash, displayName, avatar, bio
+
+Subscriptions Table
+
+id, supporterId, creatorId, tierId, startDate, endDate, status
+
+Tiers Table
+
+id, creatorId, name, price, description
+
+Posts Table
+
+id, creatorId, content, visibility (PUBLIC / PRIVATE / TIP_UNLOCK), createdAt
+
+Tips Table
+
+id, supporterId, postId, amount
+
+Comments Table
+
+id, postId, userId, content, isHidden (boolean), votes (+/-)
+
+UI / UX Behaviors (for frontend integration)
+
+Creator’s page shows:
+
+Public posts (always visible).
+
+Subscriber-only posts (visible if logged-in and subscribed).
+
+Tip-to-unlock posts (locked preview, unlock after payment).
+
+Remaining subscription days for current supporter.
+
+Supporters see their fandom badge when commenting or on profile.
+
+Mailbox / notification system (future): supporter notified of new posts.
+
+Additional Notes
+
+Payment system for subscriptions & tips can be stubbed first (simulate transactions).
+
+Fandom badges start as text-only, later allow custom image uploads.
+
+All actions require permission checks (only creator can delete their own posts, only owner of comment can delete it, etc.).
+
+Analytics (future): track number of subscribers, total tips, engagement metrics.

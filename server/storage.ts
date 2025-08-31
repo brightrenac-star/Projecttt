@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage } from "@shared/schema";
+import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage, type Comment, type InsertComment, type CommentVote, type InsertCommentVote, type PostUnlock, type InsertPostUnlock } from "@shared/schema";
 import { randomUUID } from "crypto";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -61,6 +61,24 @@ export interface IStorage {
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
 
+  // Comments
+  getComment(id: string): Promise<Comment | undefined>;
+  getCommentsByPost(postId: string): Promise<Comment[]>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: string, comment: Partial<Comment>): Promise<Comment | undefined>;
+  deleteComment(id: string): Promise<boolean>;
+
+  // Comment Votes
+  getCommentVote(commentId: string, userId: string): Promise<CommentVote | undefined>;
+  createCommentVote(vote: InsertCommentVote): Promise<CommentVote>;
+  deleteCommentVote(commentId: string, userId: string): Promise<boolean>;
+  getCommentVotesByComment(commentId: string): Promise<CommentVote[]>;
+
+  // Post Unlocks
+  getPostUnlock(postId: string, userId: string): Promise<PostUnlock | undefined>;
+  createPostUnlock(unlock: InsertPostUnlock): Promise<PostUnlock>;
+  getPostUnlocksByUser(userId: string): Promise<PostUnlock[]>;
+
   sessionStore: session.Store;
 }
 
@@ -73,6 +91,9 @@ export class MemStorage implements IStorage {
   private likes: Map<string, Like>;
   private conversations: Map<string, Conversation>;
   private messages: Map<string, Message>;
+  private comments: Map<string, Comment>;
+  private commentVotes: Map<string, CommentVote>;
+  private postUnlocks: Map<string, PostUnlock>;
   sessionStore: session.Store;
 
   constructor() {
@@ -84,6 +105,9 @@ export class MemStorage implements IStorage {
     this.likes = new Map();
     this.conversations = new Map();
     this.messages = new Map();
+    this.comments = new Map();
+    this.commentVotes = new Map();
+    this.postUnlocks = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -147,6 +171,7 @@ export class MemStorage implements IStorage {
       bio: insertCreator.bio || null,
       avatar: insertCreator.avatar || null,
       category: insertCreator.category || null,
+      fandomName: insertCreator.fandomName || "Supporters",
       tiers: (insertCreator.tiers as any) || [],
       links: (insertCreator.links as any) || {},
       payoutAddress: insertCreator.payoutAddress || null,
@@ -232,6 +257,7 @@ export class MemStorage implements IStorage {
     const subscription: Subscription = { 
       ...insertSubscription,
       active: insertSubscription.active ?? true,
+      startDate: insertSubscription.startDate || new Date(),
       id, 
       createdAt: new Date() 
     };
@@ -266,6 +292,8 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const tip: Tip = { 
       ...insertTip,
+      creatorId: insertTip.creatorId || null,
+      postId: insertTip.postId || null,
       message: insertTip.message || null,
       id, 
       createdAt: new Date() 
@@ -398,6 +426,118 @@ export class MemStorage implements IStorage {
         this.messages.set(message.id, updatedMessage);
       }
     }
+  }
+
+  // Comments
+  async getComment(id: string): Promise<Comment | undefined> {
+    return this.comments.get(id);
+  }
+
+  async getCommentsByPost(postId: string): Promise<Comment[]> {
+    return Array.from(this.comments.values())
+      .filter(comment => comment.postId === postId && !comment.isHidden)
+      .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const id = randomUUID();
+    const comment: Comment = {
+      ...insertComment,
+      isHidden: insertComment.isHidden ?? false,
+      upvotes: 0,
+      downvotes: 0,
+      id,
+      createdAt: new Date()
+    };
+    this.comments.set(id, comment);
+    return comment;
+  }
+
+  async updateComment(id: string, commentUpdate: Partial<Comment>): Promise<Comment | undefined> {
+    const comment = this.comments.get(id);
+    if (!comment) return undefined;
+    const updatedComment = { ...comment, ...commentUpdate };
+    this.comments.set(id, updatedComment);
+    return updatedComment;
+  }
+
+  async deleteComment(id: string): Promise<boolean> {
+    return this.comments.delete(id);
+  }
+
+  // Comment Votes
+  async getCommentVote(commentId: string, userId: string): Promise<CommentVote | undefined> {
+    return Array.from(this.commentVotes.values()).find(vote => 
+      vote.commentId === commentId && vote.userId === userId
+    );
+  }
+
+  async createCommentVote(insertVote: InsertCommentVote): Promise<CommentVote> {
+    const id = randomUUID();
+    const vote: CommentVote = {
+      ...insertVote,
+      id,
+      createdAt: new Date()
+    };
+    this.commentVotes.set(id, vote);
+
+    // Update comment vote counts
+    const comment = await this.getComment(insertVote.commentId);
+    if (comment) {
+      const votes = await this.getCommentVotesByComment(insertVote.commentId);
+      const upvotes = votes.filter(v => v.voteType === 'upvote').length;
+      const downvotes = votes.filter(v => v.voteType === 'downvote').length;
+      await this.updateComment(insertVote.commentId, { upvotes, downvotes });
+    }
+
+    return vote;
+  }
+
+  async deleteCommentVote(commentId: string, userId: string): Promise<boolean> {
+    const vote = Array.from(this.commentVotes.entries()).find(([_, vote]) =>
+      vote.commentId === commentId && vote.userId === userId
+    );
+    if (vote) {
+      const deleted = this.commentVotes.delete(vote[0]);
+      
+      // Update comment vote counts
+      const comment = await this.getComment(commentId);
+      if (comment) {
+        const votes = await this.getCommentVotesByComment(commentId);
+        const upvotes = votes.filter(v => v.voteType === 'upvote').length;
+        const downvotes = votes.filter(v => v.voteType === 'downvote').length;
+        await this.updateComment(commentId, { upvotes, downvotes });
+      }
+      
+      return deleted;
+    }
+    return false;
+  }
+
+  async getCommentVotesByComment(commentId: string): Promise<CommentVote[]> {
+    return Array.from(this.commentVotes.values()).filter(vote => vote.commentId === commentId);
+  }
+
+  // Post Unlocks
+  async getPostUnlock(postId: string, userId: string): Promise<PostUnlock | undefined> {
+    return Array.from(this.postUnlocks.values()).find(unlock =>
+      unlock.postId === postId && unlock.userId === userId
+    );
+  }
+
+  async createPostUnlock(insertUnlock: InsertPostUnlock): Promise<PostUnlock> {
+    const id = randomUUID();
+    const unlock: PostUnlock = {
+      ...insertUnlock,
+      id,
+      createdAt: new Date()
+    };
+    this.postUnlocks.set(id, unlock);
+    return unlock;
+  }
+
+  async getPostUnlocksByUser(userId: string): Promise<PostUnlock[]> {
+    return Array.from(this.postUnlocks.values()).filter(unlock => unlock.userId === userId);
   }
 }
 
