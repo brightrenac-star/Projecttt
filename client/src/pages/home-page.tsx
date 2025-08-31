@@ -5,6 +5,7 @@ import Navigation from "../components/navigation";
 import Footer from "../components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import PostCard from "@/components/posts/post-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserPlus, Heart, TrendingUp, Wallet, Users } from "lucide-react";
@@ -254,43 +255,35 @@ export default function HomePage() {
             ) : trendingPosts.length > 0 ? (
               trendingPosts.map((post, index) => {
                 const creator = creators.find(c => c.id === post.creatorId);
+                if (!creator) return null;
+                
                 return (
-                  <Card key={post.id} className="glass hover-scale transition-smooth cursor-pointer" data-testid={`card-trending-post-${index}`}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center mb-4">
-                        {creator?.avatar ? (
-                          <img 
-                            src={creator.avatar} 
-                            alt={`${creator.name} avatar`} 
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-bold">
-                            {creator?.name.charAt(0).toUpperCase() || "U"}
-                          </div>
-                        )}
-                        <div className="ml-3">
-                          <p className="font-medium text-foreground">{creator?.name || "Creator"}</p>
-                          <p className="text-xs text-muted-foreground">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : "Recent"}</p>
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-foreground mb-2 line-clamp-2">{post.title}</h3>
-                      {post.content && (
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{post.content}</p>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Heart className="w-4 h-4 mr-1" />
-                          {post.likes || 0} likes
-                        </div>
-                        {post.visibility === "ppv" && post.price && (
-                          <Badge variant="outline" className="text-primary border-primary/20">
-                            ${(post.price / 100).toFixed(2)}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div key={post.id} data-testid={`card-trending-post-${index}`}>
+                    <PostCard
+                      post={{
+                        id: post.id,
+                        title: post.title || undefined,
+                        content: post.content || undefined,
+                        visibility: post.visibility as "public" | "members" | "ppv",
+                        price: post.price || undefined,
+                        mediaUrl: post.mediaUrl || undefined,
+                        createdAt: post.createdAt || new Date(),
+                        editedAt: post.editedAt || undefined,
+                        likes: post.likes || 0,
+                        isLocked: false // Public posts on home page
+                      }}
+                      creator={{
+                        id: creator.id,
+                        userId: creator.userId,
+                        name: creator.name,
+                        handle: creator.handle,
+                        avatar: creator.avatar || undefined
+                      }}
+                      userSubscribed={false} // Not relevant for home page
+                      showComments={false} // Keep home page compact
+                      className="hover-scale transition-smooth"
+                    />
+                  </div>
                 );
               })
             ) : (

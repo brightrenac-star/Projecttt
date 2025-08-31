@@ -6,7 +6,7 @@ import { queryClient } from "@/lib/queryClient";
 import ContextualNavigation from "../components/contextual-navigation";
 import ContextualFooter from "../components/contextual-footer";
 import { CompactPostComposer } from "@/components/posts/compact-post-composer";
-import { LockedPostPreview } from "@/components/posts/locked-post-preview";
+import PostCard from "@/components/posts/post-card";
 import { TipButton } from "@/components/wallet/tip-button";
 import { SubscribeButton } from "@/components/wallet/subscribe-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -281,7 +281,7 @@ export default function CreatorProfilePage() {
                     );
                     
                     return (
-                      <LockedPostPreview
+                      <PostCard
                         key={post.id}
                         post={{ 
                           ...post, 
@@ -292,15 +292,20 @@ export default function CreatorProfilePage() {
                           createdAt: post.createdAt || new Date(),
                           isLocked: shouldShowLocked,
                           mediaUrl: post.mediaUrl || undefined,
-                          editedAt: post.editedAt || undefined
+                          editedAt: post.editedAt || undefined,
+                          likes: post.likes || 0
                         }}
                         creator={{
                           id: creator.id,
+                          userId: creator.userId,
                           name: creator.name,
-                          handle: creator.handle
+                          handle: creator.handle,
+                          avatar: creator.avatar
                         }}
                         userSubscribed={userSubscription?.active || false}
-                        onUnlocked={handlePostCreated}
+                        onPostUpdated={handlePostCreated}
+                        onPostDeleted={handlePostCreated}
+                        showComments={true}
                       />
                     );
                   })}
