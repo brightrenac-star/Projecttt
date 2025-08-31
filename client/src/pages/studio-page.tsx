@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
@@ -34,7 +35,15 @@ export default function StudioPage() {
   });
 
   // Get analytics
-  const { data: analytics } = useQuery({
+  const { data: analytics } = useQuery<{ 
+    totalRevenue: number;
+    monthlyRevenue: number;
+    subscriberCount: number;
+    recentTips: number;
+    totalPosts: number;
+    totalLikes: number;
+    tips: any[];
+  }>({
     queryKey: ["/api/creators", creator?.id, "analytics"],
     enabled: !!creator?.id,
   });
@@ -132,9 +141,11 @@ export default function StudioPage() {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold text-foreground mb-4">Create Your Studio</h2>
               <p className="text-muted-foreground mb-6">You need to set up your creator profile first.</p>
-              <Button className="gradient-primary text-primary-foreground" data-testid="button-setup-creator">
-                Set Up Creator Profile
-              </Button>
+              <Link href="/profile">
+                <Button className="gradient-primary text-primary-foreground" data-testid="button-setup-creator">
+                  Set Up Creator Profile
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

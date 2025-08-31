@@ -138,6 +138,21 @@ export default function ProfilePage() {
     },
   });
 
+  const createCreatorMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof updateCreatorSchema>) => {
+      const response = await apiRequest("POST", "/api/creators", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Creator profile created successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/creators", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to create creator profile", description: error.message, variant: "destructive" });
+    },
+  });
+
   const updateCreatorMutation = useMutation({
     mutationFn: async (data: z.infer<typeof updateCreatorSchema>) => {
       if (!creator?.id) throw new Error("Creator profile not found");
@@ -463,9 +478,78 @@ export default function ProfilePage() {
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">You don't have a creator profile yet.</p>
-                      <Button className="gradient-primary text-primary-foreground" data-testid="button-create-creator-profile">
-                        Create Creator Profile
-                      </Button>
+                      <Form {...creatorForm}>
+                        <form onSubmit={creatorForm.handleSubmit(data => createCreatorMutation.mutate(data))} className="space-y-4 max-w-md mx-auto">
+                          <FormField
+                            control={creatorForm.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Creator Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="Your creator name" data-testid="input-new-creator-name" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={creatorForm.control}
+                            name="handle"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Handle</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="@username" data-testid="input-new-creator-handle" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={creatorForm.control}
+                            name="bio"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Bio (Optional)</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    {...field} 
+                                    placeholder="Tell supporters about yourself..."
+                                    data-testid="textarea-new-creator-bio"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={creatorForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Category (Optional)</FormLabel>
+                                <FormControl>
+                                  <Input {...field} placeholder="e.g., Digital Artist, Musician" data-testid="input-new-creator-category" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <Button 
+                            type="submit" 
+                            className="gradient-primary text-primary-foreground w-full"
+                            disabled={createCreatorMutation.isPending}
+                            data-testid="button-create-creator-profile"
+                          >
+                            {createCreatorMutation.isPending ? "Creating..." : "Create Creator Profile"}
+                          </Button>
+                        </form>
+                      </Form>
                     </div>
                   )}
 
@@ -478,7 +562,7 @@ export default function ProfilePage() {
                           <span className="text-muted-foreground">Profile URL</span>
                           <div className="flex items-center gap-2">
                             <code className="text-sm bg-muted px-2 py-1 rounded" data-testid="text-profile-url">
-                              suiciety.com/creator/{creator.handle}
+                              society.com/creator/{creator.handle}
                             </code>
                             <Link href={`/creator/${creator.handle}`}>
                               <Button variant="ghost" size="sm" data-testid="button-view-public-profile">
