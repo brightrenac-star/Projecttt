@@ -157,8 +157,19 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.walletAddress === walletAddress);
   }
 
+  // Helper function to generate unique SID
+  private generateSID(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
+    const sid = this.generateSID();
     const user: User = { 
       ...insertUser,
       role: insertUser.role || "supporter",
@@ -171,6 +182,7 @@ export class MemStorage implements IStorage {
       adultReviewStatus: insertUser.adultReviewStatus || "none",
       creatorCategories: insertUser.creatorCategories || [],
       id, 
+      sid,
       createdAt: new Date() 
     };
     this.users.set(id, user);

@@ -9,6 +9,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "../components/navigation";
 import Footer from "../components/footer";
+import ProfileDisplayCard from "../components/profile-display-card";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -259,6 +260,15 @@ export default function ProfilePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2" data-testid="heading-profile">My Profile</h1>
           <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+        </div>
+
+        {/* Profile Display Card */}
+        <div className="mb-8">
+          <ProfileDisplayCard 
+            user={user} 
+            categories={categories}
+            data-testid="profile-display-card"
+          />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -868,12 +878,27 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     
-                    <div className="text-center">
+                    <div className="flex gap-3 justify-center">
                       <Link href="/studio/data">
-                        <Button className="gradient-primary text-primary-foreground" data-testid="button-view-analytics">
-                          View Detailed Analytics
+                        <Button variant="outline" className="glass" data-testid="button-view-analytics">
+                          View Analytics
                         </Button>
                       </Link>
+                      <Button 
+                        className="gradient-primary text-primary-foreground"
+                        disabled={!creator?.payoutAddress}
+                        data-testid="button-request-payout"
+                        onClick={() => {
+                          toast({ 
+                            title: creator?.payoutAddress ? "Payout Requested" : "Setup Required", 
+                            description: creator?.payoutAddress 
+                              ? "Your payout request has been submitted and will be processed within 2-3 business days." 
+                              : "Please setup your payout address first in the Creator Profile section."
+                          });
+                        }}
+                      >
+                        {creator?.payoutAddress ? "Request Payout" : "Setup Payout"}
+                      </Button>
                     </div>
                   </div>
                 ) : (
