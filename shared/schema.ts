@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   role: text("role").notNull().default("supporter"), // "creator" | "supporter"
+  walletAddress: text("wallet_address").unique(),
+  walletVerified: boolean("wallet_verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -64,6 +66,8 @@ export const subscriptions = pgTable("subscriptions", {
   active: boolean("active").default(true),
   startDate: timestamp("start_date").defaultNow(),
   endDate: timestamp("end_date").notNull(), // Subscription expiration
+  txDigest: text("tx_digest"), // Blockchain transaction hash
+  walletAddress: text("wallet_address"), // Subscriber wallet address
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -74,6 +78,8 @@ export const tips = pgTable("tips", {
   postId: varchar("post_id"), // For tip-to-unlock posts
   amount: integer("amount").notNull(), // in cents
   message: text("message"),
+  txDigest: text("tx_digest"), // Blockchain transaction hash
+  walletAddress: text("wallet_address"), // Sender wallet address
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -128,6 +134,16 @@ export const messages = pgTable("messages", {
   senderId: varchar("sender_id").notNull().references(() => users.id),
   content: text("content").notNull(),
   read: boolean("read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Wallet verification nonces
+export const walletNonces = pgTable("wallet_nonces", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  nonce: text("nonce").notNull(),
+  used: boolean("used").default(false),
+  expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -191,6 +207,11 @@ export const insertPostUnlockSchema = createInsertSchema(postUnlocks).omit({
   createdAt: true,
 });
 
+export const insertWalletNonceSchema = createInsertSchema(walletNonces).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -224,3 +245,6 @@ export type InsertCommentVote = z.infer<typeof insertCommentVoteSchema>;
 
 export type PostUnlock = typeof postUnlocks.$inferSelect;
 export type InsertPostUnlock = z.infer<typeof insertPostUnlockSchema>;
+
+export type WalletNonce = typeof walletNonces.$inferSelect;
+export type InsertWalletNonce = z.infer<typeof insertWalletNonceSchema>;

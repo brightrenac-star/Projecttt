@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -13,13 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink, MessageCircle } from "lucide-react";
+import { Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink, MessageCircle, Wallet } from "lucide-react";
 import sLogo from '@assets/generated_images/Blue_rainbow_S_logo_0fa7a8fb.png';
 import type { Creator, Conversation, Message } from "@shared/schema";
 
 export default function Navigation() {
   const [, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
+  const wallet = useWallet();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -154,6 +156,11 @@ export default function Navigation() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
+                {/* Wallet Connect Button */}
+                <div className="hidden sm:flex items-center" data-testid="nav-wallet-connect">
+                  <ConnectButton />
+                </div>
+
                 {/* Public Profile Button - Only for creators with profiles */}
                 {user.role === "creator" && creator?.handle && (
                   <Link href={`/creator/${creator.handle}`}>
@@ -388,6 +395,15 @@ export default function Navigation() {
               {/* Mobile Links */}
               {user && (
                 <>
+                  {/* Mobile Wallet Connection */}
+                  <div className="flex items-center px-3 py-2" data-testid="nav-mobile-wallet">
+                    <Wallet className="w-4 h-4 mr-2 text-foreground" />
+                    <div className="flex-1">
+                      <ConnectButton />
+                    </div>
+                  </div>
+                  <Separator className="my-2" />
+
                   {/* Mobile Public Profile Button - Only for creators */}
                   {user.role === "creator" && creator?.handle && (
                     <Link href={`/creator/${creator.handle}`}>

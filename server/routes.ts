@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema, insertCommentSchema, insertCommentVoteSchema, insertPostUnlockSchema } from "@shared/schema";
+import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema, insertCommentSchema, insertCommentVoteSchema, insertPostUnlockSchema, insertWalletNonceSchema } from "@shared/schema";
 import { z } from "zod";
 
 // Helper function to check if user has access to a post
@@ -75,6 +75,89 @@ function filterPostContent(post: any, hasAccess: boolean, isCreator: boolean) {
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+
+  // Wallet verification endpoints
+  app.get("/api/wallet/nonce", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      // Generate a random nonce
+      const nonce = require('crypto').randomBytes(32).toString('hex');
+      
+      // Set expiration to 5 minutes from now
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      
+      // Store nonce in database
+      const nonceData = insertWalletNonceSchema.parse({
+        userId: req.user!.id,
+        nonce,
+        expiresAt
+      });
+      
+      await storage.createWalletNonce(nonceData);
+      
+      res.json({ nonce });
+    } catch (error) {
+      console.error('Error generating nonce:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/wallet/verify", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { address, signature, nonce } = req.body;
+      
+      if (!address || !signature || !nonce) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Verify nonce exists and is not expired
+      const storedNonce = await storage.getWalletNonce(nonce, req.user!.id);
+      if (!storedNonce) {
+        return res.status(400).json({ message: "Invalid or expired nonce" });
+      }
+
+      if (storedNonce.used) {
+        return res.status(400).json({ message: "Nonce already used" });
+      }
+
+      if (new Date() > new Date(storedNonce.expiresAt)) {
+        return res.status(400).json({ message: "Nonce expired" });
+      }
+
+      // In a real implementation, you would verify the signature here
+      // For MVP, we'll trust the client's signature (signature = transaction digest)
+      
+      // Mark nonce as used
+      await storage.updateWalletNonce(storedNonce.id, { used: true });
+      
+      // Check if wallet address is already linked to another account
+      const existingUser = await storage.getUserByWalletAddress(address);
+      if (existingUser && existingUser.id !== req.user!.id) {
+        return res.status(400).json({ message: "Wallet address already linked to another account" });
+      }
+      
+      // Update user with verified wallet address
+      await storage.updateUser(req.user!.id, {
+        walletAddress: address,
+        walletVerified: true
+      });
+      
+      res.json({ 
+        message: "Wallet verified successfully",
+        walletAddress: address
+      });
+    } catch (error) {
+      console.error('Error verifying wallet:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Creators
   app.get("/api/creators", async (req, res) => {

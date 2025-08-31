@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage, type Comment, type InsertComment, type CommentVote, type InsertCommentVote, type PostUnlock, type InsertPostUnlock } from "@shared/schema";
+import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage, type Comment, type InsertComment, type CommentVote, type InsertCommentVote, type PostUnlock, type InsertPostUnlock, type WalletNonce, type InsertWalletNonce } from "@shared/schema";
 import { randomUUID } from "crypto";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -10,6 +10,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByWalletAddress(walletAddress: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
 
@@ -79,6 +80,11 @@ export interface IStorage {
   createPostUnlock(unlock: InsertPostUnlock): Promise<PostUnlock>;
   getPostUnlocksByUser(userId: string): Promise<PostUnlock[]>;
 
+  // Wallet Nonces
+  getWalletNonce(nonce: string, userId: string): Promise<WalletNonce | undefined>;
+  createWalletNonce(walletNonce: InsertWalletNonce): Promise<WalletNonce>;
+  updateWalletNonce(id: string, walletNonce: Partial<WalletNonce>): Promise<WalletNonce | undefined>;
+
   sessionStore: session.Store;
 }
 
@@ -94,6 +100,7 @@ export class MemStorage implements IStorage {
   private comments: Map<string, Comment>;
   private commentVotes: Map<string, CommentVote>;
   private postUnlocks: Map<string, PostUnlock>;
+  private walletNonces: Map<string, WalletNonce>;
   sessionStore: session.Store;
 
   constructor() {
@@ -108,6 +115,7 @@ export class MemStorage implements IStorage {
     this.comments = new Map();
     this.commentVotes = new Map();
     this.postUnlocks = new Map();
+    this.walletNonces = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -126,11 +134,17 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.email === username);
   }
 
+  async getUserByWalletAddress(walletAddress: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.walletAddress === walletAddress);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
       ...insertUser,
       role: insertUser.role || "supporter",
+      walletAddress: insertUser.walletAddress || null,
+      walletVerified: insertUser.walletVerified || false,
       id, 
       createdAt: new Date() 
     };
@@ -538,6 +552,33 @@ export class MemStorage implements IStorage {
 
   async getPostUnlocksByUser(userId: string): Promise<PostUnlock[]> {
     return Array.from(this.postUnlocks.values()).filter(unlock => unlock.userId === userId);
+  }
+
+  // Wallet Nonces
+  async getWalletNonce(nonce: string, userId: string): Promise<WalletNonce | undefined> {
+    return Array.from(this.walletNonces.values()).find(walletNonce => 
+      walletNonce.nonce === nonce && walletNonce.userId === userId
+    );
+  }
+
+  async createWalletNonce(insertNonce: InsertWalletNonce): Promise<WalletNonce> {
+    const id = randomUUID();
+    const walletNonce: WalletNonce = {
+      ...insertNonce,
+      used: insertNonce.used || false,
+      id,
+      createdAt: new Date()
+    };
+    this.walletNonces.set(id, walletNonce);
+    return walletNonce;
+  }
+
+  async updateWalletNonce(id: string, nonceUpdate: Partial<WalletNonce>): Promise<WalletNonce | undefined> {
+    const nonce = this.walletNonces.get(id);
+    if (!nonce) return undefined;
+    const updatedNonce = { ...nonce, ...nonceUpdate };
+    this.walletNonces.set(id, updatedNonce);
+    return updatedNonce;
   }
 }
 
