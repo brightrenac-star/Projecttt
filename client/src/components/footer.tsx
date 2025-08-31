@@ -5,47 +5,55 @@ export default function Footer() {
   return (
     <footer className="glass-strong border-t border-border mt-auto">
       {/* Mobile Footer */}
-      <div className="md:hidden px-4 py-6">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center mb-3">
-            <div className="gradient-primary p-2 rounded-lg">
-              <img src={sLogo} alt="Society" className="w-5 h-5" />
-            </div>
-            <span className="ml-2 text-lg font-bold text-foreground">Society</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div className="space-y-2">
-              <Link href="/discover">
-                <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-discover">
-                  Discover
-                </span>
-              </Link>
-              <Link href="/studio">
-                <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-studio">
-                  Creator Studio
-                </span>
-              </Link>
-              <Link href="/help">
-                <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-help">
-                  Help Center
-                </span>
-              </Link>
-            </div>
-            <div className="space-y-2">
-              <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-terms">
-                Terms
-              </span>
-              <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-privacy">
-                Privacy
-              </span>
-              <span className="block text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-contact">
-                Contact
-              </span>
+      <div className="md:hidden px-6 py-5">
+        <div className="max-w-sm mx-auto">
+          {/* Logo */}
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center mb-2">
+              <div className="gradient-primary p-1.5 rounded-lg">
+                <img src={sLogo} alt="Society" className="w-4 h-4" />
+              </div>
+              <span className="ml-2 text-base font-semibold text-foreground">Society</span>
             </div>
           </div>
           
-          <div className="flex justify-center space-x-4 pt-2">
+          {/* Quick Links */}
+          <div className="grid grid-cols-3 gap-3 mb-4 text-center">
+            <Link href="/discover">
+              <div className="glass-light rounded-lg p-3 hover:bg-primary/10 transition-smooth cursor-pointer" data-testid="mobile-footer-discover">
+                <span className="block text-xs font-medium text-foreground mb-1">Discover</span>
+                <span className="text-xs text-muted-foreground">Creators</span>
+              </div>
+            </Link>
+            <Link href="/studio">
+              <div className="glass-light rounded-lg p-3 hover:bg-primary/10 transition-smooth cursor-pointer" data-testid="mobile-footer-studio">
+                <span className="block text-xs font-medium text-foreground mb-1">Studio</span>
+                <span className="text-xs text-muted-foreground">Create</span>
+              </div>
+            </Link>
+            <Link href="/help">
+              <div className="glass-light rounded-lg p-3 hover:bg-primary/10 transition-smooth cursor-pointer" data-testid="mobile-footer-help">
+                <span className="block text-xs font-medium text-foreground mb-1">Help</span>
+                <span className="text-xs text-muted-foreground">Support</span>
+              </div>
+            </Link>
+          </div>
+          
+          {/* Legal Links */}
+          <div className="flex justify-center space-x-4 mb-4">
+            <span className="text-xs text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-terms">
+              Terms
+            </span>
+            <span className="text-xs text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-privacy">
+              Privacy
+            </span>
+            <span className="text-xs text-muted-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="mobile-footer-contact">
+              Contact
+            </span>
+          </div>
+          
+          {/* Social Links */}
+          <div className="flex justify-center space-x-5 mb-3">
             <a href="#" className="text-muted-foreground hover:text-primary transition-smooth" data-testid="mobile-footer-twitter">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -63,7 +71,10 @@ export default function Footer() {
             </a>
           </div>
           
-          <p className="text-muted-foreground text-xs">© 2024 Society. All rights reserved.</p>
+          {/* Copyright */}
+          <div className="text-center">
+            <p className="text-muted-foreground text-xs">© 2024 Society</p>
+          </div>
         </div>
       </div>
 
