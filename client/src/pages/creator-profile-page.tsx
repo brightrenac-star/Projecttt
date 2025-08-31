@@ -5,25 +5,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
 import Navigation from "../components/navigation";
 import Footer from "../components/footer";
+import { InlinePostComposer } from "@/components/posts/inline-post-composer";
+import { LockedPostPreview } from "@/components/posts/locked-post-preview";
+import { TipButton } from "@/components/wallet/tip-button";
+import { SubscribeButton } from "@/components/wallet/subscribe-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, DollarSign, Users, Star, Calendar, Lock } from "lucide-react";
+import { Users, Star, Calendar, Edit } from "lucide-react";
 import type { Creator, Post } from "@shared/schema";
 
 export default function CreatorProfilePage() {
   const { handle } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [tipAmount, setTipAmount] = useState("");
-  const [tipMessage, setTipMessage] = useState("");
-  const [showTipDialog, setShowTipDialog] = useState(false);
-  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
 
   // Get creator profile
   const { data: creator, isLoading: creatorLoading } = useQuery<Creator>({
@@ -37,106 +33,23 @@ export default function CreatorProfilePage() {
     enabled: !!creator?.id,
   });
 
-  // Send tip mutation
-  const tipMutation = useMutation({
-    mutationFn: async (tipData: { creatorId: string; amount: number; message?: string }) => {
-      const response = await fetch("/api/tips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tipData),
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to send tip");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Tip sent successfully!", description: "Thank you for supporting this creator." });
-      setShowTipDialog(false);
-      setTipAmount("");
-      setTipMessage("");
-      queryClient.invalidateQueries({ queryKey: ["/api/creators"] });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Failed to send tip", description: error.message, variant: "destructive" });
-    },
+  // Check if user is viewing their own profile and has creator role
+  const isOwnProfile = user && creator && user.id === creator.userId;
+  const canPost = isOwnProfile && user?.role === "creator";
+  
+  // Get user's subscription status for this creator
+  const { data: userSubscription } = useQuery<any>({    
+    queryKey: ["/api/subscriptions/check", creator?.id],
+    enabled: !!user && !!creator && !isOwnProfile,
   });
 
-  // Subscribe mutation
-  const subscribeMutation = useMutation({
-    mutationFn: async (subData: { creatorId: string; tier: string; amount: number }) => {
-      const response = await fetch("/api/subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subData),
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to subscribe");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Subscription successful!", description: "Welcome to the creator's community!" });
-      setShowSubscribeDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/creators"] });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Failed to subscribe", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Like post mutation
-  const likeMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      const response = await fetch("/api/likes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId }),
-        credentials: "include",
-      });
-      if (!response.ok) throw new Error("Failed to like post");
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/creators", creator?.id, "posts"] });
-    },
-  });
-
-  const handleTip = () => {
-    if (!user) {
-      toast({ title: "Login required", description: "Please log in to send tips.", variant: "destructive" });
-      return;
-    }
-    if (!tipAmount || parseFloat(tipAmount) <= 0) {
-      toast({ title: "Invalid amount", description: "Please enter a valid tip amount.", variant: "destructive" });
-      return;
-    }
-
-    tipMutation.mutate({
-      creatorId: creator!.id,
-      amount: Math.round(parseFloat(tipAmount) * 100), // Convert to cents
-      message: tipMessage.trim() || undefined,
-    });
+  const handlePostCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/creators", creator?.id, "posts"] });
   };
 
-  const handleSubscribe = (tier: any) => {
-    if (!user) {
-      toast({ title: "Login required", description: "Please log in to subscribe.", variant: "destructive" });
-      return;
-    }
 
-    subscribeMutation.mutate({
-      creatorId: creator!.id,
-      tier: tier.id,
-      amount: tier.price * 100, // Convert to cents
-    });
-  };
 
-  const handleLike = (postId: string) => {
-    if (!user) {
-      toast({ title: "Login required", description: "Please log in to like posts.", variant: "destructive" });
-      return;
-    }
-    likeMutation.mutate(postId);
-  };
+
 
   if (creatorLoading) {
     return (
@@ -228,96 +141,36 @@ export default function CreatorProfilePage() {
                   <div className="flex-1"></div>
 
                   <div className="flex gap-3">
-                    <Dialog open={showTipDialog} onOpenChange={setShowTipDialog}>
-                      <DialogTrigger asChild>
-                        <Button className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-send-tip">
-                          <Heart className="h-4 w-4 mr-2" />
-                          Send Tip
+                    {isOwnProfile ? (
+                      // Own profile - show edit button and go to studio
+                      <>
+                        <Button 
+                          variant="outline" 
+                          className="glass border-border hover-scale transition-smooth" 
+                          data-testid="button-edit-profile"
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Profile
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="glass-strong">
-                        <DialogHeader>
-                          <DialogTitle>Send a Tip to {creator.name}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="tip-amount">Amount (SUI)</Label>
-                            <Input
-                              id="tip-amount"
-                              type="number"
-                              step="0.01"
-                              min="0.01"
-                              value={tipAmount}
-                              onChange={(e) => setTipAmount(e.target.value)}
-                              placeholder="0.00"
-                              data-testid="input-tip-amount"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="tip-message">Message (optional)</Label>
-                            <Textarea
-                              id="tip-message"
-                              value={tipMessage}
-                              onChange={(e) => setTipMessage(e.target.value)}
-                              placeholder="Say something nice..."
-                              rows={3}
-                              data-testid="textarea-tip-message"
-                            />
-                          </div>
-                          <Button
-                            onClick={handleTip}
-                            disabled={tipMutation.isPending}
-                            className="w-full gradient-primary text-primary-foreground"
-                            data-testid="button-confirm-tip"
-                          >
-                            {tipMutation.isPending ? "Sending..." : "Send Tip"}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                    {creator.tiers && creator.tiers.length > 0 && (
-                      <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="glass border-border hover-scale transition-smooth" data-testid="button-subscribe">
-                            <Star className="h-4 w-4 mr-2" />
-                            Subscribe
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="glass-strong">
-                          <DialogHeader>
-                            <DialogTitle>Subscribe to {creator.name}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            {creator.tiers.map((tier) => (
-                              <Card key={tier.id} className="glass border border-border">
-                                <CardContent className="p-4">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-semibold text-foreground">{tier.name}</h3>
-                                    <span className="text-lg font-bold text-primary">${tier.price}/month</span>
-                                  </div>
-                                  <ul className="text-sm text-muted-foreground mb-4">
-                                    {tier.perks.map((perk, index) => (
-                                      <li key={index} className="flex items-center">
-                                        <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-                                        {perk}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                  <Button
-                                    onClick={() => handleSubscribe(tier)}
-                                    disabled={subscribeMutation.isPending}
-                                    className="w-full gradient-primary text-primary-foreground"
-                                    data-testid={`button-subscribe-${tier.id}`}
-                                  >
-                                    Subscribe
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                        <Button 
+                          className="gradient-primary text-primary-foreground hover-scale transition-smooth" 
+                          data-testid="button-go-to-studio"
+                        >
+                          Go to Studio
+                        </Button>
+                      </>
+                    ) : (
+                      // Viewing someone else's profile - show tip and subscribe
+                      <>
+                        <TipButton 
+                          creatorId={creator.id}
+                          creatorName={creator.name}
+                        />
+                        <SubscribeButton 
+                          creatorId={creator.id}
+                          creatorName={creator.name}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
@@ -380,6 +233,14 @@ export default function CreatorProfilePage() {
             </Card>
           </div>
 
+          {/* Inline Post Composer - Only shown for profile owner */}
+          {canPost && (
+            <InlinePostComposer 
+              creatorId={creator.id} 
+              onPostCreated={handlePostCreated}
+            />
+          )}
+
           {/* Posts Section */}
           <div className="grid lg:grid-cols-3 gap-8 pb-16">
             <div className="lg:col-span-2">
@@ -405,85 +266,31 @@ export default function CreatorProfilePage() {
                 </Card>
               ) : (
                 <div className="space-y-6">
-                  {posts.map((post) => (
-                    <Card key={post.id} className="glass" data-testid={`post-${post.id}`}>
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-foreground mb-1">{post.title}</h3>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <span className="flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {new Date(post.createdAt!).toLocaleDateString()}
-                              </span>
-                              <Badge 
-                                variant={post.visibility === "public" ? "default" : "secondary"}
-                                className="text-xs"
-                              >
-                                {post.visibility === "public" ? "Public" : 
-                                 post.visibility === "members" ? "Members" : "PPV"}
-                              </Badge>
-                              {post.visibility === "ppv" && post.price && (
-                                <span className="text-primary font-medium">
-                                  ${(post.price / 100).toFixed(2)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {post.visibility !== "public" && (
-                            <Lock className="h-4 w-4 text-muted-foreground" />
-                          )}
-                        </div>
-
-                        {post.content && (
-                          <p className="text-muted-foreground mb-4">{post.content}</p>
-                        )}
-
-                        {post.mediaUrl && post.visibility === "public" && (
-                          <div className="mb-4">
-                            {post.mediaType === "image" ? (
-                              <img 
-                                src={post.mediaUrl} 
-                                alt="Post media" 
-                                className="w-full rounded-lg max-h-96 object-cover"
-                              />
-                            ) : (
-                              <video 
-                                src={post.mediaUrl} 
-                                controls 
-                                className="w-full rounded-lg max-h-96"
-                              />
-                            )}
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleLike(post.id)}
-                            disabled={!user || likeMutation.isPending}
-                            className="text-muted-foreground hover:text-primary"
-                            data-testid={`button-like-${post.id}`}
-                          >
-                            <Heart className="h-4 w-4 mr-1" />
-                            {post.likes || 0}
-                          </Button>
-                          
-                          {post.visibility !== "public" && (
-                            <Button
-                              size="sm"
-                              className="gradient-primary text-primary-foreground"
-                              disabled={!user}
-                              data-testid={`button-unlock-${post.id}`}
-                            >
-                              {post.visibility === "members" ? "Subscribe to View" : `Unlock for $${((post.price || 0) / 100).toFixed(2)}`}
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {posts.map((post) => {
+                    // Determine if post should show as locked
+                    const shouldShowLocked = !isOwnProfile && post.visibility !== "public" && (
+                      (post.visibility === "members" && !userSubscription?.active) ||
+                      (post.visibility === "ppv" && !post.isUnlocked)
+                    );
+                    
+                    return (
+                      <LockedPostPreview
+                        key={post.id}
+                        post={{ 
+                          ...post, 
+                          isLocked: shouldShowLocked,
+                          mediaUrl: post.mediaUrl || undefined 
+                        }}
+                        creator={{
+                          id: creator.id,
+                          name: creator.name,
+                          handle: creator.handle
+                        }}
+                        userSubscribed={userSubscription?.active || false}
+                        onUnlocked={handlePostCreated}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -1,0 +1,288 @@
+Creator Profile – Inline Posting (MVP Spec)
+
+Goal: Let a creator post directly on their own profile page (no need to go to Studio/Backend UI). Keep profile minimal/clean, move heavy analytics to Studio, and handle 3 visibility modes: Public, Subscribers, Pay to Unlock.
+
+Assumptions
+	•	Roles: CREATOR, SUPPORTER (user can be both).
+	•	Auth: JWT in localStorage.
+	•	API base: API = https://api.example.com (replace).
+	•	Existing endpoints (adapt names as needed):
+	•	GET /users/me → current user
+	•	GET /creators/:id → public creator page data
+	•	GET /posts?creatorId=:id&status=published
+	•	POST /posts (create)
+	•	(Optional) POST /posts/:id/unlock for pay-to-unlock; GET /posts/:id/access to check rights
+
+⸻
+
+UX Rules (Clean Profile)
+	1.	Inline Composer visible only when: user is logged in AND me.id === profileOwner.id AND role includes CREATOR.
+	2.	Header on your own profile does not show “View Public Profile” / switching button (redundant). On other creators’ pages, show Message / Support buttons.
+	3.	Creator stats (metrics, earnings, counts) are NOT on profile → moved to studio.html (Creator Studio). Profile stays minimal: avatar, name, bio, socials, posts.
+	4.	Posts list shows mix of public and locked items; locked ones show a clean lock preview card.
+	5.	Keep spacing generous, 1–2 primary actions max, soft shadows, no clutter.
+
+⸻
+
+Profile Layout (Own Profile)
+
+Header
+	•	Avatar, Display Name, @slug, short bio.
+	•	Buttons: Edit Profile, (optionally) Go to Studio (replaces “View Public Profile”).
+
+Inline Composer (visible to owner only)
+	•	Fields:
+	•	Visibility select: Public, Subscribers, Pay to Unlock
+	•	If Pay to Unlock: price input (numeric; minimum & currency label)
+	•	Text area (supports markdown), attach media (optional MVP: image URL field)
+	•	Actions: Post (primary), Save Draft (optional), Cancel (link)
+	•	Validation: content required; price required if pay-to-unlock.
+
+Posts Feed
+	•	Public posts render normally.
+	•	Subscriber-only posts → render locked card with Subscribe to read CTA if viewer lacks access.
+	•	Pay-to-unlock posts → locked card with Unlock for X CTA; after unlock, full content.
+
+⸻
+
+Profile Layout (Viewing Someone Else’s Profile)
+
+Header
+	•	Avatar, Name, @slug, bio
+	•	Buttons: Support (subscribe), Message
+
+Posts Feed
+	•	Same rendering rules; if viewer is an active subscriber, subscriber posts show fully.
+
+⸻
+
+API Contract (Suggested)
+
+Create Post
+
+POST /posts
+
+{
+  "creatorId": "<me.id>",
+  "title": "optional",
+  "content": "markdown or text",
+  "media": ["https://..."],
+  "visibility": "PUBLIC" | "SUBSCRIBERS" | "PAY_TO_UNLOCK",
+  "price": 2.5
+}
+
+Responses
+	•	201 with { id, ... } if created
+	•	Errors: 400 (validation), 403 (not creator/owner), 401 (not authenticated)
+
+Fetch Posts (public endpoint)
+
+GET /posts?creatorId=:id&viewerId=:myId
+	•	Server should filter fields based on access. For locked posts, return { id, visibility, isLocked: true, preview: "..." }.
+
+Check Access (optional helper)
+
+GET /posts/:id/access → { hasAccess: true|false, reason: "SUBSCRIPTION_ACTIVE|UNLOCKED|NONE" }
+
+Unlock Pay-to-Unlock
+
+POST /posts/:id/unlock → { ok: true, txDigest?: "..." }
+	•	Accepts on-chain proof or payment token (depends on your wallet integration).
+
+⸻
+
+Permission Logic (Server)
+	•	Only owner (creator) can POST /posts with creatorId = me.id.
+	•	On GET /posts:
+	•	PUBLIC → always fetchable.
+	•	SUBSCRIBERS → return full content only if viewer has active subscription to this creator; otherwise return locked preview.
+	•	PAY_TO_UNLOCK → full content only if viewer unlocked (has a paid record) OR is the owner.
+	•	Drafts (optional): add status=DRAFT|PUBLISHED.
+
+⸻
+
+Simple HTML/JS (Vanilla) – Own Profile Page
+
+<!-- profile.html -->
+<!doctype html>
+<html lang="en" data-page="PROFILE">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creator Profile</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script>window.API_URL = "https://api.example.com";</script>
+</head>
+<body>
+  <header id="nav"></header>
+  <main class="container">
+    <section id="profile-header"></section>
+
+    <!-- Inline Composer: rendered by JS only when owner -->
+    <section id="composer" class="card" hidden>
+      <div class="row">
+        <select id="visibility">
+          <option value="PUBLIC">Public</option>
+          <option value="SUBSCRIBERS">Subscribers</option>
+          <option value="PAY_TO_UNLOCK">Pay to Unlock</option>
+        </select>
+        <input id="price" type="number" min="0" step="0.01" placeholder="Price" style="display:none"/>
+      </div>
+      <textarea id="content" rows="5" placeholder="Share something...\n(Markdown supported)"></textarea>
+      <input id="mediaUrl" type="url" placeholder="Image URL (optional)"/>
+      <div class="row end">
+        <button id="postBtn" class="btn-primary">Post</button>
+      </div>
+    </section>
+
+    <section id="posts"></section>
+  </main>
+  <footer id="footer"></footer>
+  <script src="app.js"></script>
+  <script src="profile-inline.js"></script>
+</body>
+</html>
+
+// profile-inline.js
+const API = window.API_URL;
+const qs = (s, d=document)=>d.querySelector(s);
+const meKey = 'token';
+
+function getToken(){ return localStorage.getItem(meKey); }
+async function authFetch(path, opts={}){
+  const headers = Object.assign({ 'Content-Type':'application/json' }, opts.headers||{});
+  const t = getToken(); if (t) headers['Authorization'] = `Bearer ${t}`;
+  const res = await fetch(API+path, { ...opts, headers });
+  return res;
+}
+
+(async function boot(){
+  const params = new URLSearchParams(location.search);
+  const profileId = params.get('id');
+  const me = await (await authFetch('/users/me')).json().catch(()=>null);
+  const profile = await (await fetch(`${API}/creators/${profileId}`)).json();
+
+  renderHeader(profile, me);
+  if (me && me.id === profile.userId && me.role?.includes?.('CREATOR')) {
+    enableComposer(profile);
+  }
+  loadPosts(profileId, me?.id);
+})();
+
+function renderHeader(profile, me){
+  const root = qs('#profile-header');
+  root.innerHTML = `
+    <div class="creator-header">
+      <img class="avatar" src="${profile.avatar||''}" alt="avatar"/>
+      <div>
+        <h1>${profile.displayName}</h1>
+        <p>@${profile.slug}</p>
+        <p>${profile.bio||''}</p>
+        <div class="actions">
+          ${me && me.id === profile.userId ? `
+            <a class="btn" href="studio.html">Go to Studio</a>
+            <a class="btn" href="profile-edit.html">Edit Profile</a>
+          ` : `
+            <a class="btn-primary" href="support.html?creator=${profile.id}">Support</a>
+            <a class="btn" href="chat.html?user=${profile.userId}">Message</a>
+          `}
+        </div>
+      </div>
+    </div>`;
+}
+
+function enableComposer(profile){
+  const comp = qs('#composer');
+  comp.hidden = false;
+  const visibility = qs('#visibility');
+  const price = qs('#price');
+  visibility.addEventListener('change', () => {
+    price.style.display = visibility.value === 'PAY_TO_UNLOCK' ? 'inline-block' : 'none';
+  });
+  qs('#postBtn').addEventListener('click', submitPost);
+}
+
+async function submitPost(){
+  const v = qs('#visibility').value;
+  const priceVal = parseFloat(qs('#price').value || '0');
+  const content = qs('#content').value.trim();
+  const mediaUrl = qs('#mediaUrl').value.trim();
+  if (!content) return alert('Content required');
+  if (v==='PAY_TO_UNLOCK' && !(priceVal>0)) return alert('Price required');
+
+  const body = {
+    visibility: v,
+    content,
+    media: mediaUrl ? [mediaUrl] : [],
+  };
+  if (v==='PAY_TO_UNLOCK') body.price = priceVal;
+
+  const res = await authFetch('/posts', { method:'POST', body: JSON.stringify(body) });
+  if (!res.ok) return alert('Failed to post');
+  qs('#content').value=''; qs('#mediaUrl').value='';
+  loadPosts(new URLSearchParams(location.search).get('id'));
+}
+
+async function loadPosts(creatorId, viewerId){
+  const list = qs('#posts');
+  list.innerHTML = '<div class="skeleton">Loading posts…</div>';
+  const res = await fetch(`${API}/posts?creatorId=${creatorId}&viewerId=${viewerId||''}`);
+  const items = res.ok ? await res.json() : [];
+  list.innerHTML = items.map(renderPostCard).join('');
+}
+
+function renderPostCard(p){
+  if (p.isLocked) {
+    return `
+    <article class="post locked">
+      <div class="lock">${p.visibility==='SUBSCRIBERS' ? 'Subscribers only' : `Unlock for ${p.price}`}</div>
+      <p>${p.preview||'Locked content'}</p>
+      ${p.visibility==='PAY_TO_UNLOCK' ? `<button class="btn-primary" onclick="unlock('${p.id}')">Unlock</button>`:''}
+    </article>`;
+  }
+  return `
+  <article class="post">
+    ${p.media?.[0] ? `<img src="${p.media[0]}" alt="media"/>` : ''}
+    <div class="content">${escapeHtml(p.content)}</div>
+    <div class="meta">${new Date(p.createdAt).toLocaleString()}</div>
+  </article>`;
+}
+
+window.unlock = async function(id){
+  const res = await authFetch(`/posts/${id}/unlock`, { method:'POST' });
+  if (!res.ok) return alert('Unlock failed');
+  loadPosts(new URLSearchParams(location.search).get('id'));
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+
+⸻
+
+Styling Tips (Clean Profile)
+	•	Use a single accent color (e.g., light blue gradient for SUI) sparingly.
+	•	Keep cards with border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.06);.
+	•	Large readable fonts for header; compact fonts in meta lines.
+	•	Avoid metric blocks on profile—link to studio.html for “Stats & Analytics”.
+
+⸻
+
+QA Checklist
+	•	Composer shown only on own profile; hidden elsewhere.
+	•	Post modes: Public/Subscribers/Pay-to-Unlock work end-to-end.
+	•	Price field toggles only for Pay-to-Unlock.
+	•	Locked posts show preview + correct CTA.
+	•	“View Public Profile” button not shown on own profile header.
+	•	Creator stats not present on profile; Go to Studio links to analytics.
+	•	Access checks enforced server-side (cannot fetch full locked content without rights).
+
+⸻
+
+Nice-to-Haves (Later)
+	•	Drafts & scheduled posts.
+	•	Markdown rendering & media gallery.
+	•	Rate limits, spam protection.
+	•	Optimistic UI and toasts for posting.
+	•	WebSocket/Server-Sent Events to live-update post list after posting.
