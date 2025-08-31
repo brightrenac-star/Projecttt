@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Rocket } from "lucide-react";
+import sLogo from '@assets/generated_images/Blue_rainbow_S_logo_0fa7a8fb.png';
 
 export default function Footer() {
   return (
@@ -10,7 +10,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center mb-4">
               <div className="gradient-primary p-2 rounded-lg">
-                <Rocket className="text-white text-xl" />
+                <img src={sLogo} alt="Society" className="w-6 h-6" />
               </div>
               <span className="ml-3 text-xl font-bold text-foreground">Society</span>
             </div>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Rocket, UserPlus, Heart, TrendingUp, Wallet, Users } from "lucide-react";
+import { UserPlus, Heart, TrendingUp, Wallet, Users } from "lucide-react";
 import type { Creator, Post } from "@shared/schema";
 
 export default function HomePage() {

@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
-import { Rocket, Paintbrush, Heart } from "lucide-react";
+import { Paintbrush, Heart } from "lucide-react";
+import sLogo from '@assets/generated_images/Blue_rainbow_S_logo_0fa7a8fb.png';
 import { Redirect } from "wouter";
 
 export default function AuthPage() {
@@ -89,7 +90,7 @@ export default function AuthPage() {
             <CardContent className="p-8">
               <div className="text-center mb-8">
                 <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
-                  <Rocket className="text-white text-2xl" />
+                  <img src={sLogo} alt="Society" className="w-8 h-8" />
                 </div>
                 <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
                 <p className="text-muted-foreground mt-2">Choose your role and get started</p>
