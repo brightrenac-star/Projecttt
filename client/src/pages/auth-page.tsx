@@ -106,31 +106,31 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Home Button - Top Left Corner */}
+      <Link href="/">
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute top-4 left-4 z-10 glass border-border hover:bg-primary/10 flex items-center gap-2"
+          data-testid="button-home-auth"
+        >
+          <Home className="w-4 h-4" />
+          <span className="hidden sm:inline">Home</span>
+        </Button>
+      </Link>
+      
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full">
           <Card className="glass-strong">
             <CardContent className="p-8">
-              <div className="flex justify-between items-start mb-6">
-                <div className="text-center flex-1">
-                  <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
-                    <img src={sLogo} alt="Society" className="w-8 h-8" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
-                  <p className="text-muted-foreground mt-2">Choose your role and get started</p>
+              <div className="text-center mb-8">
+                <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
+                  <img src={sLogo} alt="Society" className="w-8 h-8" />
                 </div>
-                <Link href="/">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="glass border-border hover:bg-primary/10 flex items-center gap-2"
-                    data-testid="button-home-auth"
-                  >
-                    <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">Home</span>
-                  </Button>
-                </Link>
+                <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
+                <p className="text-muted-foreground mt-2">Choose your role and get started</p>
               </div>
 
               {/* Tab Selection */}
