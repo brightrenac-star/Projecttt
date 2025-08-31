@@ -1,0 +1,172 @@
+Thanks! I dug through your uploaded ZIP and found the real source. Here’s what you already have (by file), what’s missing in the UI, and exactly where to add/fix things.
+
+# What’s in your project (confirmed)
+
+**Client (Vite + React + Tailwind + shadcn/ui)**
+
+* `client/index.html`
+* Pages:
+
+  * `client/src/pages/creator-profile-page.tsx`
+  * `client/src/pages/profile-page.tsx`
+  * `client/src/pages/studio-page.tsx`
+  * `client/src/pages/studio-data-page.tsx`
+  * `client/src/pages/discover-page.tsx`, `help-page.tsx`, `home-page.tsx`, `auth-page.tsx`, etc.
+* Posting UI (multiple variants available):
+
+  * `client/src/components/posts/compact-post-composer.tsx`  ✅
+  * `client/src/components/posts/inline-post-composer.tsx`   ✅
+  * `client/src/components/posts/facebook-style-composer.tsx` ✅
+  * `client/src/components/posts/locked-post-preview.tsx`     ✅
+* Comments:
+
+  * `client/src/components/comments/comments-section.tsx` ✅
+* Adult (18+) verification:
+
+  * `client/src/components/adult-verification.tsx` ✅
+  * `client/src/pages/adult-verification-page.tsx` ✅
+* Header/Footer logic:
+
+  * `client/src/components/contextual-navigation.tsx` ✅
+  * `client/src/components/contextual-footer.tsx` ✅
+  * `client/src/components/navigation.tsx` / `footer.tsx` ✅
+* Wallet actions (Sui):
+
+  * `client/src/components/wallet/tip-button.tsx`
+  * `client/src/components/wallet/subscribe-button.tsx`
+  * `client/src/components/wallet/unlock-button.tsx`
+
+**Server (Express + Drizzle)**
+
+* `server/index.ts`, `server/routes.ts`, `server/storage.ts`, `server/objectStorage.ts`
+* **Posts API already supports**:
+
+  * `POST /api/posts` (create)
+  * `PATCH /api/posts/:id` (edit) → also sets `editedAt`
+  * `DELETE /api/posts/:id` (delete)
+* **Comments API already supports** posting, hiding, deleting, and voting.
+* **Categories**: preset categories are defined
+
+  * See `shared/schema.ts` → `PRESET_CATEGORIES = ["Art","Music","Writing","Gaming","Lifestyle","Education","NSFW 18+"]`
+  * `routes.ts` enforces category validation and exposes `GET /api/categories`
+* **18+ flow**: adult flags & KYC fields exist in `shared/schema.ts`; related routes present.
+* **Subscriptions / tips / unlock** endpoints are present.
+
+# Why “creator can’t edit profile / edit or delete posts / comment” happened
+
+Good news: backend + many frontend parts are **already implemented**. The issues you saw are most likely **UI wiring / conditions**, not missing APIs.
+
+## 1) Creator can’t edit their **profile**
+
+* Likely the **edit button** isn’t shown due to an `isOwner` guard or the profile page not pulling `/api/users/me` correctly.
+* Check: `client/src/pages/profile-page.tsx` and `creator-profile-page.tsx`.
+* Ensure the page compares `me.id` to the profile’s `ownerUserId` (or similar) and renders an **Edit Profile** button (link to the editor UI or modal).
+* If a dedicated editor component is missing, create one (simple form) and call `PATCH /api/users/me`.
+
+## 2) Creator can’t **edit/delete posts**
+
+* Server is ready: `PATCH /api/posts/:id`, `DELETE /api/posts/:id` (with ownership checks) and “edited” via `editedAt`.
+* You need UI **actions** on each post:
+
+  * Add an **owner-only action bar** to your post card (the repo has `locked-post-preview.tsx` but no full “post card” with actions yet). Easiest path: create `client/src/components/posts/post-card.tsx` that:
+
+    * Renders content, media, meta time.
+    * If `post.creator.userId === me.id`, show buttons: **Edit** (opens modal) and **Delete**.
+    * On edit success, show “Edited” badge if `post.editedAt != null`.
+* Wire mutations:
+
+  * `useMutation({ mutationFn: (data) => apiRequest("PATCH", "/api/posts/"+id, data) })`
+  * `useMutation({ mutationFn: () => apiRequest("DELETE", "/api/posts/"+id) })`
+  * On success: `queryClient.invalidateQueries(["/api/creators", creatorId, "posts"])`
+
+## 3) Can’t **comment**
+
+* `comments-section.tsx` exists with full create/list logic. Add it under each post in your feed or on the post detail view.
+* Ensure you pass `postId` and render the component:
+
+  ```tsx
+  <CommentsSection postId={post.id} />
+  ```
+* Make sure the page has `useAuth()` and the user is logged in (the component will likely check auth and show the form accordingly).
+
+## 4) **Preset categories**
+
+* Already defined and validated. Expose a **chip selector** in your composer/edit modal:
+
+  * Call `GET /api/categories` and map into selectable chips (limit 0–3).
+  * Include `categories: string[]` in the create/edit post payloads.
+* Update Discover to optionally filter by category (query param + API call).
+
+## 5) **18+ creators** must be verified before posting NSFW
+
+* The adult verification component and API endpoints exist. On the composer:
+
+  * If creator selects **NSFW 18+** category **and** `adultReviewStatus !== "approved"`, show a blocking tooltip/banner: “Adult-content posting requires ID + selfie and admin approval.”
+  * Disable the **Post** button in that case and link to `/adult-verification`.
+
+## 6) **Mobile spacing**
+
+* You already use Tailwind + modern UI components. Add global spacing rules (no overlap):
+
+  * Wrap sections in `.container px-4 md:px-6` with `space-y-4` (or `gap-4` for grids).
+  * Ensure media elements use `max-w-full h-auto object-cover`.
+  * Give cards `rounded-2xl` and `mb-4`.
+  * Keep tap targets min-height `h-11` and spacing `space-x-2`/`space-y-2`.
+
+# Where to implement (exact files & hooks)
+
+1. **Public profile page** (top compact bar that expands to post tool, owner only)
+   File: `client/src/pages/creator-profile-page.tsx`
+
+   * You already import `CompactPostComposer`. Ensure:
+
+     * The **compact bar** (small section) is rendered **only** if the viewer is the owner.
+     * On click, toggle show/hide the full composer (still on the **same page**).
+     * Use **media-only** attach (your composer components already support images/videos).
+
+2. **Post card with actions**
+   New file: `client/src/components/posts/post-card.tsx`
+
+   * Props: `post`, `me`
+   * Show **Edit**/**Delete** only when `post.creator.userId === me.id`.
+   * On edit success: show an **“Edited”** badge if `post.editedAt` exists.
+   * Under the card, render `<CommentsSection postId={post.id} />`.
+
+3. **Wire comments**
+   File: wherever the feed of posts is rendered in `creator-profile-page.tsx`.
+
+   * After mapping posts to `PostCard`, you get comments “for free”.
+
+4. **Categories selector**
+
+   * Add in composers:
+
+     * `client/src/components/posts/compact-post-composer.tsx`
+     * (and/or) `facebook-style-composer.tsx`, `inline-post-composer.tsx`
+   * Fetch `GET /api/categories` on mount; render chips with toggle state; include `categories` in payload.
+
+5. **18+ gate**
+
+   * In the same composer(s), if categories include `"NSFW 18+"` and the user’s `adultReviewStatus !== "approved"`, disable posting and show link to `/adult-verification`.
+
+6. **Header/Footer cleanup per page**
+   Files:
+
+   * `client/src/components/contextual-navigation.tsx`
+   * `client/src/components/contextual-footer.tsx`
+     Implement the rules we outlined earlier:
+   * Hide “view public profile” when you’re already on it.
+   * Only show page-relevant tabs.
+   * Keep footer multi-row but concise.
+
+# Quick “Do Now” checklist
+
+* [ ] Add `PostCard` component with **owner-only** Edit/Delete + **Edited** badge.
+* [ ] In `creator-profile-page.tsx`, render the **compact post bar** (owner only) that expands inline to composer.
+* [ ] Mount `<CommentsSection postId={id} />` under each post.
+* [ ] Add **category chips** to composers using `GET /api/categories`; include in create/edit payloads.
+* [ ] Enforce **18+ blocking** in composer if `"NSFW 18+"` selected and not approved.
+* [ ] Tighten **mobile spacing** (`space-y-4`, `gap-4`, `rounded-2xl`, `px-4`, `max-w-full`).
+* [ ] Verify edit profile button is shown for owner and calls `PATCH /api/users/me`.
+
+If you’d like, I can generate a ready-to-paste `PostCard` React component (with edit/delete modal, edited tag, and embedded comments) tailored to your API shape, and a tiny change set for `creator-profile-page.tsx` to mount the compact bar + composer exactly how you described.
