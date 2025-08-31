@@ -1,17 +1,36 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Rocket, Search, Menu, User, Settings, LogOut } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Rocket, Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink } from "lucide-react";
+import type { Creator } from "@shared/schema";
 
 export default function Navigation() {
   const [, setLocation] = useLocation();
   const { user, logoutMutation } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+
+  // Get creator profile for public profile link
+  const { data: creator } = useQuery<Creator>({
+    queryKey: ["/api/creators", user?.id],
+    queryFn: async () => {
+      if (user?.role !== "creator") return null;
+      const creators = await fetch("/api/creators").then(res => res.json());
+      return creators.find((c: Creator) => c.userId === user.id) || null;
+    },
+    enabled: !!user && user.role === "creator",
+  });
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +43,26 @@ export default function Navigation() {
   const handleLogout = () => {
     logoutMutation.mutate();
   };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (chatMessage.trim()) {
+      // In a real app, this would send the message to a backend
+      console.log('Sending message:', chatMessage);
+      setChatMessage("");
+      // For demo purposes, add a mock response
+      setTimeout(() => {
+        console.log('Mock response received');
+      }, 1000);
+    }
+  };
+
+  // Mock chat messages for demonstration
+  const chatMessages = [
+    { id: 1, sender: "Support", message: "Welcome to Society! How can we help you today?", timestamp: "2 hours ago", isSupport: true },
+    { id: 2, sender: "You", message: "Hi, I have a question about creator payouts", timestamp: "1 hour ago", isSupport: false },
+    { id: 3, sender: "Support", message: "I'd be happy to help with payout questions! What specifically would you like to know?", timestamp: "45 min ago", isSupport: true },
+  ];
 
   return (
     <nav className="glass-strong fixed top-0 left-0 right-0 z-50 border-b border-border">
@@ -83,41 +122,116 @@ export default function Navigation() {
           {/* Auth Section */}
           <div className="flex items-center space-x-4">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="nav-user-menu">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="gradient-primary text-white">
-                        {user.displayName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 glass-strong border-border" align="end" forceMount>
-                  <div className="flex flex-col space-y-1 p-2">
-                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                  </div>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="w-full">
-                      <User className="mr-2 h-4 w-4" />
-                      <span data-testid="nav-profile">Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  {user.role === "creator" && (
+              <>
+                {/* Public Profile Button - Only for creators with profiles */}
+                {user.role === "creator" && creator?.handle && (
+                  <Link href={`/creator/${creator.handle}`}>
+                    <Button variant="ghost" size="sm" className="text-foreground hover:text-primary transition-smooth" data-testid="nav-public-profile">
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">Public Profile</span>
+                    </Button>
+                  </Link>
+                )}
+
+                {/* Chat Button */}
+                <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="sm" className="relative text-foreground hover:text-primary transition-smooth" data-testid="nav-chat">
+                      <Mail className="w-4 h-4" />
+                      <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs h-4 w-4 p-0 flex items-center justify-center">
+                        2
+                      </Badge>
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent className="glass-strong border-border">
+                    <SheetHeader>
+                      <SheetTitle className="text-foreground">Messages</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex flex-col h-full max-h-[calc(100vh-120px)]">
+                      <ScrollArea className="flex-1 mt-4">
+                        <div className="space-y-4 pr-4">
+                          {chatMessages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={`flex flex-col space-y-1 ${
+                                msg.isSupport ? 'items-start' : 'items-end'
+                              }`}
+                            >
+                              <div
+                                className={`max-w-[80%] p-3 rounded-lg ${
+                                  msg.isSupport
+                                    ? 'glass text-foreground'
+                                    : 'gradient-primary text-primary-foreground'
+                                }`}
+                              >
+                                <p className="text-sm font-medium">{msg.sender}</p>
+                                <p className="text-sm">{msg.message}</p>
+                              </div>
+                              <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <form onSubmit={handleSendMessage} className="flex gap-2">
+                          <Textarea
+                            value={chatMessage}
+                            onChange={(e) => setChatMessage(e.target.value)}
+                            placeholder="Type your message..."
+                            className="flex-1 min-h-[60px] bg-input/80 backdrop-blur-sm border-border resize-none"
+                            data-testid="input-chat-message"
+                          />
+                          <Button 
+                            type="submit" 
+                            className="gradient-primary text-primary-foreground"
+                            disabled={!chatMessage.trim()}
+                            data-testid="button-send-chat"
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        </form>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+
+                {/* User Dropdown Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="nav-user-menu">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="gradient-primary text-white">
+                          {user.displayName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 glass-strong border-border" align="end" forceMount>
+                    <div className="flex flex-col space-y-1 p-2">
+                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
                     <DropdownMenuItem asChild>
-                      <Link href="/studio" className="w-full">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span data-testid="nav-studio-menu">Studio</span>
+                      <Link href="/profile" className="w-full">
+                        <User className="mr-2 h-4 w-4" />
+                        <span data-testid="nav-profile">Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleLogout} data-testid="nav-logout">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    {user.role === "creator" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/studio" className="w-full">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span data-testid="nav-studio-menu">Studio</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleLogout} data-testid="nav-logout">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <>
                 <Link href="/auth">
