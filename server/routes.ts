@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema } from "@shared/schema";
+import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 
 export function registerRoutes(app: Express): Server {
@@ -422,6 +422,114 @@ export function registerRoutes(app: Express): Server {
       creators: type === "posts" ? [] : filteredCreators,
       posts: type === "creators" ? [] : filteredPosts
     });
+  });
+
+  // Messaging - Get user's conversations
+  app.get("/api/conversations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const conversations = await storage.getConversationsByUser(req.user!.id);
+      res.json(conversations);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get messages in a conversation
+  app.get("/api/conversations/:id/messages", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const conversation = await storage.getConversation(req.params.id);
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    // Check if user is part of this conversation
+    if (conversation.user1Id !== req.user!.id && conversation.user2Id !== req.user!.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const messages = await storage.getMessagesByConversation(req.params.id);
+      // Mark messages as read
+      await storage.markMessagesAsRead(req.params.id, req.user!.id);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Send a message
+  app.post("/api/conversations/:id/messages", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const conversation = await storage.getConversation(req.params.id);
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    // Check if user is part of this conversation
+    if (conversation.user1Id !== req.user!.id && conversation.user2Id !== req.user!.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    try {
+      const messageData = insertMessageSchema.parse({
+        ...req.body,
+        conversationId: req.params.id,
+        senderId: req.user!.id,
+      });
+
+      const message = await storage.createMessage(messageData);
+      res.status(201).json(message);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Start a new conversation
+  app.post("/api/conversations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { otherUserId } = req.body;
+      
+      if (!otherUserId || otherUserId === req.user!.id) {
+        return res.status(400).json({ message: "Invalid recipient" });
+      }
+
+      // Check if conversation already exists
+      const existingConversation = await storage.getConversationByUsers(req.user!.id, otherUserId);
+      if (existingConversation) {
+        return res.json(existingConversation);
+      }
+
+      // Create new conversation
+      const conversationData = insertConversationSchema.parse({
+        user1Id: req.user!.id,
+        user2Id: otherUserId,
+      });
+
+      const conversation = await storage.createConversation(conversationData);
+      res.status(201).json(conversation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   const httpServer = createServer(app);

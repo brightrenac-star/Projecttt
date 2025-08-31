@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -10,8 +12,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { Rocket, Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink } from "lucide-react";
-import type { Creator } from "@shared/schema";
+import { Separator } from "@/components/ui/separator";
+import { Rocket, Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink, MessageCircle } from "lucide-react";
+import type { Creator, Conversation, Message } from "@shared/schema";
 
 export default function Navigation() {
   const [, setLocation] = useLocation();
@@ -19,7 +22,9 @@ export default function Navigation() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [messageContent, setMessageContent] = useState("");
+  const { toast } = useToast();
 
   // Get creator profile for public profile link
   const { data: creator } = useQuery<Creator>({
@@ -31,6 +36,21 @@ export default function Navigation() {
     },
     enabled: !!user && user.role === "creator",
   });
+
+  // Get conversations
+  const { data: conversations = [] } = useQuery<Array<Conversation & { otherUser: any; lastMessage?: Message; unreadCount: number }>>({
+    queryKey: ["/api/conversations"],
+    enabled: !!user,
+  });
+
+  // Get messages for selected conversation
+  const { data: messages = [] } = useQuery<Message[]>({
+    queryKey: ["/api/conversations", selectedConversation, "messages"],
+    enabled: !!selectedConversation,
+  });
+
+  // Calculate total unread count
+  const totalUnreadCount = conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,25 +64,45 @@ export default function Navigation() {
     logoutMutation.mutate();
   };
 
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ conversationId, content }: { conversationId: string; content: string }) => {
+      const response = await apiRequest("POST", `/api/conversations/${conversationId}/messages`, { content });
+      return response.json();
+    },
+    onSuccess: () => {
+      setMessageContent("");
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations", selectedConversation, "messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to send message", description: error.message, variant: "destructive" });
+    },
+  });
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (chatMessage.trim()) {
-      // In a real app, this would send the message to a backend
-      console.log('Sending message:', chatMessage);
-      setChatMessage("");
-      // For demo purposes, add a mock response
-      setTimeout(() => {
-        console.log('Mock response received');
-      }, 1000);
+    if (messageContent.trim() && selectedConversation) {
+      sendMessageMutation.mutate({
+        conversationId: selectedConversation,
+        content: messageContent.trim()
+      });
     }
   };
 
-  // Mock chat messages for demonstration
-  const chatMessages = [
-    { id: 1, sender: "Support", message: "Welcome to Society! How can we help you today?", timestamp: "2 hours ago", isSupport: true },
-    { id: 2, sender: "You", message: "Hi, I have a question about creator payouts", timestamp: "1 hour ago", isSupport: false },
-    { id: 3, sender: "Support", message: "I'd be happy to help with payout questions! What specifically would you like to know?", timestamp: "45 min ago", isSupport: true },
-  ];
+  const formatMessageTime = (date: string | Date) => {
+    const messageDate = new Date(date);
+    const now = new Date();
+    const diffInHours = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${Math.floor(diffInHours)}h ago`;
+    } else {
+      return messageDate.toLocaleDateString();
+    }
+  };
 
   return (
     <nav className="glass-strong fixed top-0 left-0 right-0 z-50 border-b border-border">
@@ -138,9 +178,11 @@ export default function Navigation() {
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="sm" className="relative text-foreground hover:text-primary transition-smooth" data-testid="nav-chat">
                       <Mail className="w-4 h-4" />
-                      <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs h-4 w-4 p-0 flex items-center justify-center">
-                        2
-                      </Badge>
+                      {totalUnreadCount > 0 && (
+                        <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs h-4 w-4 p-0 flex items-center justify-center">
+                          {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                        </Badge>
+                      )}
                     </Button>
                   </SheetTrigger>
                   <SheetContent className="glass-strong border-border">
@@ -148,49 +190,125 @@ export default function Navigation() {
                       <SheetTitle className="text-foreground">Messages</SheetTitle>
                     </SheetHeader>
                     <div className="flex flex-col h-full max-h-[calc(100vh-120px)]">
-                      <ScrollArea className="flex-1 mt-4">
-                        <div className="space-y-4 pr-4">
-                          {chatMessages.map((msg) => (
-                            <div
-                              key={msg.id}
-                              className={`flex flex-col space-y-1 ${
-                                msg.isSupport ? 'items-start' : 'items-end'
-                              }`}
-                            >
-                              <div
-                                className={`max-w-[80%] p-3 rounded-lg ${
-                                  msg.isSupport
-                                    ? 'glass text-foreground'
-                                    : 'gradient-primary text-primary-foreground'
-                                }`}
-                              >
-                                <p className="text-sm font-medium">{msg.sender}</p>
-                                <p className="text-sm">{msg.message}</p>
+                      {!selectedConversation ? (
+                        // Conversation list
+                        <ScrollArea className="flex-1 mt-4">
+                          <div className="space-y-2 pr-4">
+                            {conversations.length === 0 ? (
+                              <div className="text-center py-8">
+                                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                                <p className="text-muted-foreground">No conversations yet</p>
+                                <p className="text-sm text-muted-foreground">Start chatting with creators and supporters!</p>
                               </div>
-                              <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
+                            ) : (
+                              conversations.map((conversation) => (
+                                <div
+                                  key={conversation.id}
+                                  onClick={() => setSelectedConversation(conversation.id)}
+                                  className="flex items-center space-x-3 p-3 glass hover:bg-primary/10 rounded-lg cursor-pointer transition-smooth"
+                                  data-testid={`conversation-${conversation.id}`}
+                                >
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarFallback className="gradient-primary text-white">
+                                      {conversation.otherUser.displayName.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex justify-between items-start">
+                                      <p className="text-sm font-medium text-foreground truncate">
+                                        {conversation.otherUser.displayName}
+                                      </p>
+                                      {conversation.lastMessage && (
+                                        <span className="text-xs text-muted-foreground">
+                                          {formatMessageTime(conversation.lastMessage.createdAt!)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {conversation.lastMessage && (
+                                      <p className="text-sm text-muted-foreground truncate">
+                                        {conversation.lastMessage.content}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {conversation.unreadCount > 0 && (
+                                    <Badge className="bg-red-500 text-white text-xs">
+                                      {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+                                    </Badge>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </ScrollArea>
+                      ) : (
+                        // Chat view
+                        <>
+                          <div className="flex items-center space-x-2 mt-4 pb-4 border-b border-border">
+                            <Button
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setSelectedConversation(null)}
+                              data-testid="button-back-to-conversations"
+                            >
+                              ← Back
+                            </Button>
+                            <div className="flex items-center space-x-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="gradient-primary text-white">
+                                  {conversations.find(c => c.id === selectedConversation)?.otherUser.displayName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium text-foreground">
+                                {conversations.find(c => c.id === selectedConversation)?.otherUser.displayName}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                      <div className="mt-4 pt-4 border-t border-border">
-                        <form onSubmit={handleSendMessage} className="flex gap-2">
-                          <Textarea
-                            value={chatMessage}
-                            onChange={(e) => setChatMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            className="flex-1 min-h-[60px] bg-input/80 backdrop-blur-sm border-border resize-none"
-                            data-testid="input-chat-message"
-                          />
-                          <Button 
-                            type="submit" 
-                            className="gradient-primary text-primary-foreground"
-                            disabled={!chatMessage.trim()}
-                            data-testid="button-send-chat"
-                          >
-                            <Send className="w-4 h-4" />
-                          </Button>
-                        </form>
-                      </div>
+                          </div>
+                          <ScrollArea className="flex-1">
+                            <div className="space-y-4 pr-4 py-4">
+                              {messages.map((message) => (
+                                <div
+                                  key={message.id}
+                                  className={`flex flex-col space-y-1 ${
+                                    message.senderId === user?.id ? 'items-end' : 'items-start'
+                                  }`}
+                                >
+                                  <div
+                                    className={`max-w-[80%] p-3 rounded-lg ${
+                                      message.senderId === user?.id
+                                        ? 'gradient-primary text-primary-foreground'
+                                        : 'glass text-foreground'
+                                    }`}
+                                  >
+                                    <p className="text-sm">{message.content}</p>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {formatMessageTime(message.createdAt!)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </ScrollArea>
+                          <div className="pt-4 border-t border-border">
+                            <form onSubmit={handleSendMessage} className="flex gap-2">
+                              <Textarea
+                                value={messageContent}
+                                onChange={(e) => setMessageContent(e.target.value)}
+                                placeholder="Type your message..."
+                                className="flex-1 min-h-[60px] bg-input/80 backdrop-blur-sm border-border resize-none"
+                                data-testid="input-message-content"
+                              />
+                              <Button 
+                                type="submit" 
+                                className="gradient-primary text-primary-foreground"
+                                disabled={!messageContent.trim() || sendMessageMutation.isPending}
+                                data-testid="button-send-message"
+                              >
+                                <Send className="w-4 h-4" />
+                              </Button>
+                            </form>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -277,6 +395,45 @@ export default function Navigation() {
               </form>
 
               {/* Mobile Links */}
+              {user && (
+                <>
+                  {/* Mobile Public Profile Button - Only for creators */}
+                  {user.role === "creator" && creator?.handle && (
+                    <Link href={`/creator/${creator.handle}`}>
+                      <div 
+                        className="flex items-center px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"
+                        onClick={() => setMobileMenuOpen(false)}
+                        data-testid="nav-mobile-public-profile"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Public Profile
+                      </div>
+                    </Link>
+                  )}
+
+                  {/* Mobile Chat Button */}
+                  <div 
+                    className="flex items-center justify-between px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"
+                    onClick={() => {
+                      setChatOpen(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    data-testid="nav-mobile-chat"
+                  >
+                    <div className="flex items-center">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Messages
+                    </div>
+                    {totalUnreadCount > 0 && (
+                      <Badge className="bg-red-500 text-white text-xs">
+                        {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                      </Badge>
+                    )}
+                  </div>
+                  <Separator className="my-2" />
+                </>
+              )}
+
               <Link href="/">
                 <div 
                   className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"

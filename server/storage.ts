@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike } from "@shared/schema";
+import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage } from "@shared/schema";
 import { randomUUID } from "crypto";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -48,6 +48,19 @@ export interface IStorage {
   createLike(like: InsertLike): Promise<Like>;
   deleteLike(userId: string, postId: string): Promise<boolean>;
 
+  // Conversations
+  getConversation(id: string): Promise<Conversation | undefined>;
+  getConversationByUsers(user1Id: string, user2Id: string): Promise<Conversation | undefined>;
+  getConversationsByUser(userId: string): Promise<Array<Conversation & { otherUser: User; lastMessage?: Message; unreadCount: number }>>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  updateConversation(id: string, conversation: Partial<Conversation>): Promise<Conversation | undefined>;
+
+  // Messages
+  getMessage(id: string): Promise<Message | undefined>;
+  getMessagesByConversation(conversationId: string): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
+
   sessionStore: session.Store;
 }
 
@@ -58,6 +71,8 @@ export class MemStorage implements IStorage {
   private subscriptions: Map<string, Subscription>;
   private tips: Map<string, Tip>;
   private likes: Map<string, Like>;
+  private conversations: Map<string, Conversation>;
+  private messages: Map<string, Message>;
   sessionStore: session.Store;
 
   constructor() {
@@ -67,6 +82,8 @@ export class MemStorage implements IStorage {
     this.subscriptions = new Map();
     this.tips = new Map();
     this.likes = new Map();
+    this.conversations = new Map();
+    this.messages = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -130,8 +147,8 @@ export class MemStorage implements IStorage {
       bio: insertCreator.bio || null,
       avatar: insertCreator.avatar || null,
       category: insertCreator.category || null,
-      tiers: insertCreator.tiers || [],
-      links: insertCreator.links || {},
+      tiers: (insertCreator.tiers as any) || [],
+      links: (insertCreator.links as any) || {},
       payoutAddress: insertCreator.payoutAddress || null,
       totalEarnings: insertCreator.totalEarnings || 0,
       subscriberCount: insertCreator.subscriberCount || 0,
@@ -176,6 +193,7 @@ export class MemStorage implements IStorage {
       price: insertPost.price || 0,
       tier: insertPost.tier || null,
       likes: 0,
+      visibility: insertPost.visibility || "public",
       published: insertPost.published ?? true,
       id, 
       createdAt: new Date() 
@@ -284,6 +302,102 @@ export class MemStorage implements IStorage {
       return this.likes.delete(like[0]);
     }
     return false;
+  }
+
+  // Conversations
+  async getConversation(id: string): Promise<Conversation | undefined> {
+    return this.conversations.get(id);
+  }
+
+  async getConversationByUsers(user1Id: string, user2Id: string): Promise<Conversation | undefined> {
+    return Array.from(this.conversations.values()).find(conv => 
+      (conv.user1Id === user1Id && conv.user2Id === user2Id) ||
+      (conv.user1Id === user2Id && conv.user2Id === user1Id)
+    );
+  }
+
+  async getConversationsByUser(userId: string): Promise<Array<Conversation & { otherUser: User; lastMessage?: Message; unreadCount: number }>> {
+    const userConversations = Array.from(this.conversations.values())
+      .filter(conv => conv.user1Id === userId || conv.user2Id === userId)
+      .sort((a, b) => new Date(b.lastMessageAt!).getTime() - new Date(a.lastMessageAt!).getTime());
+
+    const result = [];
+    for (const conv of userConversations) {
+      const otherUserId = conv.user1Id === userId ? conv.user2Id : conv.user1Id;
+      const otherUser = await this.getUser(otherUserId);
+      if (!otherUser) continue;
+
+      const messages = await this.getMessagesByConversation(conv.id);
+      const lastMessage = messages[messages.length - 1];
+      const unreadCount = messages.filter(msg => msg.senderId !== userId && !msg.read).length;
+
+      result.push({
+        ...conv,
+        otherUser,
+        lastMessage,
+        unreadCount
+      });
+    }
+    return result;
+  }
+
+  async createConversation(insertConversation: InsertConversation): Promise<Conversation> {
+    const id = randomUUID();
+    const conversation: Conversation = { 
+      ...insertConversation,
+      id, 
+      lastMessageAt: new Date(),
+      createdAt: new Date() 
+    };
+    this.conversations.set(id, conversation);
+    return conversation;
+  }
+
+  async updateConversation(id: string, convUpdate: Partial<Conversation>): Promise<Conversation | undefined> {
+    const conversation = this.conversations.get(id);
+    if (!conversation) return undefined;
+    const updatedConversation = { ...conversation, ...convUpdate };
+    this.conversations.set(id, updatedConversation);
+    return updatedConversation;
+  }
+
+  // Messages
+  async getMessage(id: string): Promise<Message | undefined> {
+    return this.messages.get(id);
+  }
+
+  async getMessagesByConversation(conversationId: string): Promise<Message[]> {
+    return Array.from(this.messages.values())
+      .filter(msg => msg.conversationId === conversationId)
+      .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const id = randomUUID();
+    const message: Message = { 
+      ...insertMessage,
+      read: insertMessage.read ?? false,
+      id, 
+      createdAt: new Date() 
+    };
+    this.messages.set(id, message);
+
+    // Update conversation's last message timestamp
+    await this.updateConversation(insertMessage.conversationId, {
+      lastMessageAt: new Date()
+    });
+
+    return message;
+  }
+
+  async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+    const messages = await this.getMessagesByConversation(conversationId);
+    for (const message of messages) {
+      if (message.senderId !== userId && !message.read) {
+        const updatedMessage = { ...message, read: true };
+        this.messages.set(message.id, updatedMessage);
+      }
+    }
   }
 }
 
