@@ -35,7 +35,7 @@ export default function Navigation() {
               <div className="gradient-primary p-2 rounded-lg">
                 <Rocket className="text-white text-xl" />
               </div>
-              <span className="ml-3 text-xl font-bold text-foreground">Suiciety</span>
+              <span className="ml-3 text-xl font-bold text-foreground">Society</span>
             </div>
           </Link>
 

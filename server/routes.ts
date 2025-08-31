@@ -16,7 +16,17 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.get("/api/creators/:handle", async (req, res) => {
-    const creator = await storage.getCreatorByHandle(req.params.handle);
+    // Check if it's a UUID (ID) or handle
+    const param = req.params.handle;
+    const isId = param.length === 36 && param.includes('-'); // UUID format check
+    
+    let creator;
+    if (isId) {
+      creator = await storage.getCreator(param);
+    } else {
+      creator = await storage.getCreatorByHandle(param);
+    }
+    
     if (!creator) {
       return res.status(404).json({ message: "Creator not found" });
     }

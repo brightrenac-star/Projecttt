@@ -1,8 +1,8 @@
-# Suiciety - Creator Support Platform
+# Society - Creator Support Platform
 
 ## Overview
 
-Suiciety is a full-stack web application that connects creators with supporters through a content subscription and tipping platform. The application enables creators to share exclusive content, build communities, and monetize their work while providing supporters with direct access to their favorite creators. Built with modern web technologies, it features a React frontend with TypeScript, an Express.js backend, and PostgreSQL database with Drizzle ORM.
+Society is a full-stack web application that connects creators with supporters through a content subscription and tipping platform. The application enables creators to share exclusive content, build communities, and monetize their work while providing supporters with direct access to their favorite creators. Built with modern web technologies, it features a React frontend with TypeScript, an Express.js backend, and PostgreSQL database with Drizzle ORM.
 
 ## User Preferences
 

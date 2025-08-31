@@ -66,7 +66,7 @@ export default function AuthPage() {
         {
           onSuccess: () => {
             toast({
-              title: "Welcome to Suiciety!",
+              title: "Welcome to Society!",
               description: "Your account has been created successfully.",
             });
             setLocation("/");
@@ -91,7 +91,7 @@ export default function AuthPage() {
                 <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
                   <Rocket className="text-white text-2xl" />
                 </div>
-                <h2 className="text-3xl font-bold text-foreground">Join Suiciety</h2>
+                <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
                 <p className="text-muted-foreground mt-2">Choose your role and get started</p>
               </div>
 
@@ -134,7 +134,7 @@ export default function AuthPage() {
                           className="glass rounded-lg p-4 cursor-pointer hover-scale transition-smooth flex flex-col items-center text-center"
                           data-testid="role-creator"
                         >
-                          <Paintbrush className="text-primary text-xl mb-2" />
+                          <Paintbrush className="text-muted-foreground text-xl mb-2" />
                           <div className="text-sm font-medium text-foreground">Creator</div>
                           <div className="text-xs text-muted-foreground mt-1">Share content & earn</div>
                         </Label>
@@ -146,7 +146,7 @@ export default function AuthPage() {
                           className="glass rounded-lg p-4 cursor-pointer hover-scale transition-smooth flex flex-col items-center text-center"
                           data-testid="role-supporter"
                         >
-                          <Heart className="text-accent text-xl mb-2" />
+                          <Heart className="text-muted-foreground text-xl mb-2" />
                           <div className="text-sm font-medium text-foreground">Supporter</div>
                           <div className="text-xs text-muted-foreground mt-1">Support creators</div>
                         </Label>

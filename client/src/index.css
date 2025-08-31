@@ -114,3 +114,22 @@
     transform: translateY(-20px); 
   }
 }
+
+/* Mobile spacing optimizations */
+@media (max-width: 768px) {
+  .mobile-spacing-sm {
+    @apply py-4;
+  }
+  
+  .mobile-spacing-md {
+    @apply py-6;
+  }
+  
+  .mobile-spacing-lg {
+    @apply py-8;
+  }
+  
+  .mobile-spacing-xl {
+    @apply py-12;
+  }
+}

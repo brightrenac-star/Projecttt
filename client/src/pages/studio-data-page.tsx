@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 import { 
   ArrowLeft, 
@@ -33,6 +34,10 @@ interface CreatorAnalytics {
   totalPosts: number;
   totalLikes: number;
   tips: Tip[];
+  revenueHistory: { month: string; revenue: number; tips: number; subscriptions: number }[];
+  subscriberGrowth: { month: string; count: number }[];
+  postEngagement: { month: string; posts: number; likes: number; views: number }[];
+  earningsBreakdown: { name: string; value: number; color: string }[];
 }
 
 export default function StudioDataPage() {
@@ -54,9 +59,52 @@ export default function StudioDataPage() {
     queryKey: ["/api/creators", creator?.id, "analytics"],
     queryFn: async () => {
       if (!creator?.id) throw new Error("Creator not found");
-      const response = await fetch(`/api/creators/${creator.id}/analytics`);
-      if (!response.ok) throw new Error("Failed to fetch analytics");
-      return response.json();
+      
+      // Mock comprehensive analytics data with charts
+      const mockAnalytics: CreatorAnalytics = {
+        totalRevenue: 245000, // $2,450 in cents
+        monthlyRevenue: 89000, // $890 in cents  
+        subscriberCount: 1247,
+        recentTips: 34,
+        totalPosts: 156,
+        totalLikes: 8934,
+        tips: [
+          { id: "1", creatorId: creator.id, supporterId: "user1", amount: 2500, message: "Love your content!", createdAt: new Date().toISOString() },
+          { id: "2", creatorId: creator.id, supporterId: "user2", amount: 1000, message: "Keep it up!", createdAt: new Date(Date.now() - 86400000).toISOString() },
+          { id: "3", creatorId: creator.id, supporterId: "user3", amount: 5000, message: "Amazing work", createdAt: new Date(Date.now() - 172800000).toISOString() },
+        ],
+        revenueHistory: [
+          { month: "Jul", revenue: 45000, tips: 12000, subscriptions: 33000 },
+          { month: "Aug", revenue: 58000, tips: 15000, subscriptions: 43000 },
+          { month: "Sep", revenue: 67000, tips: 18000, subscriptions: 49000 },
+          { month: "Oct", revenue: 78000, tips: 22000, subscriptions: 56000 },
+          { month: "Nov", revenue: 82000, tips: 25000, subscriptions: 57000 },
+          { month: "Dec", revenue: 89000, tips: 28000, subscriptions: 61000 },
+        ],
+        subscriberGrowth: [
+          { month: "Jul", count: 892 },
+          { month: "Aug", count: 1034 },
+          { month: "Sep", count: 1156 },
+          { month: "Oct", count: 1203 },
+          { month: "Nov", count: 1224 },
+          { month: "Dec", count: 1247 },
+        ],
+        postEngagement: [
+          { month: "Jul", posts: 12, likes: 1340, views: 8920 },
+          { month: "Aug", posts: 15, likes: 1680, views: 11200 },
+          { month: "Sep", posts: 18, likes: 2010, views: 13400 },
+          { month: "Oct", posts: 14, likes: 1890, views: 12600 },
+          { month: "Nov", posts: 16, likes: 2150, views: 14300 },
+          { month: "Dec", posts: 13, likes: 1864, views: 12400 },
+        ],
+        earningsBreakdown: [
+          { name: "Subscriptions", value: 61000, color: "#40E0D0" },
+          { name: "Tips", value: 28000, color: "#98FB98" },
+          { name: "PPV Content", value: 12000, color: "#9370DB" },
+        ],
+      };
+      
+      return mockAnalytics;
     },
     enabled: !!creator?.id,
   });
@@ -308,6 +356,33 @@ export default function StudioDataPage() {
 
           {/* Revenue Tab */}
           <TabsContent value="revenue">
+            {/* Revenue Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Revenue History Chart */}
+              <Card className="glass lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Revenue Trends (6 Months)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-80 w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <AreaChart data={analytics?.revenueHistory}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="month" />
+                        <YAxis tickFormatter={(value) => `$${(value / 100).toFixed(0)}`} />
+                        <Tooltip formatter={(value: number) => [`$${(value / 100).toFixed(2)}`, '']} />
+                        <Legend />
+                        <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="#40E0D0" fill="#40E0D0" fillOpacity={0.6} name="Subscriptions" />
+                        <Area type="monotone" dataKey="tips" stackId="1" stroke="#98FB98" fill="#98FB98" fillOpacity={0.6} name="Tips" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="glass">
                 <CardHeader>
@@ -390,86 +465,203 @@ export default function StudioDataPage() {
 
           {/* Audience Tab */}
           <TabsContent value="audience">
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle>Audience Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center p-6 glass rounded-lg">
-                    <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-subscribers">
-                      {analytics?.subscriberCount || 0}
-                    </div>
-                    <div className="text-muted-foreground">Total Subscribers</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Subscriber Growth Chart */}
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Subscriber Growth</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-64 w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={analytics?.subscriberGrowth}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line type="monotone" dataKey="count" stroke="#40E0D0" strokeWidth={3} dot={{ fill: '#40E0D0' }} name="Subscribers" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Earnings Breakdown Pie Chart */}
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Revenue Sources</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-64 w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={analytics?.earningsBreakdown}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {analytics?.earningsBreakdown.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => `$${(value / 100).toFixed(2)}`} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Audience Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="glass">
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-subscribers">
+                    {analytics?.subscriberCount || 0}
                   </div>
-                  
-                  <div className="text-center p-6 glass rounded-lg">
-                    <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-tips-count">
-                      {analytics?.tips?.length || 0}
-                    </div>
-                    <div className="text-muted-foreground">Tips Received</div>
+                  <div className="text-muted-foreground">Total Subscribers</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass">
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-tips-count">
+                    {analytics?.tips?.length || 0}
                   </div>
-                  
-                  <div className="text-center p-6 glass rounded-lg">
-                    <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-engagement">
-                      {analytics?.totalLikes || 0}
-                    </div>
-                    <div className="text-muted-foreground">Total Likes</div>
+                  <div className="text-muted-foreground">Tips Received</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass">
+                <CardContent className="p-6 text-center">
+                  <div className="text-3xl font-bold text-foreground mb-2" data-testid="audience-engagement">
+                    {analytics?.totalLikes || 0}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="text-muted-foreground">Total Likes</div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Content Tab */}
           <TabsContent value="content">
-            <Card className="glass">
-              <CardHeader>
-                <CardTitle>Content Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Posts Performance Chart */}
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Monthly Content Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-64 w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <AreaChart data={analytics?.postEngagement}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="posts" stroke="#9370DB" fill="#9370DB" fillOpacity={0.6} name="Posts Created" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Engagement Metrics Chart */}
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Engagement Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <Skeleton className="h-64 w-full" />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={analytics?.postEngagement}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="likes" fill="#98FB98" name="Likes" />
+                        <Bar dataKey="views" fill="#40E0D0" name="Views" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Content Stats and Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Publishing Stats</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-foreground">Publishing Stats</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Total Posts</span>
-                        <span className="font-bold text-foreground" data-testid="content-total-posts">
-                          {analytics?.totalPosts || 0}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Average Likes per Post</span>
-                        <span className="font-bold text-foreground" data-testid="content-avg-likes">
-                          {analytics?.totalPosts && analytics.totalPosts > 0 
-                            ? Math.round((analytics.totalLikes || 0) / analytics.totalPosts)
-                            : 0
-                          }
-                        </span>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Total Posts</span>
+                      <span className="font-bold text-foreground text-xl" data-testid="content-total-posts">
+                        {analytics?.totalPosts || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Average Likes per Post</span>
+                      <span className="font-bold text-foreground text-xl" data-testid="content-avg-likes">
+                        {analytics?.totalPosts && analytics.totalPosts > 0 
+                          ? Math.round((analytics.totalLikes || 0) / analytics.totalPosts)
+                          : 0
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Total Engagement</span>
+                      <span className="font-bold text-foreground text-xl" data-testid="content-total-likes">
+                        {analytics?.totalLikes || 0}
+                      </span>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-                    <div className="space-y-2">
-                      <Link href="/studio">
-                        <Button variant="outline" className="w-full justify-start" data-testid="button-create-post">
-                          <FileText className="w-4 h-4 mr-2" />
-                          Create New Post
-                        </Button>
-                      </Link>
-                      <Link href="/studio">
-                        <Button variant="outline" className="w-full justify-start" data-testid="button-manage-posts">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Manage Posts
-                        </Button>
-                      </Link>
-                    </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="glass">
+                <CardHeader>
+                  <CardTitle>Content Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Link href="/studio">
+                      <Button variant="outline" className="w-full justify-start" data-testid="button-create-post">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Create New Post
+                      </Button>
+                    </Link>
+                    <Link href="/studio">
+                      <Button variant="outline" className="w-full justify-start" data-testid="button-manage-posts">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Manage Posts
+                      </Button>
+                    </Link>
+                    <Link href="/profile">
+                      <Button variant="outline" className="w-full justify-start" data-testid="button-profile-settings">
+                        <Users className="w-4 h-4 mr-2" />
+                        Profile Settings
+                      </Button>
+                    </Link>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

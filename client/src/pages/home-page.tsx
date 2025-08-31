@@ -40,14 +40,14 @@ export default function HomePage() {
             <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-secondary rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{ animationDelay: '-4s' }}></div>
           </div>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mobile-spacing-xl sm:py-24">
             <div className="text-center">
               <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
                 Support Your Favorite
                 <span className="gradient-primary bg-clip-text text-transparent ml-3">Creators</span>
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-                Join Suiciety, the revolutionary platform where creators connect with supporters through exclusive content, direct support, and community building.
+                Join Society, the revolutionary platform where creators connect with supporters through exclusive content, direct support, and community building.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 {user ? (
@@ -84,9 +84,9 @@ export default function HomePage() {
         </div>
 
         {/* How It Works Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mobile-spacing-xl sm:py-24">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How Suiciety Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">How Society Works</h2>
             <p className="text-xl text-muted-foreground">Simple steps to start your creator journey</p>
           </div>
 
@@ -134,7 +134,7 @@ export default function HomePage() {
         </div>
 
         {/* Featured Creators Section */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mobile-spacing-xl sm:py-24">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Featured Creators</h2>
             <p className="text-xl text-muted-foreground">Discover amazing creators in our community</p>
@@ -312,7 +312,7 @@ export default function HomePage() {
           <Card className="glass-strong">
             <CardContent className="p-12 text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Ready to Start Your Creator Journey?</h2>
-              <p className="text-xl text-muted-foreground mb-8">Join thousands of creators who are already building their communities on Suiciety.</p>
+              <p className="text-xl text-muted-foreground mb-8">Join thousands of creators who are already building their communities on Society.</p>
               <Link href="/auth">
                 <Button size="lg" className="gradient-primary text-primary-foreground hover-scale transition-smooth" data-testid="button-create-studio">
                   Create Your Studio

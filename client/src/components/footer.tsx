@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="gradient-primary p-2 rounded-lg">
                 <Rocket className="text-white text-xl" />
               </div>
-              <span className="ml-3 text-xl font-bold text-foreground">Suiciety</span>
+              <span className="ml-3 text-xl font-bold text-foreground">Society</span>
             </div>
             <p className="text-muted-foreground text-sm">
               Empowering creators and supporters to build meaningful connections through content and community.
@@ -108,7 +108,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-muted-foreground text-sm">© 2024 Suiciety. All rights reserved.</p>
+          <p className="text-muted-foreground text-sm">© 2024 Society. All rights reserved.</p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <a 
               href="#" 
