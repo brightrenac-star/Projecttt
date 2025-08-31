@@ -94,6 +94,23 @@
     background: var(--gradient-bg);
   }
 
+  /* SUI Light-Blue Gradient Theme */
+  .gradient-sui {
+    background: linear-gradient(135deg, #00b4d8 0%, #0077b6 50%, #023e8a 100%);
+  }
+
+  .gradient-sui-light {
+    background: linear-gradient(135deg, rgba(0, 180, 216, 0.1) 0%, rgba(0, 119, 182, 0.1) 50%, rgba(2, 62, 138, 0.1) 100%);
+  }
+
+  .text-sui-primary {
+    color: #00b4d8;
+  }
+
+  .border-sui {
+    border-color: #00b4d8;
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }

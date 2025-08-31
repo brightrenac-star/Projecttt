@@ -3,8 +3,8 @@ import { useParams } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
-import Navigation from "../components/navigation";
-import Footer from "../components/footer";
+import ContextualNavigation from "../components/contextual-navigation";
+import ContextualFooter from "../components/contextual-footer";
 import { CompactPostComposer } from "@/components/posts/compact-post-composer";
 import { LockedPostPreview } from "@/components/posts/locked-post-preview";
 import { TipButton } from "@/components/wallet/tip-button";
@@ -54,7 +54,7 @@ export default function CreatorProfilePage() {
   if (creatorLoading) {
     return (
       <div className="min-h-screen">
-        <Navigation />
+        <ContextualNavigation />
         <div className="pt-16 flex items-center justify-center min-h-screen">
           <div className="glass rounded-xl p-8">
             <div className="animate-pulse">
@@ -71,7 +71,7 @@ export default function CreatorProfilePage() {
   if (!creator) {
     return (
       <div className="min-h-screen">
-        <Navigation />
+        <ContextualNavigation />
         <div className="pt-16 flex items-center justify-center min-h-screen">
           <Card className="glass-strong">
             <CardContent className="p-8 text-center">
@@ -86,7 +86,7 @@ export default function CreatorProfilePage() {
 
   return (
     <div className="min-h-screen">
-      <Navigation />
+      <ContextualNavigation />
       
       <main className="pt-16">
         {/* Hero Section */}
@@ -280,6 +280,7 @@ export default function CreatorProfilePage() {
                           ...post, 
                           title: post.title || undefined,
                           content: post.content || "",
+                          visibility: post.visibility as "public" | "members" | "ppv",
                           isLocked: shouldShowLocked,
                           mediaUrl: post.mediaUrl || undefined 
                         }}
@@ -356,7 +357,7 @@ export default function CreatorProfilePage() {
         </div>
       </main>
 
-      <Footer />
+      <ContextualFooter />
     </div>
   );
 }

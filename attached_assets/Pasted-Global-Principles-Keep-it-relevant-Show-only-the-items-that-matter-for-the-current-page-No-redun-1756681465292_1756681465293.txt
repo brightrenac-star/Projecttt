@@ -1,0 +1,192 @@
+Global Principles
+
+Keep it relevant: Show only the items that matter for the current page.
+
+No redundant links: If you’re already on a public profile, hide the “view public profile” icon/button.
+
+Auth-aware: Header content changes based on loggedIn and role (CREATOR/SUPPORTER).
+
+SUI theme: Use a light-blue gradient accent for header/footer (subtle), not the whole page.
+
+Shared Header Structure (one DOM, toggled by JS)
+
+Left: Logo/Home (always)
+
+Mid: Contextual tabs (varies by page)
+
+Right:
+
+Logged out: Login, Register
+
+Logged in: Search, Messages, Avatar menu (Profile, Studio for creators, Logout)
+
+Shared Footer (multi-row, concise)
+
+Row 1 (contextual short links): e.g., page help, reporting, status (optional)
+
+Row 2 (legal): Terms, Privacy
+
+Row 3 (meta): © Suiciety, Language switch (optional)
+
+Footer must stay short. If no page-specific links, show only Row 2 + Row 3.
+
+Per-Page Header / Footer Rules
+1) Public Creator Page (creator.html?id=...)
+
+Header
+
+Show: Logo/Home, Discover, (if logged in) Messages, Search
+
+If viewer is NOT the owner: show Support and Message buttons in the page header section (not the global header bar)
+
+If viewer IS the owner:
+
+Show compact post bar at top of the feed (click to expand the posting tool in place)
+
+Hide any “View Public Profile” button (redundant)
+
+Show “Edit Profile” and “Studio” buttons in the page header section
+
+Footer
+
+Row 1: “Report this page” (mailto or route), “Creator guidelines”
+
+Row 2–3: Terms, Privacy, ©
+
+2) Own Profile Settings (profile.html)
+
+Header
+
+Show: Logo/Home, (if creator) Studio
+
+Hide: Discover (optional), Support/Message (not relevant on your own settings)
+
+Right: Search (optional), Avatar menu
+
+Footer
+
+Row 1: “Account help”
+
+Row 2–3: Terms, Privacy, ©
+
+3) Studio (Creator hub) (studio.html)
+
+Header
+
+Show: Logo/Home, Studio tabs (Posts, Members, Settings)
+
+Hide: Discover, Support, Message (not relevant here)
+
+Right: Avatar menu
+
+Footer
+
+Row 1: “Docs” (internal), “Status” (optional)
+
+Row 2–3: Terms, Privacy, ©
+
+4) Studio Data / Analytics (studiodata.html)
+
+Header
+
+Same as Studio: Logo/Home + “Studio” active state
+
+Hide: Discover/Support/Message
+
+Footer
+
+Row 1: “Analytics help”
+
+Row 2–3: Terms, Privacy, ©
+
+5) Discover (discover.html)
+
+Header
+
+Show: Logo/Home, Discover (active), Search
+
+If logged in: Messages, Avatar menu
+
+Hide: Studio (unless creator wants quick access—optional)
+
+Footer
+
+Row 1: “How Discover works”
+
+Row 2–3: Terms, Privacy, ©
+
+6) Help (help.html)
+
+Header
+
+Show: Logo/Home only (keep it minimal)
+
+Hide: Discover, Studio, Support/Message
+
+Footer
+
+Row 1: “Contact Support”
+
+Row 2–3: Terms, Privacy, ©
+
+7) Register / Login (register.html)
+
+Header
+
+Show: Logo/Home button (explicit), nothing else
+
+Hide: Search, Messages, Avatar menu
+
+Footer
+
+Row 1: “Why create an account?”
+
+Row 2–3: Terms, Privacy, ©
+
+8) Messages / Chat (messages.html, chat.html)
+
+Header
+
+Show: Logo/Home, Messages (active), Search (optional)
+
+Hide: Discover, Studio, Support
+
+Footer
+
+Row 2–3 only: Terms, Privacy, ©
+
+Inline Posting (Public Profile — Owner View)
+
+At the top of the feed, show a small compact bar: “Share an update…” + attach icon.
+
+On click, expand inline to a posting tool (still on the same page) with:
+
+Text area
+
+Attach media (images/videos only)
+
+Visibility select: Public / Subscribers / Pay to Unlock (show price input only when Pay to Unlock)
+
+Post button (disabled until text or media present; price > 0 in Pay mode)
+
+Use FormData for upload; do not set Content-Type manually.
+
+Visibility & Redundancy:
+
+Only show the compact bar + composer if viewer.id === creator.userId.
+
+Do not show a “public profile” button while you’re already on the public profile.
+
+Acceptance Criteria
+
+Header/footers follow the per-page rules above.
+
+No redundant items (e.g., no “public profile” button when already there).
+
+Public creator page (owner view) shows compact bar → expands composer inline.
+
+Composer supports media only (accept="image/*,video/*"), previews, visibility switch, pay price.
+
+On successful post: composer resets; feed refreshes.
+
+On failure: user sees meaningful error text from the server.
