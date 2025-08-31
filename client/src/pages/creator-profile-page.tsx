@@ -131,8 +131,15 @@ export default function CreatorProfilePage() {
                           <Users className="h-4 w-4 mr-1" />
                           {creator.subscriberCount || 0} supporters
                         </span>
-                        {creator.category && (
-                          <Badge variant="secondary">{creator.category}</Badge>
+                        {creator.categories && creator.categories.length > 0 && (
+                          <div className="flex gap-1">
+                            {creator.categories.slice(0, 2).map((category) => (
+                              <Badge key={category} variant="secondary">{category}</Badge>
+                            ))}
+                            {creator.categories.length > 2 && (
+                              <Badge variant="outline">+{creator.categories.length - 2}</Badge>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -281,8 +288,11 @@ export default function CreatorProfilePage() {
                           title: post.title || undefined,
                           content: post.content || "",
                           visibility: post.visibility as "public" | "members" | "ppv",
+                          price: post.price || undefined,
+                          createdAt: post.createdAt || new Date(),
                           isLocked: shouldShowLocked,
-                          mediaUrl: post.mediaUrl || undefined 
+                          mediaUrl: post.mediaUrl || undefined,
+                          editedAt: post.editedAt || undefined
                         }}
                         creator={{
                           id: creator.id,

@@ -15,6 +15,7 @@ interface LockedPostPreviewProps {
     price?: number;
     mediaUrl?: string;
     createdAt: string | Date;
+    editedAt?: string | Date;
     isLocked?: boolean;
   };
   creator: {
@@ -54,13 +55,23 @@ export function LockedPostPreview({
             ))}
           </div>
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-            <span className="text-xs text-muted-foreground">
-              {new Date(post.createdAt).toLocaleDateString()} at{' '}
-              {new Date(post.createdAt).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {new Date(post.createdAt).toLocaleDateString()} at{' '}
+                {new Date(post.createdAt).toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+                {post.editedAt && (
+                  <> • Edited {new Date(post.editedAt).toLocaleDateString()}</>
+                )}
+              </span>
+              {post.editedAt && (
+                <Badge variant="outline" className="text-xs" data-testid="badge-post-edited">
+                  Edited
+                </Badge>
+              )}
+            </div>
             {post.visibility !== "public" && (
               <Badge variant="outline" className="text-xs">
                 {post.visibility === "members" ? "Subscribers Only" : `$${post.price} Unlock`}

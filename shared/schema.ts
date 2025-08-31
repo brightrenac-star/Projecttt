@@ -8,9 +8,16 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  bio: text("bio"),
+  avatar: text("avatar"),
   role: text("role").notNull().default("supporter"), // "creator" | "supporter"
   walletAddress: text("wallet_address").unique(),
   walletVerified: boolean("wallet_verified").default(false),
+  // 18+ creator verification fields
+  isAdultCreatorRequested: boolean("is_adult_creator_requested").default(false),
+  isAdultCreatorVerified: boolean("is_adult_creator_verified").default(false),
+  adultReviewStatus: text("adult_review_status").default("none"), // "none" | "pending" | "approved" | "rejected"
+  creatorCategories: json("creator_categories").$type<string[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -22,7 +29,7 @@ export const creators = pgTable("creators", {
   bio: text("bio"),
   avatar: text("avatar"),
   banner: text("banner"),
-  category: text("category"),
+  categories: json("categories").$type<string[]>().default([]), // Multiple categories
   fandomName: text("fandom_name").default("Supporters"), // Name for subscriber badges
   tiers: json("tiers").$type<Array<{
     id: string;
@@ -53,9 +60,11 @@ export const posts = pgTable("posts", {
   visibility: text("visibility").notNull().default("public"), // "public" | "members" | "ppv"
   price: integer("price").default(0), // in cents for PPV
   tier: text("tier"), // for member-only content
+  categories: json("categories").$type<string[]>().default([]), // Post categories
   likes: integer("likes").default(0),
   published: boolean("published").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  editedAt: timestamp("edited_at"), // Null if never edited
 });
 
 export const subscriptions = pgTable("subscriptions", {
@@ -148,6 +157,27 @@ export const walletNonces = pgTable("wallet_nonces", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Categories table for preset categories
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  isAdult: boolean("is_adult").default(false), // True for "NSFW 18+" category
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Adult verification submissions
+export const adultVerifications = pgTable("adult_verifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  idImageUrl: text("id_image_url").notNull(),
+  selfieImageUrl: text("selfie_image_url").notNull(),
+  status: text("status").notNull().default("pending"), // "pending" | "approved" | "rejected"
+  reviewerId: varchar("reviewer_id").references(() => users.id), // Admin who reviewed
+  reviewNotes: text("review_notes"),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -213,6 +243,16 @@ export const insertWalletNonceSchema = createInsertSchema(walletNonces).omit({
   createdAt: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAdultVerificationSchema = createInsertSchema(adultVerifications).omit({
+  id: true,
+  submittedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -249,3 +289,22 @@ export type InsertPostUnlock = z.infer<typeof insertPostUnlockSchema>;
 
 export type WalletNonce = typeof walletNonces.$inferSelect;
 export type InsertWalletNonce = z.infer<typeof insertWalletNonceSchema>;
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+
+export type AdultVerification = typeof adultVerifications.$inferSelect;
+export type InsertAdultVerification = z.infer<typeof insertAdultVerificationSchema>;
+
+// Preset categories
+export const PRESET_CATEGORIES = [
+  "Art",
+  "Music", 
+  "Writing",
+  "Gaming",
+  "Lifestyle",
+  "Education",
+  "NSFW 18+"
+] as const;
+
+export type PresetCategory = typeof PRESET_CATEGORIES[number];

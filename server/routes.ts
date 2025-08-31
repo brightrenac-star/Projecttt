@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema, insertCommentSchema, insertCommentVoteSchema, insertPostUnlockSchema, insertWalletNonceSchema } from "@shared/schema";
+import { insertCreatorSchema, insertPostSchema, insertTipSchema, insertSubscriptionSchema, insertLikeSchema, insertConversationSchema, insertMessageSchema, insertCommentSchema, insertCommentVoteSchema, insertPostUnlockSchema, insertWalletNonceSchema, insertCategorySchema, insertAdultVerificationSchema, PRESET_CATEGORIES } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -78,6 +78,7 @@ export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
 
+
   // Configure multer for file uploads
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -96,6 +97,166 @@ export function registerRoutes(app: Express): Server {
   });
 
   const objectStorageService = new ObjectStorageService();
+
+  // Categories API
+  app.get("/api/categories", async (req, res) => {
+    const categories = await storage.getAllCategories();
+    res.json(categories);
+  });
+
+  // Profile editing API
+  app.get("/api/users/me", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    const user = await storage.getUser(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json(user);
+  });
+
+  app.patch("/api/users/me", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    try {
+      const { displayName, bio, avatar, creatorCategories } = req.body;
+      
+      // Validate categories if provided
+      if (creatorCategories && !Array.isArray(creatorCategories)) {
+        return res.status(400).json({ message: "Categories must be an array" });
+      }
+      
+      if (creatorCategories && creatorCategories.some((cat: string) => !PRESET_CATEGORIES.includes(cat as any))) {
+        return res.status(400).json({ message: "Invalid category provided" });
+      }
+
+      const updatedUser = await storage.updateUser(req.user!.id, {
+        displayName,
+        bio,
+        avatar,
+        creatorCategories: creatorCategories || []
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Adult verification API
+  app.post("/api/adult/kyc", upload.fields([{ name: 'idImage', maxCount: 1 }, { name: 'selfie', maxCount: 1 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    
+    if (!files?.idImage?.[0] || !files?.selfie?.[0]) {
+      return res.status(400).json({ message: "Both ID image and selfie are required" });
+    }
+
+    try {
+      // Upload images to object storage
+      const idImageUrl = await objectStorageService.uploadFile(
+        files.idImage[0].buffer,
+        `id-${req.user!.id}-${Date.now()}.${files.idImage[0].originalname.split('.').pop()}`,
+        files.idImage[0].mimetype
+      );
+      
+      const selfieImageUrl = await objectStorageService.uploadFile(
+        files.selfie[0].buffer,
+        `selfie-${req.user!.id}-${Date.now()}.${files.selfie[0].originalname.split('.').pop()}`,
+        files.selfie[0].mimetype
+      );
+
+      // Create verification submission
+      const verificationData = insertAdultVerificationSchema.parse({
+        userId: req.user!.id,
+        idImageUrl,
+        selfieImageUrl,
+        status: "pending"
+      });
+
+      const verification = await storage.createAdultVerification(verificationData);
+      
+      // Update user status
+      await storage.updateUser(req.user!.id, {
+        isAdultCreatorRequested: true,
+        adultReviewStatus: "pending"
+      });
+
+      res.status(201).json({
+        message: "Adult verification submitted successfully",
+        status: "pending"
+      });
+    } catch (error) {
+      console.error('Error submitting adult verification:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/adult/status", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const user = await storage.getUser(req.user!.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      isAdultCreatorRequested: user.isAdultCreatorRequested,
+      isAdultCreatorVerified: user.isAdultCreatorVerified,
+      adultReviewStatus: user.adultReviewStatus
+    });
+  });
+
+  // Admin adult verification approval (admin only)
+  app.patch("/api/admin/adult/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    // Check if user is admin (you can implement admin role checking here)
+    // For now, we'll assume any authenticated user can approve (implement proper admin check)
+    
+    try {
+      const { status, reviewNotes } = req.body;
+      
+      if (!['approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'approved' or 'rejected'" });
+      }
+
+      // Update user adult verification status
+      await storage.updateUser(req.params.userId, {
+        isAdultCreatorVerified: status === 'approved',
+        adultReviewStatus: status
+      });
+
+      // Update verification record
+      const verification = await storage.getAdultVerificationByUserId(req.params.userId);
+      if (verification) {
+        await storage.updateAdultVerification(verification.id, {
+          status,
+          reviewerId: req.user!.id,
+          reviewNotes,
+          reviewedAt: new Date()
+        });
+      }
+
+      res.json({ message: `Adult verification ${status} successfully` });
+    } catch (error) {
+      console.error('Error updating adult verification:', error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 
   // Wallet verification endpoints
   app.get("/api/wallet/nonce", async (req, res) => {
@@ -403,9 +564,24 @@ export function registerRoutes(app: Express): Server {
     }
 
     try {
-      const updatedPost = await storage.updatePost(req.params.id, req.body);
+      // Add editedAt timestamp to track when post was edited
+      const updateData = {
+        ...req.body,
+        editedAt: new Date()
+      };
+      
+      // Validate categories if provided
+      if (req.body.categories && Array.isArray(req.body.categories)) {
+        const invalidCategories = req.body.categories.filter((cat: string) => !PRESET_CATEGORIES.includes(cat as any));
+        if (invalidCategories.length > 0) {
+          return res.status(400).json({ message: "Invalid categories provided", invalidCategories });
+        }
+      }
+      
+      const updatedPost = await storage.updatePost(req.params.id, updateData);
       res.json(updatedPost);
     } catch (error) {
+      console.error('Error updating post:', error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -817,7 +993,7 @@ export function registerRoutes(app: Express): Server {
     const filteredCreators = creators.filter(creator => 
       creator.name.toLowerCase().includes(query.toLowerCase()) ||
       creator.bio?.toLowerCase().includes(query.toLowerCase()) ||
-      creator.category?.toLowerCase().includes(query.toLowerCase())
+      creator.categories?.some(cat => cat.toLowerCase().includes(query.toLowerCase()))
     );
     
     const filteredPosts = posts.filter(post =>

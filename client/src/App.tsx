@@ -13,6 +13,7 @@ import StudioDataPage from "./pages/studio-data-page";
 import DiscoverPage from "./pages/discover-page";
 import HelpPage from "./pages/help-page";
 import CreatorProfilePage from "./pages/creator-profile-page";
+import AdultVerificationPage from "./pages/adult-verification-page";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/creator/:handle" component={CreatorProfilePage} />
       <ProtectedRoute path="/studio/data" component={StudioDataPage} />
       <ProtectedRoute path="/studio" component={StudioPage} />
+      <ProtectedRoute path="/adult-verification" component={AdultVerificationPage} />
       <Route component={NotFound} />
     </Switch>
   );

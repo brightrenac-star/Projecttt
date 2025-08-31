@@ -1,0 +1,215 @@
+Absolutely — here’s a polished, developer-ready prompt you can paste into Replit. It fixes the issues you found and adds the missing features (editing/deleting posts with “edited” tag, comments, preset categories, 18+ creator verification & admin approval, and solid mobile spacing).
+
+---
+
+# Prompt for Replit — Creator Controls, Comments, Categories, 18+ Verification, Mobile UX
+
+## Problems to fix
+
+1. **Creators can’t edit their profile** on their own page.
+2. **Creators can’t edit/delete their own posts.** (Edits should show an “Edited” tag.)
+3. **No comments** under posts.
+4. **No preset categories** for posts/creators.
+5. **18+ creators**: must pass ID + selfie verification and **admin approval** before posting.
+6. **Mobile layout** collisions: not enough horizontal/vertical spacing; elements overlap.
+
+---
+
+## Required Features & Logic
+
+### A) Profile Editing (owner only)
+
+* Show **Edit Profile** button only when `viewer.id === profile.ownerUserId`.
+* Inline or modal form fields: `displayName`, `bio`, `avatar`, socials, `isAdultCreator` (read-only until approved).
+* API:
+
+  * `GET /users/me`
+  * `PATCH /users/me` (owner only)
+* Acceptance:
+
+  * Save shows toast + updates header instantly.
+  * Unauthorized users don’t see the button.
+
+### B) Post Edit/Delete + “Edited” Tag
+
+* Show **Edit** and **Delete** actions on each post **only for the post owner**.
+* Edit opens modal (or inline) with current `content`, `media`, `visibility`, `price` (if pay-to-unlock), `categories`.
+* On successful edit, mark post `editedAt!=null` → UI shows “Edited” badge/time.
+* API:
+
+  * `PATCH /posts/:id`
+  * `DELETE /posts/:id`
+* Acceptance:
+
+  * Non-owners never see these actions.
+  * After edit, feed item shows “Edited • <time>”.
+
+**UI snippet (per post owner view):**
+
+```html
+<div class="post-actions owner-only">
+  <button class="btn" data-edit="POST_ID">Edit</button>
+  <button class="btn-danger" data-delete="POST_ID">Delete</button>
+</div>
+<span class="edited-badge" hidden>Edited</span>
+```
+
+```js
+// after fetch post
+if (post.editedAt) el.querySelector('.edited-badge').hidden = false;
+```
+
+### C) Comments (with basic moderation)
+
+* Each post has a **comment box** (text only MVP) and a **comment list**.
+* Permissions:
+
+  * Logged-in users can comment.
+  * Post owner can **delete** or **hide** comments (soft hide).
+* API:
+
+  * `GET /posts/:id/comments`
+  * `POST /posts/:id/comments`  { content }
+  * `PATCH /comments/:id/hide`  (owner only)
+  * `DELETE /comments/:id`      (author or owner)
+* Acceptance:
+
+  * New comment appears immediately.
+  * Hidden comments show “Comment hidden by creator” to others; visible to owner with unhide.
+
+**HTML (per post):**
+
+```html
+<div class="comments">
+  <form class="comment-form" data-post="POST_ID">
+    <input type="text" placeholder="Write a comment…" maxlength="500" required />
+    <button class="btn-primary">Comment</button>
+  </form>
+  <ul class="comment-list" id="c-POST_ID"></ul>
+</div>
+```
+
+### D) Categories (preset + selectable)
+
+* Define a small **preset set** (adjust later):
+  `["Art","Music","Writing","Gaming","Lifestyle","Education","NSFW 18+"]`
+* Each post can have **0–3 categories** (chips).
+* Creator profile can have **primary categories** (for Discover filters).
+* API:
+
+  * `GET /categories`  → list presets
+  * `POST /posts` includes `categories: string[]`
+  * `PATCH /users/me` includes `creatorCategories: string[]`
+* Acceptance:
+
+  * Chips selectable in the composer/edit modal.
+  * Discover page can filter by category.
+
+**Composer chips example:**
+
+```html
+<div class="cat-chips" id="cat-select">
+  <!-- render preset chips; toggled active with JS -->
+</div>
+```
+
+### E) 18+ Creator Verification (KYC-lite) & Admin Approval
+
+* If a creator opts into **18+**, they must:
+
+  1. Upload **ID photo** and **selfie** (same person check).
+  2. Submit for **admin review**.
+  3. **Cannot publish** any content until approved.
+* States on user:
+
+  * `isAdultCreatorRequested: boolean`
+  * `isAdultCreatorVerified: boolean` (approved by admin)
+  * `adultReviewStatus: "pending"|"approved"|"rejected"`
+* Server **blocks** `POST /posts` for creators with `adultReviewStatus !== "approved"` **if** any selected category includes `NSFW 18+` **or** creator flagged `isAdultCreator` profile.
+* API:
+
+  * `POST /adult/kyc` (multipart: idImage, selfie)
+  * `GET /adult/status`
+  * `PATCH /admin/adult/:userId` (admin only)
+* Acceptance:
+
+  * On profile, if `pending`, show “Awaiting adult-content approval” banner; post button disabled for NSFW.
+  * If **rejected**, show reason; allow resubmission.
+
+### F) Mobile-First Spacing & Collision Prevention
+
+* Global container:
+
+  ```css
+  .container { padding: 16px; }
+  @media (min-width: 768px) { .container { padding: 24px 20px; } }
+  ```
+* **Cards**: `margin-bottom: 16px; border-radius: 16px;`
+* **Stack vertically** on mobile:
+
+  ```css
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .col { flex: 1 1 100%; }
+  @media (min-width: 768px) { .col--half { flex: 1 1 calc(50% - 12px); } }
+  ```
+* **Images & videos**: `max-width: 100%; height: auto; object-fit: cover;`
+* **Buttons/inputs**: minimum touch size `44px` height; spacing between tap targets `8–12px`.
+* Prevent overlaps with **clear section spacing**:
+  `section { margin-block: 16px; } h1,h2 { margin: 0 0 8px; }`
+
+---
+
+## Backend: Minimal Data/Flags (extend your models)
+
+**User**
+
+* `id, role, displayName, bio, avatar`
+* `creatorCategories: string[]`
+* `isAdultCreatorRequested, adultReviewStatus, isAdultCreatorVerified`
+
+**Post**
+
+* `id, creatorId, content, mediaUrls[], visibility: "PUBLIC"|"SUBSCRIBERS"|"PAY_TO_UNLOCK", price, categories[]`
+* `createdAt, editedAt` (null if never edited)
+
+**Comment**
+
+* `id, postId, userId, content, isHidden, createdAt`
+
+**Rules**
+
+* Only **post owner**: edit/delete post.
+* Show **Edited** when `editedAt != null`.
+* Comments: any logged-in user; post owner can hide/delete.
+* 18+ gate: If NSFW category chosen or creator is 18+-flagged but **not approved**, reject `POST /posts` with `403 {code:"ADULT_NOT_APPROVED"}`.
+
+---
+
+## Acceptance Checklist (QA)
+
+* [ ] **Profile Editing** visible only to owner; saves correctly.
+* [ ] **Post Edit/Delete** visible only to owner; “Edited” badge appears after updates.
+* [ ] **Comments**: create/list/delete/hide work; UI reflects hidden state.
+* [ ] **Categories**: preset chips appear; selectable in composer/edit; persisted & shown on posts.
+* [ ] **18+ Flow**: KYC submission, pending banner; admin approval required before NSFW posts.
+* [ ] **Mobile**: no overlaps; sections/cards have safe spacing; images/videos responsive.
+* [ ] **Security**: server enforces ownership & adult gating (not only the UI).
+
+---
+
+## Micro-copy for errors (paste in UI)
+
+* “Please sign in.” (401)
+* “Only the post owner can edit or delete this post.” (403)
+* “Adult-content posting requires ID verification and admin approval.” (403/ADULT\_NOT\_APPROVED)
+* “Edited just now.” (after save)
+* “Comment hidden by creator.” (hidden comment placeholder)
+
+---
+
+If you want, I can drop in:
+
+* A **tiny edit modal** snippet (HTML/JS) for posts,
+* The **comment form/list** with hide/delete controls,
+* And the **KYC upload form** (ID + selfie, multipart)
+  so you can paste straight into your pages.

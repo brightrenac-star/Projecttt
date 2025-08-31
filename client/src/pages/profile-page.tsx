@@ -21,13 +21,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-import { User, Settings, CreditCard, Shield, ExternalLink, Eye, EyeOff } from "lucide-react";
-import type { Creator, Subscription, Tip } from "@shared/schema";
+import { User, Settings, CreditCard, Shield, ExternalLink, Eye, EyeOff, X, AlertTriangle, CheckCircle } from "lucide-react";
+import type { Creator, Subscription, Tip, Category } from "@shared/schema";
+import { PRESET_CATEGORIES } from "@shared/schema";
+import React from "react";
 
 // Form schemas
 const updateAccountSchema = z.object({
   displayName: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email format"),
+  bio: z.string().max(500, "Bio must be under 500 characters").optional(),
+  avatar: z.string().url("Avatar must be a valid URL").optional().or(z.literal("")),
+  creatorCategories: z.array(z.string()).max(3, "Maximum 3 categories allowed").optional(),
 });
 
 const changePasswordSchema = z.object({
@@ -43,7 +48,7 @@ const updateCreatorSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   handle: z.string().min(3, "Handle must be at least 3 characters").regex(/^[a-zA-Z0-9_-]+$/, "Handle can only contain letters, numbers, hyphens, and underscores"),
   bio: z.string().max(500, "Bio must be under 500 characters").optional(),
-  category: z.string().optional(),
+  categories: z.array(z.string()).max(3, "Maximum 3 categories allowed").optional(),
   payoutAddress: z.string().optional(),
 });
 
@@ -52,6 +57,23 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("account");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCreatorCategories, setSelectedCreatorCategories] = useState<string[]>([]);
+
+  // Get categories
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  // Get adult verification status
+  const { data: adultStatus } = useQuery<{
+    isAdultCreatorRequested: boolean;
+    isAdultCreatorVerified: boolean;
+    adultReviewStatus: string;
+  }>({
+    queryKey: ["/api/adult/status"],
+    enabled: !!user,
+  });
 
   // Get creator profile if user is a creator
   const { data: creator } = useQuery<Creator>({
@@ -81,8 +103,25 @@ export default function ProfilePage() {
     defaultValues: {
       displayName: user?.displayName || "",
       email: user?.email || "",
+      bio: user?.bio || "",
+      avatar: user?.avatar || "",
+      creatorCategories: user?.creatorCategories || [],
     },
   });
+
+  // Update form when user data changes
+  React.useEffect(() => {
+    if (user) {
+      accountForm.reset({
+        displayName: user.displayName || "",
+        email: user.email || "",
+        bio: user.bio || "",
+        avatar: user.avatar || "",
+        creatorCategories: user.creatorCategories || [],
+      });
+      setSelectedCategories(user.creatorCategories || []);
+    }
+  }, [user, accountForm]);
 
   // Password change form
   const passwordForm = useForm({
@@ -101,15 +140,32 @@ export default function ProfilePage() {
       name: creator?.name || "",
       handle: creator?.handle || "",
       bio: creator?.bio || "",
-      category: creator?.category || "",
+      categories: creator?.categories || [],
       payoutAddress: creator?.payoutAddress || "",
     },
   });
 
+  // Update creator form when creator data changes
+  React.useEffect(() => {
+    if (creator) {
+      creatorForm.reset({
+        name: creator.name || "",
+        handle: creator.handle || "",
+        bio: creator.bio || "",
+        categories: creator.categories || [],
+        payoutAddress: creator.payoutAddress || "",
+      });
+      setSelectedCreatorCategories(creator.categories || []);
+    }
+  }, [creator, creatorForm]);
+
   // Mutations
   const updateAccountMutation = useMutation({
     mutationFn: async (data: z.infer<typeof updateAccountSchema>) => {
-      const response = await apiRequest("PATCH", "/api/user", data);
+      const response = await apiRequest("PATCH", "/api/users/me", {
+        ...data,
+        creatorCategories: selectedCategories
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -140,7 +196,10 @@ export default function ProfilePage() {
 
   const createCreatorMutation = useMutation({
     mutationFn: async (data: z.infer<typeof updateCreatorSchema>) => {
-      const response = await apiRequest("POST", "/api/creators", data);
+      const response = await apiRequest("POST", "/api/creators", {
+        ...data,
+        categories: selectedCreatorCategories
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -156,7 +215,10 @@ export default function ProfilePage() {
   const updateCreatorMutation = useMutation({
     mutationFn: async (data: z.infer<typeof updateCreatorSchema>) => {
       if (!creator?.id) throw new Error("Creator profile not found");
-      const response = await apiRequest("PATCH", `/api/creators/${creator.id}`, data);
+      const response = await apiRequest("PATCH", `/api/creators/${creator.id}`, {
+        ...data,
+        categories: selectedCreatorCategories
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -260,6 +322,89 @@ export default function ProfilePage() {
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={accountForm.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bio (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              placeholder="Tell others about yourself..."
+                              data-testid="textarea-bio"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={accountForm.control}
+                      name="avatar"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Avatar URL (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="https://example.com/avatar.jpg"
+                              data-testid="input-avatar"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {user?.role === "creator" && (
+                      <FormField
+                        control={accountForm.control}
+                        name="creatorCategories"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Creator Categories (up to 3)</FormLabel>
+                            <FormControl>
+                              <div className="space-y-2">
+                                <div className="flex flex-wrap gap-2">
+                                  {PRESET_CATEGORIES.map((category) => (
+                                    <Button
+                                      key={category}
+                                      type="button"
+                                      variant={selectedCategories.includes(category) ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => {
+                                        const newCategories = selectedCategories.includes(category)
+                                          ? selectedCategories.filter(c => c !== category)
+                                          : selectedCategories.length < 3
+                                            ? [...selectedCategories, category]
+                                            : selectedCategories;
+                                        setSelectedCategories(newCategories);
+                                        field.onChange(newCategories);
+                                      }}
+                                      data-testid={`button-user-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
+                                    >
+                                      {category}
+                                      {selectedCategories.includes(category) && (
+                                        <X className="w-3 h-3 ml-1" />
+                                      )}
+                                    </Button>
+                                  ))}
+                                </div>
+                                {selectedCategories.length > 0 && (
+                                  <div className="text-sm text-muted-foreground">
+                                    Selected: {selectedCategories.join(", ")}
+                                  </div>
+                                )}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <Button 
                       type="submit" 
@@ -288,6 +433,55 @@ export default function ProfilePage() {
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Recently"}
                     </span>
                   </div>
+                  {user.role === "creator" && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Adult Content Verification</span>
+                      <div className="flex items-center gap-2">
+                        {adultStatus?.isAdultCreatorVerified ? (
+                          <>
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <Badge variant="default" className="bg-green-500" data-testid="badge-adult-verified">
+                              Verified
+                            </Badge>
+                          </>
+                        ) : adultStatus?.adultReviewStatus === "pending" ? (
+                          <>
+                            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                            <Badge variant="secondary" className="bg-yellow-500 text-white" data-testid="badge-adult-pending">
+                              Pending Review
+                            </Badge>
+                          </>
+                        ) : adultStatus?.adultReviewStatus === "rejected" ? (
+                          <>
+                            <X className="w-4 h-4 text-red-500" />
+                            <Badge variant="destructive" data-testid="badge-adult-rejected">
+                              Rejected
+                            </Badge>
+                          </>
+                        ) : (
+                          <Badge variant="outline" data-testid="badge-adult-not-requested">
+                            Not Requested
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {user.role === "creator" && !adultStatus?.isAdultCreatorVerified && (
+                    <div className="pt-4">
+                      <Link href="/adult-verification">
+                        <Button variant="outline" className="w-full" data-testid="button-adult-verification">
+                          <Shield className="w-4 h-4 mr-2" />
+                          {adultStatus?.adultReviewStatus === "rejected" 
+                            ? "Resubmit Adult Verification" 
+                            : adultStatus?.adultReviewStatus === "pending"
+                            ? "View Verification Status"
+                            : "Apply for Adult Verification"
+                          }
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -439,12 +633,43 @@ export default function ProfilePage() {
                         
                         <FormField
                           control={creatorForm.control}
-                          name="category"
+                          name="categories"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Category</FormLabel>
+                              <FormLabel>Categories (up to 3)</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="e.g., Digital Artist, Musician" data-testid="input-creator-category" />
+                                <div className="space-y-2">
+                                  <div className="flex flex-wrap gap-2">
+                                    {PRESET_CATEGORIES.map((category) => (
+                                      <Button
+                                        key={category}
+                                        type="button"
+                                        variant={selectedCreatorCategories.includes(category) ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => {
+                                          const newCategories = selectedCreatorCategories.includes(category)
+                                            ? selectedCreatorCategories.filter(c => c !== category)
+                                            : selectedCreatorCategories.length < 3
+                                              ? [...selectedCreatorCategories, category]
+                                              : selectedCreatorCategories;
+                                          setSelectedCreatorCategories(newCategories);
+                                          field.onChange(newCategories);
+                                        }}
+                                        data-testid={`button-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
+                                      >
+                                        {category}
+                                        {selectedCreatorCategories.includes(category) && (
+                                          <X className="w-3 h-3 ml-1" />
+                                        )}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                  {selectedCreatorCategories.length > 0 && (
+                                    <div className="text-sm text-muted-foreground">
+                                      Selected: {selectedCreatorCategories.join(", ")}
+                                    </div>
+                                  )}
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -528,12 +753,43 @@ export default function ProfilePage() {
                           
                           <FormField
                             control={creatorForm.control}
-                            name="category"
+                            name="categories"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Category (Optional)</FormLabel>
+                                <FormLabel>Categories (Optional, up to 3)</FormLabel>
                                 <FormControl>
-                                  <Input {...field} placeholder="e.g., Digital Artist, Musician" data-testid="input-new-creator-category" />
+                                  <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-2">
+                                      {PRESET_CATEGORIES.map((category) => (
+                                        <Button
+                                          key={category}
+                                          type="button"
+                                          variant={selectedCreatorCategories.includes(category) ? "default" : "outline"}
+                                          size="sm"
+                                          onClick={() => {
+                                            const newCategories = selectedCreatorCategories.includes(category)
+                                              ? selectedCreatorCategories.filter(c => c !== category)
+                                              : selectedCreatorCategories.length < 3
+                                                ? [...selectedCreatorCategories, category]
+                                                : selectedCreatorCategories;
+                                            setSelectedCreatorCategories(newCategories);
+                                            field.onChange(newCategories);
+                                          }}
+                                          data-testid={`button-new-category-${category.toLowerCase().replace(/\s+/g, '-')}`}
+                                        >
+                                          {category}
+                                          {selectedCreatorCategories.includes(category) && (
+                                            <X className="w-3 h-3 ml-1" />
+                                          )}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                    {selectedCreatorCategories.length > 0 && (
+                                      <div className="text-sm text-muted-foreground">
+                                        Selected: {selectedCreatorCategories.join(", ")}
+                                      </div>
+                                    )}
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

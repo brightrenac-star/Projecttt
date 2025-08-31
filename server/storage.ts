@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage, type Comment, type InsertComment, type CommentVote, type InsertCommentVote, type PostUnlock, type InsertPostUnlock, type WalletNonce, type InsertWalletNonce } from "@shared/schema";
+import { type User, type InsertUser, type Creator, type InsertCreator, type Post, type InsertPost, type Subscription, type InsertSubscription, type Tip, type InsertTip, type Like, type InsertLike, type Conversation, type InsertConversation, type Message, type InsertMessage, type Comment, type InsertComment, type CommentVote, type InsertCommentVote, type PostUnlock, type InsertPostUnlock, type WalletNonce, type InsertWalletNonce, type Category, type InsertCategory, type AdultVerification, type InsertAdultVerification, PRESET_CATEGORIES } from "@shared/schema";
 import { randomUUID } from "crypto";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -85,6 +85,18 @@ export interface IStorage {
   createWalletNonce(walletNonce: InsertWalletNonce): Promise<WalletNonce>;
   updateWalletNonce(id: string, walletNonce: Partial<WalletNonce>): Promise<WalletNonce | undefined>;
 
+  // Categories
+  getAllCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
+  getCategoryByName(name: string): Promise<Category | undefined>;
+  createCategory(category: InsertCategory): Promise<Category>;
+
+  // Adult Verification
+  getAdultVerification(id: string): Promise<AdultVerification | undefined>;
+  getAdultVerificationByUserId(userId: string): Promise<AdultVerification | undefined>;
+  createAdultVerification(verification: InsertAdultVerification): Promise<AdultVerification>;
+  updateAdultVerification(id: string, verification: Partial<AdultVerification>): Promise<AdultVerification | undefined>;
+
   sessionStore: session.Store;
 }
 
@@ -101,6 +113,8 @@ export class MemStorage implements IStorage {
   private commentVotes: Map<string, CommentVote>;
   private postUnlocks: Map<string, PostUnlock>;
   private walletNonces: Map<string, WalletNonce>;
+  private categories: Map<string, Category>;
+  private adultVerifications: Map<string, AdultVerification>;
   sessionStore: session.Store;
 
   constructor() {
@@ -116,9 +130,14 @@ export class MemStorage implements IStorage {
     this.commentVotes = new Map();
     this.postUnlocks = new Map();
     this.walletNonces = new Map();
+    this.categories = new Map();
+    this.adultVerifications = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+    
+    // Initialize preset categories
+    this.initializeCategories();
   }
 
   // Users
@@ -143,8 +162,14 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser,
       role: insertUser.role || "supporter",
+      bio: insertUser.bio || null,
+      avatar: insertUser.avatar || null,
       walletAddress: insertUser.walletAddress || null,
       walletVerified: insertUser.walletVerified || false,
+      isAdultCreatorRequested: insertUser.isAdultCreatorRequested || false,
+      isAdultCreatorVerified: insertUser.isAdultCreatorVerified || false,
+      adultReviewStatus: insertUser.adultReviewStatus || "none",
+      creatorCategories: insertUser.creatorCategories || [],
       id, 
       createdAt: new Date() 
     };
@@ -184,7 +209,7 @@ export class MemStorage implements IStorage {
       banner: insertCreator.banner || null,
       bio: insertCreator.bio || null,
       avatar: insertCreator.avatar || null,
-      category: insertCreator.category || null,
+      categories: insertCreator.categories || [],
       fandomName: insertCreator.fandomName || "Supporters",
       tiers: (insertCreator.tiers as any) || [],
       links: (insertCreator.links as any) || {},
@@ -228,12 +253,15 @@ export class MemStorage implements IStorage {
       ...insertPost,
       content: insertPost.content || null,
       mediaUrl: insertPost.mediaUrl || null,
+      mediaUrls: insertPost.mediaUrls || null,
       mediaType: insertPost.mediaType || null,
+      categories: insertPost.categories || [],
       price: insertPost.price || 0,
       tier: insertPost.tier || null,
       likes: 0,
       visibility: insertPost.visibility || "public",
       published: insertPost.published ?? true,
+      editedAt: insertPost.editedAt || null,
       id, 
       createdAt: new Date() 
     };
@@ -579,6 +607,76 @@ export class MemStorage implements IStorage {
     const updatedNonce = { ...nonce, ...nonceUpdate };
     this.walletNonces.set(id, updatedNonce);
     return updatedNonce;
+  }
+
+  // Categories
+  async getAllCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values());
+  }
+
+  async getCategory(id: string): Promise<Category | undefined> {
+    return this.categories.get(id);
+  }
+
+  async getCategoryByName(name: string): Promise<Category | undefined> {
+    return Array.from(this.categories.values()).find(cat => cat.name === name);
+  }
+
+  async createCategory(insertCategory: InsertCategory): Promise<Category> {
+    const id = randomUUID();
+    const category: Category = {
+      ...insertCategory,
+      isAdult: insertCategory.isAdult || false,
+      id,
+      createdAt: new Date()
+    };
+    this.categories.set(id, category);
+    return category;
+  }
+
+  // Adult Verification
+  async getAdultVerification(id: string): Promise<AdultVerification | undefined> {
+    return this.adultVerifications.get(id);
+  }
+
+  async getAdultVerificationByUserId(userId: string): Promise<AdultVerification | undefined> {
+    return Array.from(this.adultVerifications.values()).find(v => v.userId === userId);
+  }
+
+  async createAdultVerification(insertVerification: InsertAdultVerification): Promise<AdultVerification> {
+    const id = randomUUID();
+    const verification: AdultVerification = {
+      ...insertVerification,
+      status: insertVerification.status || "pending",
+      reviewerId: insertVerification.reviewerId || null,
+      reviewNotes: insertVerification.reviewNotes || null,
+      submittedAt: new Date(),
+      reviewedAt: insertVerification.reviewedAt || null,
+      id
+    };
+    this.adultVerifications.set(id, verification);
+    return verification;
+  }
+
+  async updateAdultVerification(id: string, verificationUpdate: Partial<AdultVerification>): Promise<AdultVerification | undefined> {
+    const verification = this.adultVerifications.get(id);
+    if (!verification) return undefined;
+    const updatedVerification = { ...verification, ...verificationUpdate };
+    this.adultVerifications.set(id, updatedVerification);
+    return updatedVerification;
+  }
+
+  // Initialize preset categories
+  private async initializeCategories(): Promise<void> {
+    for (const categoryName of PRESET_CATEGORIES) {
+      const existing = await this.getCategoryByName(categoryName);
+      if (!existing) {
+        await this.createCategory({
+          name: categoryName,
+          isAdult: categoryName === "NSFW 18+"
+        });
+      }
+    }
   }
 }
 

@@ -333,9 +333,20 @@ export default function StudioPage() {
                         <CardContent className="p-6">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="font-semibold text-foreground">{post.title}</h3>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-foreground">{post.title}</h3>
+                                {post.editedAt && (
+                                  <Badge variant="outline" className="text-xs" data-testid={`badge-edited-${post.id}`}>
+                                    Edited
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-muted-foreground">
-                                Published {new Date(post.createdAt!).toLocaleDateString()} • {post.likes} likes
+                                Published {new Date(post.createdAt!).toLocaleDateString()}
+                                {post.editedAt && (
+                                  <> • Edited {new Date(post.editedAt).toLocaleDateString()}</>
+                                )}
+                                {" "} • {post.likes} likes
                               </p>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -469,7 +480,7 @@ export default function StudioPage() {
                     <CardTitle>Recent Tips</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {analytics?.tips?.length > 0 ? (
+                    {analytics?.tips && analytics.tips.length > 0 ? (
                       <div className="space-y-4">
                         {analytics.tips.map((tip: any) => (
                           <div key={tip.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
