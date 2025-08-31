@@ -332,9 +332,17 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
+      // Auto-generate title from content if not provided
+      const autoTitle = content?.trim() 
+        ? content.trim().substring(0, 50) + (content.trim().length > 50 ? "..." : "")
+        : mediaUrls.length > 0 
+          ? "Media post"
+          : "New post";
+
       // Create post with media URLs
       const postData = insertPostSchema.parse({
         creatorId: creator.id,
+        title: autoTitle,
         content: content?.trim() || "",
         mediaUrl: mediaUrls.length > 0 ? mediaUrls[0] : undefined, // For backwards compatibility
         mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
@@ -813,7 +821,7 @@ export function registerRoutes(app: Express): Server {
     );
     
     const filteredPosts = posts.filter(post =>
-      post.title.toLowerCase().includes(query.toLowerCase()) ||
+      (post.title && post.title.toLowerCase().includes(query.toLowerCase())) ||
       post.content?.toLowerCase().includes(query.toLowerCase())
     );
     

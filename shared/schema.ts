@@ -45,7 +45,7 @@ export const creators = pgTable("creators", {
 export const posts = pgTable("posts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   creatorId: varchar("creator_id").notNull().references(() => creators.id),
-  title: text("title").notNull(),
+  title: text("title"),
   content: text("content"),
   mediaUrl: text("media_url"),
   mediaUrls: json("media_urls").$type<string[]>(), // Array of media URLs

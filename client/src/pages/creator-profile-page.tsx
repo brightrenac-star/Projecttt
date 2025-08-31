@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
 import Navigation from "../components/navigation";
 import Footer from "../components/footer";
-import { FacebookStyleComposer } from "@/components/posts/facebook-style-composer";
+import { CompactPostComposer } from "@/components/posts/compact-post-composer";
 import { LockedPostPreview } from "@/components/posts/locked-post-preview";
 import { TipButton } from "@/components/wallet/tip-button";
 import { SubscribeButton } from "@/components/wallet/subscribe-button";
@@ -233,9 +233,9 @@ export default function CreatorProfilePage() {
             </Card>
           </div>
 
-          {/* Facebook-Style Post Composer - Only shown for profile owner */}
+          {/* Compact Post Composer - Only shown for profile owner */}
           {canPost && (
-            <FacebookStyleComposer 
+            <CompactPostComposer 
               creatorId={creator.id} 
               onPostCreated={handlePostCreated}
             />
@@ -278,6 +278,7 @@ export default function CreatorProfilePage() {
                         key={post.id}
                         post={{ 
                           ...post, 
+                          title: post.title || undefined,
                           content: post.content || "",
                           isLocked: shouldShowLocked,
                           mediaUrl: post.mediaUrl || undefined 
