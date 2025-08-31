@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Paintbrush, Heart } from "lucide-react";
+import { Paintbrush, Heart, Home } from "lucide-react";
 import { SiGoogle, SiDiscord } from "react-icons/si";
 import sLogo from '@assets/generated_images/Blue_rainbow_S_logo_0fa7a8fb.png';
 import { Redirect } from "wouter";
@@ -112,12 +112,25 @@ export default function AuthPage() {
         <div className="max-w-md w-full">
           <Card className="glass-strong">
             <CardContent className="p-8">
-              <div className="text-center mb-8">
-                <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
-                  <img src={sLogo} alt="Society" className="w-8 h-8" />
+              <div className="flex justify-between items-start mb-6">
+                <div className="text-center flex-1">
+                  <div className="gradient-primary p-3 rounded-lg inline-block mb-4">
+                    <img src={sLogo} alt="Society" className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
+                  <p className="text-muted-foreground mt-2">Choose your role and get started</p>
                 </div>
-                <h2 className="text-3xl font-bold text-foreground">Join Society</h2>
-                <p className="text-muted-foreground mt-2">Choose your role and get started</p>
+                <Link href="/">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="glass border-border hover:bg-primary/10 flex items-center gap-2"
+                    data-testid="button-home-auth"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Home</span>
+                  </Button>
+                </Link>
               </div>
 
               {/* Tab Selection */}
