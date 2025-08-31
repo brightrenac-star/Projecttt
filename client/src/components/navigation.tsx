@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Rocket, Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink, MessageCircle } from "lucide-react";
+import { Search, Menu, User, Settings, LogOut, Mail, Send, ExternalLink, MessageCircle } from "lucide-react";
+import sLogo from '@assets/generated_images/Blue_rainbow_S_logo_0fa7a8fb.png';
 import type { Creator, Conversation, Message } from "@shared/schema";
 
 export default function Navigation() {
@@ -112,7 +113,7 @@ export default function Navigation() {
           <Link href="/">
             <div className="flex items-center cursor-pointer" data-testid="nav-logo">
               <div className="gradient-primary p-2 rounded-lg">
-                <Rocket className="text-white text-xl" />
+                <img src={sLogo} alt="Society" className="w-6 h-6" />
               </div>
               <span className="ml-3 text-xl font-bold text-foreground">Society</span>
             </div>
@@ -120,11 +121,6 @@ export default function Navigation() {
 
           {/* Navigation Links - Desktop */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/">
-              <span className="text-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="nav-home">
-                Home
-              </span>
-            </Link>
             <Link href="/discover">
               <span className="text-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="nav-discover">
                 Discover
@@ -137,11 +133,6 @@ export default function Navigation() {
                 </span>
               </Link>
             )}
-            <Link href="/help">
-              <span className="text-foreground hover:text-primary transition-smooth cursor-pointer" data-testid="nav-help">
-                Help
-              </span>
-            </Link>
           </div>
 
           {/* Search Bar - Desktop */}
@@ -434,15 +425,6 @@ export default function Navigation() {
                 </>
               )}
 
-              <Link href="/">
-                <div 
-                  className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="nav-mobile-home"
-                >
-                  Home
-                </div>
-              </Link>
               <Link href="/discover">
                 <div 
                   className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"
@@ -463,15 +445,6 @@ export default function Navigation() {
                   </div>
                 </Link>
               )}
-              <Link href="/help">
-                <div 
-                  className="block px-3 py-2 text-base font-medium text-foreground hover:text-primary transition-smooth cursor-pointer"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="nav-mobile-help"
-                >
-                  Help
-                </div>
-              </Link>
 
               {!user && (
                 <div className="px-3 py-2 space-y-2">
