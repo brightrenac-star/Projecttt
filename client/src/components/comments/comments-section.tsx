@@ -43,7 +43,7 @@ interface CommentsSectionProps {
 }
 
 interface CommentItemProps {
-  comment: Comment & { user: { name: string; avatar?: string } };
+  comment: Comment & { user: { displayName: string; avatar?: string } };
   isCreator: boolean;
   onModerationAction: (commentId: string, action: 'hide' | 'delete') => void;
 }
@@ -67,13 +67,13 @@ function CommentItem({ comment, isCreator, onModerationAction }: CommentItemProp
           {comment.user.avatar ? (
             <img 
               src={comment.user.avatar} 
-              alt={`${comment.user.name} avatar`} 
+              alt={`${comment.user.displayName} avatar`} 
               className="w-8 h-8 rounded-full object-cover"
               data-testid="comment-avatar"
             />
           ) : (
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-bold">
-              {comment.user.name.charAt(0).toUpperCase()}
+              {comment.user.displayName?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
         </div>
@@ -81,7 +81,7 @@ function CommentItem({ comment, isCreator, onModerationAction }: CommentItemProp
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-medium text-sm text-foreground" data-testid="comment-author">
-              {comment.user.name}
+              {comment.user.displayName}
             </span>
             <span className="text-xs text-muted-foreground" data-testid="comment-date">
               {comment.createdAt ? (
@@ -293,14 +293,7 @@ export default function CommentsSection({ postId, creatorId, className }: Commen
   const visibleComments = comments.filter(comment => !comment.isHidden || isCreator);
 
   return (
-    <Card className={`glass ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" />
-          Comments ({visibleComments.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className={`space-y-3 ${className}`}>
         {/* Add Comment Form */}
         {user ? (
           <Form {...form}>
@@ -314,7 +307,7 @@ export default function CommentsSection({ postId, creatorId, className }: Commen
                       <Textarea
                         {...field}
                         placeholder="Write a comment..."
-                        rows={3}
+                        rows={1}
                         disabled={addCommentMutation.isPending}
                         data-testid="textarea-comment"
                       />
@@ -391,7 +384,6 @@ export default function CommentsSection({ postId, creatorId, className }: Commen
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+    </div>
   );
 }
