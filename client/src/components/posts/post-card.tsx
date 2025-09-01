@@ -357,17 +357,19 @@ export default function PostCard({
               )}
             </div>
           </div>
+
+          {/* Comments section - integrated within the card */}
+          {showComments && (
+            <div className="mt-4 pt-4 border-t border-border">
+              <CommentsSection 
+                postId={post.id} 
+                creatorId={creator.id}
+                className=""
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Comments section */}
-      {showComments && (
-        <CommentsSection 
-          postId={post.id} 
-          creatorId={creator.id}
-          className="mb-6"
-        />
-      )}
 
       {/* Edit Post Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
