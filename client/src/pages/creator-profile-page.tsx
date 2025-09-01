@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Star, Calendar, Edit } from "lucide-react";
+import { Users, Star, Calendar, Edit, Instagram, Youtube, Twitter, Globe, Twitch, Camera, Plus } from "lucide-react";
 import type { Creator, Post } from "@shared/schema";
 
 export default function CreatorProfilePage() {
@@ -89,169 +89,205 @@ export default function CreatorProfilePage() {
       <ContextualNavigation />
       
       <main className="pt-16">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden">
-          {creator.banner ? (
-            <img 
-              src={creator.banner} 
-              alt={`${creator.name} banner`} 
-              className="w-full h-64 md:h-80 object-cover"
-            />
-          ) : (
-            <div className="w-full h-64 md:h-80 gradient-primary opacity-30"></div>
-          )}
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Profile Header */}
-          <div className="relative -mt-20 mb-8">
-            <Card className="glass-strong">
-              <CardContent className="p-8">
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                  <div className="flex items-center gap-4">
-                    {creator.avatar ? (
-                      <img 
-                        src={creator.avatar} 
-                        alt={`${creator.name} avatar`} 
-                        className="w-20 h-20 rounded-full border-4 border-white"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center border-4 border-white">
-                        <span className="text-white font-bold text-2xl">
-                          {creator.name.charAt(0)}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <h1 className="text-3xl font-bold text-foreground" data-testid="creator-name">{creator.name}</h1>
-                      <p className="text-muted-foreground">@{creator.handle}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <span className="flex items-center text-sm text-muted-foreground">
-                          <Users className="h-4 w-4 mr-1" />
-                          {creator.subscriberCount || 0} supporters
-                        </span>
-                        {creator.categories && creator.categories.length > 0 && (
-                          <div className="flex gap-1">
-                            {creator.categories.slice(0, 2).map((category) => (
-                              <Badge key={category} variant="secondary">{category}</Badge>
-                            ))}
-                            {creator.categories.length > 2 && (
-                              <Badge variant="outline">+{creator.categories.length - 2}</Badge>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex-1"></div>
-
-                  <div className="flex gap-3">
-                    {isOwnProfile ? (
-                      // Own profile - show edit button and go to studio
-                      <>
-                        <Button 
-                          variant="outline" 
-                          className="glass border-border hover-scale transition-smooth" 
-                          data-testid="button-edit-profile"
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                        <Button 
-                          className="gradient-primary text-primary-foreground hover-scale transition-smooth" 
-                          data-testid="button-go-to-studio"
-                        >
-                          Go to Studio
-                        </Button>
-                      </>
-                    ) : (
-                      // Viewing someone else's profile - show tip and subscribe
-                      <>
-                        <TipButton 
-                          creatorId={creator.id}
-                          creatorName={creator.name}
-                        />
-                        <SubscribeButton 
-                          creatorId={creator.id}
-                          creatorName={creator.name}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {creator.bio && (
-                  <div className="mt-6">
-                    <p className="text-muted-foreground">{creator.bio}</p>
-                  </div>
-                )}
-
-                {creator.links && Object.keys(creator.links).length > 0 && (
-                  <div className="mt-4 flex gap-3">
-                    {creator.links.website && (
-                      <a 
-                        href={creator.links.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                        data-testid="link-website"
-                      >
-                        Website
-                      </a>
-                    )}
-                    {creator.links.twitter && (
-                      <a 
-                        href={creator.links.twitter} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                        data-testid="link-twitter"
-                      >
-                        Twitter
-                      </a>
-                    )}
-                    {creator.links.instagram && (
-                      <a 
-                        href={creator.links.instagram} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                        data-testid="link-instagram"
-                      >
-                        Instagram
-                      </a>
-                    )}
-                    {creator.links.youtube && (
-                      <a 
-                        href={creator.links.youtube} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                        data-testid="link-youtube"
-                      >
-                        YouTube
-                      </a>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+        {/* Modern Banner Section */}
+        <div className="relative">
+          {/* Banner Image */}
+          <div className="h-48 md:h-64 lg:h-80 overflow-hidden">
+            {creator.banner ? (
+              <img 
+                src={creator.banner} 
+                alt={`${creator.name} banner`} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full gradient-primary opacity-40"></div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20"></div>
           </div>
 
-          {/* Compact Post Composer - Only shown for profile owner */}
+          {/* Profile Picture - Overlapping Banner */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+            <div className="relative">
+              {creator.avatar ? (
+                <img 
+                  src={creator.avatar} 
+                  alt={`${creator.name} avatar`} 
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-background shadow-xl"
+                  data-testid="creator-avatar"
+                />
+              ) : (
+                <div className="w-32 h-32 md:w-40 md:h-40 rounded-full gradient-primary flex items-center justify-center border-4 border-background shadow-xl">
+                  <span className="text-white font-bold text-4xl md:text-5xl">
+                    {creator.name.charAt(0)}
+                  </span>
+                </div>
+              )}
+              {isOwnProfile && (
+                <Button 
+                  size="sm" 
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full p-0 bg-background border border-border hover:bg-muted"
+                  data-testid="button-change-avatar"
+                >
+                  <Camera className="w-4 h-4 text-foreground" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Info Section */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="pt-20 pb-8 text-center">
+            {/* Name and Handle */}
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" data-testid="creator-name">
+              {creator.name}
+            </h1>
+            <p className="text-muted-foreground text-lg mb-4">@{creator.handle}</p>
+
+            {/* Bio */}
+            {creator.bio && (
+              <p className="text-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
+                {creator.bio}
+              </p>
+            )}
+
+            {/* Stats */}
+            <div className="flex items-center justify-center gap-6 mb-6">
+              <div className="text-center">
+                <div className="text-xl font-bold text-foreground">{creator.subscriberCount || 0}</div>
+                <div className="text-sm text-muted-foreground">supporters</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-foreground">{posts.length}</div>
+                <div className="text-sm text-muted-foreground">posts</div>
+              </div>
+            </div>
+
+            {/* Categories */}
+            {creator.categories && creator.categories.length > 0 && (
+              <div className="flex justify-center gap-2 mb-6 flex-wrap">
+                {creator.categories.slice(0, 4).map((category) => (
+                  <Badge key={category} variant="secondary" className="px-3 py-1">
+                    {category}
+                  </Badge>
+                ))}
+                {creator.categories.length > 4 && (
+                  <Badge variant="outline" className="px-3 py-1">
+                    +{creator.categories.length - 4}
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {/* Social Media Icons */}
+            {creator.links && Object.keys(creator.links).length > 0 && (
+              <div className="flex justify-center gap-4 mb-8">
+                {creator.links.website && (
+                  <a 
+                    href={creator.links.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    data-testid="link-website"
+                  >
+                    <Globe className="w-5 h-5 text-foreground" />
+                  </a>
+                )}
+                {creator.links.instagram && (
+                  <a 
+                    href={creator.links.instagram} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    data-testid="link-instagram"
+                  >
+                    <Instagram className="w-5 h-5 text-foreground" />
+                  </a>
+                )}
+                {creator.links.twitter && (
+                  <a 
+                    href={creator.links.twitter} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    data-testid="link-twitter"
+                  >
+                    <Twitter className="w-5 h-5 text-foreground" />
+                  </a>
+                )}
+                {creator.links.youtube && (
+                  <a 
+                    href={creator.links.youtube} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    data-testid="link-youtube"
+                  >
+                    <Youtube className="w-5 h-5 text-foreground" />
+                  </a>
+                )}
+                {creator.links.twitch && (
+                  <a 
+                    href={creator.links.twitch} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                    data-testid="link-twitch"
+                  >
+                    <Twitch className="w-5 h-5 text-foreground" />
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-3">
+              {isOwnProfile ? (
+                // Own profile - show edit button
+                <Button 
+                  variant="outline" 
+                  className="px-6 py-2"
+                  data-testid="button-edit-profile"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              ) : (
+                // Viewing someone else's profile - show tip and subscribe
+                <>
+                  <SubscribeButton 
+                    creatorId={creator.id}
+                    creatorName={creator.name}
+                    className="px-6 py-2"
+                  />
+                  <TipButton 
+                    creatorId={creator.id}
+                    creatorName={creator.name}
+                    variant="outline"
+                    className="px-6 py-2"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Posts Feed Section */}
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Inline Post Composer - Only shown for profile owner */}
           {canPost && (
-            <CompactPostComposer 
-              creatorId={creator.id} 
-              onPostCreated={handlePostCreated}
-            />
+            <div className="mb-8">
+              <CompactPostComposer 
+                creatorId={creator.id} 
+                onPostCreated={handlePostCreated}
+              />
+            </div>
           )}
 
-          {/* Posts Section */}
-          <div className="grid lg:grid-cols-3 gap-8 pb-16">
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-foreground mb-6">Latest Posts</h2>
+          {/* Posts Feed */}
+          <div className="space-y-6 pb-16">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Latest Posts</h2>
               
               {postsLoading ? (
                 <div className="space-y-6">
@@ -310,62 +346,6 @@ export default function CreatorProfilePage() {
                     );
                   })}
                 </div>
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Creator Stats */}
-              <Card className="glass">
-                <CardHeader>
-                  <CardTitle>Creator Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Supporters</span>
-                    <span className="font-semibold">{creator.subscriberCount || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Posts</span>
-                    <span className="font-semibold">{posts.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Member Since</span>
-                    <span className="font-semibold">
-                      {new Date(creator.createdAt!).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Subscription Tiers */}
-              {creator.tiers && creator.tiers.length > 0 && (
-                <Card className="glass">
-                  <CardHeader>
-                    <CardTitle>Subscription Tiers</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {creator.tiers.map((tier) => (
-                      <div key={tier.id} className="glass rounded-lg p-4 border border-border">
-                        <div className="flex justify-between items-center mb-2">
-                          <h4 className="font-semibold text-foreground">{tier.name}</h4>
-                          <span className="text-primary font-bold">${tier.price}/mo</span>
-                        </div>
-                        <ul className="text-sm text-muted-foreground space-y-1">
-                          {tier.perks.slice(0, 3).map((perk, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2"></span>
-                              {perk}
-                            </li>
-                          ))}
-                          {tier.perks.length > 3 && (
-                            <li className="text-xs">+{tier.perks.length - 3} more perks</li>
-                          )}
-                        </ul>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
               )}
             </div>
           </div>

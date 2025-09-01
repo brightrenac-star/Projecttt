@@ -1,0 +1,87 @@
+Goal
+
+Redesign the public profile page (creator.html) so it feels modern, clean, and similar to Instagram/Facebook, with inline posting for creators, social links, and interaction tools.
+
+Profile Section (Top of Public Page)
+
+Banner area:
+
+Full-width banner image across the top.
+
+Banner is slightly collapsed behind the profile picture for a layered effect.
+
+Profile picture:
+
+Circular avatar displayed in the center, overlapping the banner.
+
+Owner editing:
+
+If the logged-in user is the owner of this profile and has role CREATOR, show an “Edit Profile” button to update banner, profile picture, bio, and social links.
+
+Owner can change these anytime (via PATCH /users/me).
+
+Creator Info (Below Banner/Profile Picture)
+
+Display name & @username
+
+Short description / bio (editable by owner)
+
+Social media icons row (only show icons if creator has added links in profile.html):
+
+Instagram, YouTube, X (Twitter), Twitch, etc.
+
+Each icon is clickable → opens external platform link.
+
+Inline Post Composer (Owner Only, at Top of Feed)
+
+Collapsed bar:
+
+“Share something…” text placeholder + small attach icon.
+
+On click: expands in place (no page change) to a posting tool.
+
+Fields:
+
+Large text box for writing content (like Facebook).
+
+Attach file button with icon (accept only images/videos).
+
+Visibility selector: Public, Subscribers Only, Pay to Unlock.
+
+If Pay to Unlock selected → show a price input field.
+
+Post button:
+
+Disabled until user enters text or attaches media.
+
+Validates media type (only image/video) and file size.
+
+API:
+
+POST /api/posts with FormData (fields: content, media[], visibility, price).
+
+Posts Feed (Below Profile Section & Composer)
+
+Show posts in reverse chronological order.
+
+Post card layout:
+
+Author avatar + display name
+
+Post content (text, media preview)
+
+Timestamp
+
+“Edited” badge if editedAt exists (after edit).
+
+Like/Upvote button (toggle state).
+
+Comment section below each post:\n - List of comments with avatar, display name, text, timestamp\n - Comment form (text only) for logged-in users\n - Upvote/Downvote per comment\n - Owner of post can delete or hide any comment.
+
+Post action menu (owner only, top-right corner):
+
+Edit (opens edit modal)
+
+Delete
+
+Hide
