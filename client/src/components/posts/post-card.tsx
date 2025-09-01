@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { MoreVertical, Edit3, Trash2, Users, DollarSign, Heart, MessageCircle } from "lucide-react";
+import { MoreVertical, Edit3, Trash2, Users, DollarSign, Heart, MessageCircle, ThumbsUp } from "lucide-react";
 import { UnlockButton } from "@/components/wallet/unlock-button";
 import { SubscribeButton } from "@/components/wallet/subscribe-button";
 import { TipButton } from "@/components/wallet/tip-button";
@@ -90,6 +90,8 @@ export default function PostCard({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
 
   // Check if current user owns this post
   const isOwner = user && (user.id === creator.userId);
@@ -147,12 +149,44 @@ export default function PostCard({
     },
   });
 
+  // Like post mutation
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", `/api/posts/${post.id}/like`);
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsLiked(!isLiked);
+      setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+      queryClient.invalidateQueries({ queryKey: ["/api/creators", creator.id, "posts"] });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to update like", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleEdit = (data: z.infer<typeof editPostSchema>) => {
     editMutation.mutate(data);
   };
 
   const handleDelete = () => {
     deleteMutation.mutate();
+  };
+
+  const handleLike = () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to like posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+    likeMutation.mutate();
   };
 
   // Determine if post should be locked
@@ -255,7 +289,7 @@ export default function PostCard({
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid="button-post-menu">
+                  <Button variant="ghost" size="sm" className="h-11 w-11 p-0" data-testid="button-post-menu">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -337,13 +371,33 @@ export default function PostCard({
 
             {/* Post actions */}
             <div className="flex items-center gap-2">
-              {/* Like count */}
-              {post.likes !== undefined && post.likes > 0 && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Heart className="w-4 h-4" />
-                  <span data-testid="post-likes">{post.likes}</span>
-                </div>
-              )}
+              {/* Like button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLike}
+                disabled={likeMutation.isPending}
+                className={`h-11 px-3 transition-all duration-200 ${
+                  isLiked 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-muted-foreground hover:text-red-500'
+                }`}
+                data-testid="button-like-post"
+              >
+                <ThumbsUp className={`w-4 h-4 mr-1 ${isLiked ? 'fill-current' : ''}`} />
+                <span className="text-sm">{likeCount}</span>
+              </Button>
+
+              {/* Comments button toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-11 px-3 text-muted-foreground hover:text-foreground transition-all duration-200"
+                data-testid="button-toggle-comments"
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                <span className="text-sm">Comment</span>
+              </Button>
 
               {/* Tip button for non-owners */}
               {!isOwner && (
@@ -353,6 +407,7 @@ export default function PostCard({
                   creatorName={creator.name}
                   size="sm"
                   variant="outline"
+                  className="h-11"
                 />
               )}
             </div>

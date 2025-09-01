@@ -43,7 +43,7 @@ interface CommentsSectionProps {
 }
 
 interface CommentItemProps {
-  comment: Comment & { user: { displayName: string; avatar?: string } };
+  comment: Comment & { user: { name: string; avatar?: string } };
   isCreator: boolean;
   onModerationAction: (commentId: string, action: 'hide' | 'delete') => void;
 }
@@ -62,18 +62,18 @@ function CommentItem({ comment, isCreator, onModerationAction }: CommentItemProp
 
   return (
     <>
-      <div className="flex gap-3 p-4 border-b border-border last:border-0" data-testid={`comment-${comment.id}`}>
+      <div className="flex gap-3 p-4 bg-background/30 backdrop-blur-sm rounded-lg border border-border/20 shadow-sm hover:bg-background/50 transition-all duration-200" data-testid={`comment-${comment.id}`}>
         <div className="flex-shrink-0">
           {comment.user.avatar ? (
             <img 
               src={comment.user.avatar} 
-              alt={`${comment.user.displayName} avatar`} 
+              alt={`${comment.user.name} avatar`} 
               className="w-8 h-8 rounded-full object-cover"
               data-testid="comment-avatar"
             />
           ) : (
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-bold">
-              {comment.user.displayName?.charAt(0).toUpperCase() || '?'}
+              {comment.user.name?.charAt(0).toUpperCase() || '?'}
             </div>
           )}
         </div>
@@ -81,7 +81,7 @@ function CommentItem({ comment, isCreator, onModerationAction }: CommentItemProp
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-medium text-sm text-foreground" data-testid="comment-author">
-              {comment.user.displayName}
+              {comment.user.name}
             </span>
             <span className="text-xs text-muted-foreground" data-testid="comment-date">
               {comment.createdAt ? (
@@ -293,59 +293,68 @@ export default function CommentsSection({ postId, creatorId, className }: Commen
   const visibleComments = comments.filter(comment => !comment.isHidden || isCreator);
 
   return (
-    <div className={`space-y-3 ${className}`}>
-        {/* Add Comment Form */}
+    <div className={`space-y-4 ${className}`}>
+        {/* Add Comment Form - Enhanced with Glassmorphism */}
         {user ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Write a comment..."
-                        rows={1}
-                        disabled={addCommentMutation.isPending}
-                        data-testid="textarea-comment"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  disabled={addCommentMutation.isPending || !form.watch("content").trim()}
-                  className="gradient-primary text-primary-foreground"
-                  data-testid="button-submit-comment"
-                >
-                  {addCommentMutation.isPending ? (
-                    "Posting..."
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Post Comment
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-xl backdrop-blur-sm"></div>
+            <div className="relative bg-background/60 backdrop-blur-md border border-border/30 rounded-xl p-4 shadow-lg">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Join the conversation..."
+                            rows={1}
+                            disabled={addCommentMutation.isPending}
+                            className="bg-background/50 border-border/50 rounded-lg resize-none focus:bg-background/80 transition-all duration-200"
+                            data-testid="textarea-comment"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={addCommentMutation.isPending || !form.watch("content").trim()}
+                      className="h-11 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                      data-testid="button-submit-comment"
+                    >
+                      {addCommentMutation.isPending ? (
+                        "Posting..."
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Post Comment
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          </div>
         ) : (
-          <div className="text-center p-4 border border-border rounded-lg">
-            <p className="text-muted-foreground mb-2">Please log in to join the conversation</p>
-            <Button variant="outline" size="sm" data-testid="button-login-to-comment">
-              Log In to Comment
-            </Button>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-red-500/5 rounded-xl backdrop-blur-sm"></div>
+            <div className="relative bg-background/60 backdrop-blur-md border border-border/30 rounded-xl p-6 text-center shadow-lg">
+              <p className="text-muted-foreground mb-3">Please log in to join the conversation</p>
+              <Button variant="outline" size="sm" className="h-11 px-6" data-testid="button-login-to-comment">
+                Log In to Comment
+              </Button>
+            </div>
           </div>
         )}
 
         {/* Comments List */}
-        <div className="divide-y divide-border">
+        <div className="space-y-3">
           {isLoading ? (
             <div className="space-y-4 p-4">
               {[...Array(3)].map((_, i) => (

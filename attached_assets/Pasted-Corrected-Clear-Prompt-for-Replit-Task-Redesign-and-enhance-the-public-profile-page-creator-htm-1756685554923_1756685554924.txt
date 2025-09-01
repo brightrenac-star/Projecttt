@@ -1,0 +1,82 @@
+Corrected & Clear Prompt for Replit
+
+Task:
+Redesign and enhance the public profile page (creator.html) with the following improvements:
+
+Profile Section (Modern Layout)
+
+Replace the old design with a grid-style layout:
+
+A banner image at the top (spanning full width).
+
+A circular profile picture centered, overlapping the banner.
+
+The profile owner (creator) can update the banner and profile picture at any time.
+
+Creator Info Area (under the profile grid)
+
+Show display name and @username.
+
+Show a short description/bio (set by the creator in their profile settings).
+
+Show social platform icons (e.g., Instagram, YouTube, X/Twitter, Twitch).
+
+Icons only appear if the creator has added those links in their profile page.
+
+Clicking an icon opens the external link.
+
+Inline Post Composer (Owner only, on public profile)
+
+At the top of the feed, show a small collapsed bar that says “Share something…” with an attach icon.
+
+When clicked, the bar expands into a posting tool directly on the same page (no page navigation).
+
+Posting tool must include:
+
+Text box (for post content, like Facebook).
+
+Attach file button with an icon (only images/videos allowed).
+
+Visibility options: Public, Subscribers Only, Pay to Unlock.
+
+If “Pay to Unlock” is selected → show a price input field.
+
+Post button (disabled until there is text or media, and a valid price if Pay to Unlock).
+
+Posts Feed
+
+Show posts in reverse chronological order.
+
+Each post card must include:
+
+Creator’s avatar + display name
+
+Post content (text + media)
+
+Timestamp
+
+Edited badge if the post has been updated (editedAt exists)
+
+Like/Upvote button (toggle state, similar to “like” on social apps)
+
+Comment section below each post:
+
+Comment input box (modern/futuristic style, works well on desktop & mobile)
+
+List of comments with avatar, username, text, timestamp
+
+Upvote/Downvote for comments
+
+Post owner can delete or hide any comment
+
+Post action menu (top-right, owner only): options to Edit, Delete, or Hide the post
+
+Visual Design
+
+Each section (profile, post feed, comments) should have a slightly different background color/surface, so users can clearly distinguish between them (e.g., light-blue gradient for header/profile, lighter surface for posts, another shade for comments/chat).
+
+The comment box should have a futuristic style (glass/gradient look, rounded corners, soft shadows) and adapt well to both desktop and mobile.
+
+Ensure proper horizontal and vertical spacing (use padding/margins so boxes, text, and sections never overlap).
+
+Buttons and inputs must have enough size (≥44px height) for mobile tap targets.

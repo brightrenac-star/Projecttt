@@ -1,62 +1,54 @@
-import { useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { queryClient } from "@/lib/queryClient";
-import ContextualNavigation from "../components/contextual-navigation";
-import ContextualFooter from "../components/contextual-footer";
-import { CompactPostComposer } from "@/components/posts/compact-post-composer";
+import ContextualNavigation from "@/components/contextual-navigation";
+import ContextualFooter from "@/components/contextual-footer";
 import PostCard from "@/components/posts/post-card";
-import { TipButton } from "@/components/wallet/tip-button";
+import { CompactPostComposer } from "@/components/posts/compact-post-composer";
 import { SubscribeButton } from "@/components/wallet/subscribe-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TipButton } from "@/components/wallet/tip-button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Users, Star, Calendar, Edit, Instagram, Youtube, Twitter, Globe, Twitch, Camera, Plus } from "lucide-react";
-import type { Creator, Post } from "@shared/schema";
+import { Camera, Edit, Globe, Instagram, Twitter, Youtube } from "lucide-react";
 
 export default function CreatorProfilePage() {
-  const { handle } = useParams();
+  const { handle } = useParams<{ handle: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
 
-  // Get creator profile
-  const { data: creator, isLoading: creatorLoading } = useQuery<Creator>({
-    queryKey: ["/api/creators", handle],
+  // Fetch creator data
+  const { data: creator, isLoading: creatorLoading } = useQuery({
+    queryKey: ['/api/creators', handle],
     enabled: !!handle,
   });
 
-  // Get creator posts
-  const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
-    queryKey: ["/api/creators", creator?.id, "posts"],
+  // Fetch creator's posts
+  const { data: posts = [], isLoading: postsLoading } = useQuery({
+    queryKey: ['/api/creators', creator?.id, 'posts'],
     enabled: !!creator?.id,
   });
 
-  // Check if user is viewing their own profile and has creator role
-  const isOwnProfile = user && creator && user.id === creator.userId;
-  const canPost = isOwnProfile && user?.role === "creator";
-  
-  // Get user's subscription status for this creator
-  const { data: userSubscription } = useQuery<any>({    
-    queryKey: ["/api/subscriptions/check", creator?.id],
-    enabled: !!user && !!creator && !isOwnProfile,
+  // Check if current user is viewing their own profile
+  const isOwnProfile = user?.id === creator?.userId;
+  const canPost = isOwnProfile;
+
+  // Check subscription status
+  const { data: userSubscription } = useQuery({
+    queryKey: ['/api/subscriptions/check', creator?.id],
+    enabled: !!creator?.id && !!user && !isOwnProfile,
   });
 
   const handlePostCreated = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/creators", creator?.id, "posts"] });
+    // Refresh posts when a new post is created
   };
-
-
-
-
 
   if (creatorLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-background to-purple-50/20 dark:from-blue-950/20 dark:via-background dark:to-purple-950/10">
         <ContextualNavigation />
         <div className="pt-16 flex items-center justify-center min-h-screen">
-          <div className="glass rounded-xl p-8">
+          <div className="space-y-6 max-w-4xl mx-auto px-4">
             <div className="animate-pulse">
               <div className="h-8 bg-muted/30 rounded mb-4"></div>
               <div className="h-4 bg-muted/30 rounded mb-2"></div>
@@ -70,7 +62,7 @@ export default function CreatorProfilePage() {
 
   if (!creator) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-background to-purple-50/20 dark:from-blue-950/20 dark:via-background dark:to-purple-950/10">
         <ContextualNavigation />
         <div className="pt-16 flex items-center justify-center min-h-screen">
           <Card className="glass-strong">
@@ -85,14 +77,14 @@ export default function CreatorProfilePage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-background to-purple-50/20 dark:from-blue-950/20 dark:via-background dark:to-purple-950/10">
       <ContextualNavigation />
       
       <main className="pt-16">
-        {/* Modern Banner Section */}
+        {/* Modern Banner Section with Enhanced Gradient */}
         <div className="relative">
           {/* Banner Image */}
-          <div className="h-48 md:h-64 lg:h-80 overflow-hidden">
+          <div className="h-48 md:h-64 lg:h-80 overflow-hidden bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20">
             {creator.banner ? (
               <img 
                 src={creator.banner} 
@@ -100,9 +92,9 @@ export default function CreatorProfilePage() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full gradient-primary opacity-40"></div>
+              <div className="w-full h-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-60"></div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30"></div>
           </div>
 
           {/* Profile Picture - Overlapping Banner */}
@@ -125,168 +117,160 @@ export default function CreatorProfilePage() {
               {isOwnProfile && (
                 <Button 
                   size="sm" 
-                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full p-0 bg-background border border-border hover:bg-muted"
+                  className="absolute bottom-2 right-2 w-12 h-12 rounded-full p-0 bg-background border border-border hover:bg-muted"
                   data-testid="button-change-avatar"
                 >
-                  <Camera className="w-4 h-4 text-foreground" />
+                  <Camera className="w-5 h-5 text-foreground" />
                 </Button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Profile Info Section */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="pt-20 pb-8 text-center">
-            {/* Name and Handle */}
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" data-testid="creator-name">
-              {creator.name}
-            </h1>
-            <p className="text-muted-foreground text-lg mb-4">@{creator.handle}</p>
+        {/* Profile Info Section with Glass Background */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-100/10 via-background/95 to-background backdrop-blur-sm"></div>
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="pt-20 pb-8 text-center">
+              {/* Name and Handle */}
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2" data-testid="creator-name">
+                {creator.name}
+              </h1>
+              <p className="text-muted-foreground text-lg mb-4">@{creator.handle}</p>
 
-            {/* Bio */}
-            {creator.bio && (
-              <p className="text-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
-                {creator.bio}
-              </p>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center justify-center gap-6 mb-6">
-              <div className="text-center">
-                <div className="text-xl font-bold text-foreground">{creator.subscriberCount || 0}</div>
-                <div className="text-sm text-muted-foreground">supporters</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-foreground">{posts.length}</div>
-                <div className="text-sm text-muted-foreground">posts</div>
-              </div>
-            </div>
-
-            {/* Categories */}
-            {creator.categories && creator.categories.length > 0 && (
-              <div className="flex justify-center gap-2 mb-6 flex-wrap">
-                {creator.categories.slice(0, 4).map((category) => (
-                  <Badge key={category} variant="secondary" className="px-3 py-1">
-                    {category}
-                  </Badge>
-                ))}
-                {creator.categories.length > 4 && (
-                  <Badge variant="outline" className="px-3 py-1">
-                    +{creator.categories.length - 4}
-                  </Badge>
-                )}
-              </div>
-            )}
-
-            {/* Social Media Icons */}
-            {creator.links && Object.keys(creator.links).length > 0 && (
-              <div className="flex justify-center gap-4 mb-8">
-                {creator.links.website && (
-                  <a 
-                    href={creator.links.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    data-testid="link-website"
-                  >
-                    <Globe className="w-5 h-5 text-foreground" />
-                  </a>
-                )}
-                {creator.links.instagram && (
-                  <a 
-                    href={creator.links.instagram} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    data-testid="link-instagram"
-                  >
-                    <Instagram className="w-5 h-5 text-foreground" />
-                  </a>
-                )}
-                {creator.links.twitter && (
-                  <a 
-                    href={creator.links.twitter} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    data-testid="link-twitter"
-                  >
-                    <Twitter className="w-5 h-5 text-foreground" />
-                  </a>
-                )}
-                {creator.links.youtube && (
-                  <a 
-                    href={creator.links.youtube} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    data-testid="link-youtube"
-                  >
-                    <Youtube className="w-5 h-5 text-foreground" />
-                  </a>
-                )}
-                {creator.links.twitch && (
-                  <a 
-                    href={creator.links.twitch} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="w-10 h-10 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    data-testid="link-twitch"
-                  >
-                    <Twitch className="w-5 h-5 text-foreground" />
-                  </a>
-                )}
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-center gap-3">
-              {isOwnProfile ? (
-                // Own profile - show edit button
-                <Button 
-                  variant="outline" 
-                  className="px-6 py-2"
-                  data-testid="button-edit-profile"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
-                </Button>
-              ) : (
-                // Viewing someone else's profile - show tip and subscribe
-                <>
-                  <SubscribeButton 
-                    creatorId={creator.id}
-                    creatorName={creator.name}
-                    className="px-6 py-2"
-                  />
-                  <TipButton 
-                    creatorId={creator.id}
-                    creatorName={creator.name}
-                    variant="outline"
-                    className="px-6 py-2"
-                  />
-                </>
+              {/* Bio */}
+              {creator.bio && (
+                <p className="text-foreground max-w-2xl mx-auto mb-6 leading-relaxed">
+                  {creator.bio}
+                </p>
               )}
+
+              {/* Stats */}
+              <div className="flex items-center justify-center gap-6 mb-6">
+                <div className="text-center">
+                  <div className="text-xl font-bold text-foreground">{creator.subscriberCount || 0}</div>
+                  <div className="text-sm text-muted-foreground">supporters</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-foreground">{posts.length}</div>
+                  <div className="text-sm text-muted-foreground">posts</div>
+                </div>
+              </div>
+
+              {/* Categories */}
+              {creator.categories && creator.categories.length > 0 && (
+                <div className="flex justify-center gap-2 mb-6 flex-wrap">
+                  {creator.categories.slice(0, 4).map((category) => (
+                    <Badge key={category} variant="secondary" className="px-3 py-1">
+                      {category}
+                    </Badge>
+                  ))}
+                  {creator.categories.length > 4 && (
+                    <Badge variant="outline" className="px-3 py-1">
+                      +{creator.categories.length - 4}
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* Social Media Icons */}
+              {creator.links && Object.keys(creator.links).length > 0 && (
+                <div className="flex justify-center gap-4 mb-8">
+                  {creator.links.website && (
+                    <a 
+                      href={creator.links.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                      data-testid="link-website"
+                    >
+                      <Globe className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {creator.links.instagram && (
+                    <a 
+                      href={creator.links.instagram} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                      data-testid="link-instagram"
+                    >
+                      <Instagram className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {creator.links.twitter && (
+                    <a 
+                      href={creator.links.twitter} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                      data-testid="link-twitter"
+                    >
+                      <Twitter className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                  {creator.links.youtube && (
+                    <a 
+                      href={creator.links.youtube} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                      data-testid="link-youtube"
+                    >
+                      <Youtube className="w-6 h-6 text-foreground" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-center gap-3">
+                {isOwnProfile ? (
+                  // Own profile - show edit button
+                  <Button 
+                    variant="outline" 
+                    className="px-6 py-3 h-12"
+                    data-testid="button-edit-profile"
+                  >
+                    <Edit className="h-5 w-5 mr-2" />
+                    Edit Profile
+                  </Button>
+                ) : (
+                  // Viewing someone else's profile - show tip and subscribe
+                  <>
+                    <SubscribeButton 
+                      creatorId={creator.id}
+                      creatorName={creator.name}
+                      className="px-6 py-3 h-12"
+                    />
+                    <TipButton 
+                      creatorId={creator.id}
+                      creatorName={creator.name}
+                      variant="outline"
+                      className="px-6 py-3 h-12"
+                    />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Posts Feed Section */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Inline Post Composer - Only shown for profile owner */}
-          {canPost && (
-            <div className="mb-8">
-              <CompactPostComposer 
-                creatorId={creator.id} 
-                onPostCreated={handlePostCreated}
-              />
-            </div>
-          )}
+        {/* Posts Feed Section with Distinct Background */}
+        <div className="bg-gradient-to-b from-purple-50/10 via-background to-background dark:from-purple-950/5 dark:via-background dark:to-background">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+            {/* Inline Post Composer - Only shown for profile owner */}
+            {canPost && (
+              <div className="mb-8">
+                <CompactPostComposer 
+                  creatorId={creator.id} 
+                  onPostCreated={handlePostCreated}
+                />
+              </div>
+            )}
 
-          {/* Posts Feed */}
-          <div className="space-y-6 pb-16">
-            <div>
+            {/* Posts Feed */}
+            <div className="space-y-6 pb-16">
               <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Latest Posts</h2>
               
               {postsLoading ? (
@@ -336,7 +320,7 @@ export default function CreatorProfilePage() {
                           userId: creator.userId,
                           name: creator.name,
                           handle: creator.handle,
-                          avatar: creator.avatar
+                          avatar: creator.avatar || undefined
                         }}
                         userSubscribed={userSubscription?.active || false}
                         onPostUpdated={handlePostCreated}
